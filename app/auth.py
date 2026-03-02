@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, g, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, g
 from werkzeug.security import check_password_hash
 
-# Blueprint de autenticación
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
@@ -16,21 +15,25 @@ def login():
         cur = g.db.cursor()
 
         cur.execute(
-            "SELECT id, password_hash FROM usuarios WHERE email=%s",
+            """
+            SELECT id, nombre, password_hash
+            FROM usuarios
+            WHERE email = %s
+            """,
             (email,)
         )
 
         user = cur.fetchone()
 
-        if user and check_password_hash(user[1], password):
+        if user and check_password_hash(user[2], password):
 
             session["user_id"] = user[0]
+            session["user_name"] = user[1]
 
             return redirect(url_for("routes.dashboard"))
 
-        flash("Credenciales incorrectas")
-
-        return redirect(url_for("auth.login"))
+        else:
+            flash("Credenciales incorrectas")
 
     return render_template("auth/login.html")
 

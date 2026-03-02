@@ -2,33 +2,36 @@
 
 {% block content %}
 
-<h1>Crear Paciente</h1>
+<h2>Crear Paciente</h2>
 
 <form method="POST">
 
-RUT
+<label>RUT</label>
+<br>
 <input type="text" name="rut" required>
 <br><br>
 
-Nombre
+<label>Nombre</label>
+<br>
 <input type="text" name="nombre" required>
 <br><br>
 
-Apellido
+<label>Apellido</label>
+<br>
 <input type="text" name="apellido" required>
 <br><br>
 
-Email
+<label>Email</label>
+<br>
 <input type="email" name="email">
 <br><br>
 
-Fecha nacimiento
+<label>Fecha nacimiento</label>
+<br>
 <input type="date" name="fecha_nacimiento" required>
 <br><br>
 
-<button type="submit">
-Guardar
-</button>
+<button type="submit">Guardar</button>
 
 </form>
 

@@ -1,15 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Editar Paciente</h1>
+
+<h2>Editar Paciente</h2>
 
 <form method="POST">
-    <label>Nombre: <input type="text" name="nombre" value="{{ paciente[1] }}" required></label><br><br>
-    <label>Apellido: <input type="text" name="apellido" value="{{ paciente[2] }}" required></label><br><br>
-    <label>Email: <input type="email" name="email" value="{{ paciente[3] }}"></label><br><br>
-    <label>Fecha de Nacimiento: <input type="date" name="fecha_nacimiento" value="{{ paciente[4] }}" required></label><br><br>
-    <button type="submit">Actualizar</button>
+
+<label>RUT</label>
+<br>
+<input type="text" name="rut" value="{{ paciente[1] }}" required>
+<br><br>
+
+<label>Nombre</label>
+<br>
+<input type="text" name="nombre" value="{{ paciente[2] }}" required>
+<br><br>
+
+<label>Apellido</label>
+<br>
+<input type="text" name="apellido" value="{{ paciente[3] }}" required>
+<br><br>
+
+<label>Email</label>
+<br>
+<input type="email" name="email" value="{{ paciente[4] }}">
+<br><br>
+
+<label>Fecha nacimiento</label>
+<br>
+<input type="date" name="fecha_nacimiento" value="{{ paciente[5] }}" required>
+<br><br>
+
+<button type="submit">Actualizar</button>
+
 </form>
 
-<a href="{{ url_for('patients.index') }}">🔙 Volver a Lista de Pacientes</a>
+<br>
+
+<a href="{{ url_for('patients.index') }}">
+Volver
+</a>
+
 {% endblock %}

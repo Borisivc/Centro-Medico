@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Crear Paciente</h1>
+
+<form method="POST">
+
+RUT
+<input type="text" name="rut" required>
+<br><br>
+
+Nombre
+<input type="text" name="nombre" required>
+<br><br>
+
+Apellido
+<input type="text" name="apellido" required>
+<br><br>
+
+Email
+<input type="email" name="email">
+<br><br>
+
+Fecha nacimiento
+<input type="date" name="fecha_nacimiento" required>
+<br><br>
+
+<button type="submit">
+Guardar
+</button>
+
+</form>
+
+<br>
+
+<a href="{{ url_for('patients.index') }}">
+Volver
+</a>
+
+{% endblock %}

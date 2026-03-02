@@ -1,23 +1,21 @@
-from flask import Blueprint, render_template
-from .decorators import login_required, role_required
+from flask import Blueprint, render_template, redirect, url_for, session
 
 routes_bp = Blueprint("routes", __name__)
 
+
+@routes_bp.route("/")
+def home():
+
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login"))
+
+    return redirect(url_for("routes.dashboard"))
+
+
 @routes_bp.route("/dashboard")
-@login_required
 def dashboard():
+
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login"))
+
     return render_template("dashboard.html")
-
-
-@routes_bp.route("/admin")
-@login_required
-@role_required("admin")
-def admin_panel():
-    return "<h1>Panel de Administración</h1>"
-
-
-@routes_bp.route("/profesional")
-@login_required
-@role_required("profesional")
-def profesional_panel():
-    return "<h1>Panel Profesional</h1>"

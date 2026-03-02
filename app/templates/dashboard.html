@@ -1,10 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Dashboard</h1>
 
-<p>Bienvenido {{ session.user_name }}</p>
-<p>Rol: {{ session.rol }}</p>
+<h1>Dashboard Centro Médico</h1>
 
-<a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+<ul>
+
+<li>
+<a href="{{ url_for('patients.index') }}">
+Gestión de Pacientes
+</a>
+</li>
+
+</ul>
+
 {% endblock %}

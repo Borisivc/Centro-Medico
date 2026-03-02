@@ -1,32 +1,37 @@
 from functools import wraps
-from flask import session, redirect, url_for, abort
+from flask import session, redirect, url_for, flash
+
 
 def login_required(f):
-    """
-    Verifica que el usuario esté logueado
-    """
+
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
+    def decorated(*args, **kwargs):
+
+        if not session.get("user_id"):
             return redirect(url_for("auth.login"))
+
         return f(*args, **kwargs)
-    return decorated_function
+
+    return decorated
 
 
-def role_required(*roles):
-    """
-    Verifica que el usuario tenga uno de los roles permitidos
-    Uso: @role_required("admin", "profesional")
-    """
-    def wrapper(f):
+def role_required(role):
+
+    def decorator(f):
+
         @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if "rol" not in session:
-                return redirect(url_for("auth.login"))
+        def decorated(*args, **kwargs):
 
-            if session.get("rol") not in roles:
-                abort(403)  # Acceso prohibido
+            roles = session.get("roles", [])
+
+            if role not in roles:
+
+                flash("No tienes permisos para acceder a esta página")
+
+                return redirect(url_for("routes.dashboard"))
 
             return f(*args, **kwargs)
-        return decorated_function
-    return wrapper
+
+        return decorated
+
+    return decorator

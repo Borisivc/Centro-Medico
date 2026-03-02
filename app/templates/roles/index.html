@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Roles</h2>
+
+<a href="{{ url_for('roles.create') }}">➕ Crear Rol</a>
+
+<table border="1">
+
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+</tr>
+
+{% for r in roles %}
+
+<tr>
+<td>{{ r[0] }}</td>
+<td>{{ r[1] }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="{{ url_for('routes.dashboard') }}">⬅ Volver</a>
+
+{% endblock %}

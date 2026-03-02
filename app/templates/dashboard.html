@@ -2,16 +2,50 @@
 
 {% block content %}
 
-<h1>Dashboard Centro Médico</h1>
+<h1>Panel de Administración</h1>
+
+<p>Bienvenido <strong>{{ session.user_name }}</strong></p>
+
+<hr>
+
+<h3>Mantenedores del Sistema</h3>
 
 <ul>
 
 <li>
+<a href="{{ url_for('users.index') }}">
+👤 Administración de Usuarios
+</a>
+</li>
+
+<li>
 <a href="{{ url_for('patients.index') }}">
-Gestión de Pacientes
+🧑 Pacientes
+</a>
+</li>
+
+<li>
+<a href="#">
+🔐 Roles
 </a>
 </li>
 
 </ul>
+
+<hr>
+
+<h3>Información del Usuario</h3>
+
+<p>Roles asignados:</p>
+
+<ul>
+{% for rol in session.roles %}
+<li>{{ rol }}</li>
+{% endfor %}
+</ul>
+
+<hr>
+
+<a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
 
 {% endblock %}

@@ -1,63 +1,41 @@
 {% extends "base.html" %}
-
 {% block content %}
 
 <h2>Pacientes</h2>
 
-<a href="{{ url_for('patients.create') }}">
-➕ Nuevo Paciente
+<a href="{{ url_for('patients.create') }}" class="btn btn-primary">
+    ➕ Crear Paciente
 </a>
 
-<br><br>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>RUT</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Email</th>
+        <th>Fecha Nacimiento</th>
+        <th>Acciones</th>
+    </tr>
 
-<table border="1" cellpadding="10">
-
-<tr>
-<th>ID</th>
-<th>RUT</th>
-<th>Nombre</th>
-<th>Apellido</th>
-<th>Email</th>
-<th>Fecha Nacimiento</th>
-<th>Acciones</th>
-</tr>
-
-{% for p in pacientes %}
-
-<tr>
-
-<td>{{ p[0] }}</td>
-<td>{{ p[1] }}</td>
-<td>{{ p[2] }}</td>
-<td>{{ p[3] }}</td>
-<td>{{ p[4] }}</td>
-<td>{{ p[5] }}</td>
-
-<td>
-
-<a href="{{ url_for('patients.edit', id=p[0]) }}">
-✏ Editar
-</a>
-
-|
-
-<a href="{{ url_for('patients.delete', id=p[0]) }}"
-onclick="return confirm('¿Eliminar paciente?')">
-🗑 Eliminar
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
+    {% for p in pacientes %}
+    <tr>
+        <td>{{ p[0] }}</td>
+        <td>{{ p[1] }}</td>
+        <td>{{ p[2] }}</td>
+        <td>{{ p[3] }}</td>
+        <td>{{ p[4] }}</td>
+        <td>{{ p[5] }}</td>
+        <td>
+            <a href="{{ url_for('patients.edit', id=p[0]) }}" class="btn btn-warning">Editar</a>
+            <a href="{{ url_for('patients.delete', id=p[0]) }}"
+               class="btn btn-danger"
+               onclick="return confirm('¿Eliminar paciente?')">
+               Eliminar
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
-
-<br>
-
-<a href="{{ url_for('routes.dashboard') }}">
-⬅ Volver al Dashboard
-</a>
 
 {% endblock %}

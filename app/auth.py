@@ -4,39 +4,47 @@ from werkzeug.security import check_password_hash
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@auth_bp.route("/login", methods=["GET","POST"])
+@auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+
+    # Si ya está logueado, redirige al dashboard
+    if session.get("user_id"):
+        return redirect(url_for("routes.dashboard"))
 
     if request.method == "POST":
 
-        email = request.form["email"].strip().lower()
-        password = request.form["password"]
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        print("EMAIL INGRESADO:", email)
+        if not email or not password:
+            flash("Debe ingresar email y contraseña")
+            return render_template("auth/login.html")
 
         cur = g.db.cursor()
 
         cur.execute("""
             SELECT id, nombre, email, password_hash
             FROM usuarios
-            WHERE LOWER(TRIM(email)) = %s
-        """,(email,))
+            WHERE email = %s
+        """, (email,))
 
-        user = cur.fetchone()
+        usuario = cur.fetchone()
 
-        print("USUARIO DB:", user)
-
-        if not user:
+        # Usuario no existe
+        if not usuario:
             flash("Usuario no encontrado")
             return render_template("auth/login.html")
 
-        if not check_password_hash(user[3], password):
-            flash("Contraseña incorrecta")
+        # Password incorrecto
+        if not check_password_hash(usuario[3], password):
+            flash("Credenciales incorrectas")
             return render_template("auth/login.html")
 
-        session["user_id"] = user[0]
-        session["user_name"] = user[1]
+        # Login correcto
+        session["user_id"] = usuario[0]
+        session["user_name"] = usuario[1]
 
+        flash(f"Bienvenido {usuario[1]}")
         return redirect(url_for("routes.dashboard"))
 
     return render_template("auth/login.html")
@@ -46,5 +54,6 @@ def login():
 def logout():
 
     session.clear()
+    flash("Sesión cerrada correctamente")
 
     return redirect(url_for("auth.login"))

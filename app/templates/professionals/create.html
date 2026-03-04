@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Crear Profesional</h2>
+
+<form method="POST">
+
+RUT<br>
+<input type="text" name="rut" required><br><br>
+
+Nombre<br>
+<input type="text" name="nombre" required><br><br>
+
+Apellido<br>
+<input type="text" name="apellido" required><br><br>
+
+Especialidad<br>
+<input type="text" name="especialidad"><br><br>
+
+Email<br>
+<input type="email" name="email"><br><br>
+
+Teléfono<br>
+<input type="text" name="telefono"><br><br>
+
+<button type="submit" class="btn btn-primary">
+Guardar
+</button>
+
+<a href="{{ url_for('professionals.index') }}" class="btn">
+Volver
+</a>
+
+</form>
+
+{% endblock %}

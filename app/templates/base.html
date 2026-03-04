@@ -1,140 +1,145 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Sistema Centro Médico</title>
+<meta charset="UTF-8">
+<title>Sistema Centro Médico</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f2f2f2;
-        }
+<style>
 
-        /* NAVBAR */
-        .navbar {
-            background-color: #ffffff;
-            padding: 15px 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    margin:0;
+    background:#f5f6fa;
+}
 
-        .navbar a {
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-            color: #333;
-        }
+/* NAVBAR */
 
-        .navbar a:hover {
-            color: #007bff;
-        }
+.navbar{
+    background:#e9ecef;
+    padding:15px 30px;
+    border-top:5px solid #2e7d32;
+}
 
-        /* CONTENEDOR */
-        .container {
-            width: 85%;
-            margin: 40px auto;
-        }
+.navbar a{
+    text-decoration:none;
+    margin-right:20px;
+    color:#2c3e50;
+    font-weight:bold;
+}
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
+.navbar a:hover{
+    color:#0d6efd;
+}
 
-        h2 {
-            margin-top: 0;
-        }
+/* CONTENIDO */
 
-        /* BOTONES */
-        .btn {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: bold;
-            margin-right: 5px;
-        }
+.container{
+    padding:30px;
+}
 
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
+/* TARJETAS DASHBOARD */
 
-        .btn-warning {
-            background-color: #ffc107;
-            color: black;
-        }
+.card{
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+    max-width:500px;
+}
 
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
+/* TABLAS */
 
-        .btn:hover {
-            opacity: 0.85;
-        }
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
 
-        /* TABLAS */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+table th{
+    background:#2c3e50;
+    color:white;
+    padding:10px;
+}
 
-        table th {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            text-align: left;
-        }
+table td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
 
-        table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
+/* BOTONES */
 
-        table tr:hover {
-            background-color: #f9f9f9;
-        }
+.btn{
+    padding:6px 10px;
+    text-decoration:none;
+    border-radius:4px;
+    font-size:14px;
+}
 
-        /* ALERTAS */
-        .flash {
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            background-color: #e9ecef;
-        }
-    </style>
+.btn-primary{
+    background:#0d6efd;
+    color:white;
+}
+
+.btn-warning{
+    background:#f39c12;
+    color:white;
+}
+
+.btn-danger{
+    background:#e74c3c;
+    color:white;
+}
+
+/* MENSAJES */
+
+.flash{
+    background:#27ae60;
+    color:white;
+    padding:10px;
+    border-radius:5px;
+    margin-bottom:20px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-{% if session.get("user_id") %}
+<!-- NAVBAR -->
+
 <div class="navbar">
-    <a href="{{ url_for('routes.dashboard') }}">🏠 Dashboard</a>
-    <a href="{{ url_for('patients.index') }}">Pacientes</a>
-    <a href="{{ url_for('users.index') }}">Usuarios</a>
-    <a href="{{ url_for('roles.index') }}">Roles</a>
-    <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+
+<a href="{{ url_for('routes.dashboard') }}">🏠 Dashboard</a>
+
+<a href="{{ url_for('patients.index') }}">Pacientes</a>
+
+<a href="{{ url_for('professionals.index') }}">Profesionales</a>
+
+<a href="{{ url_for('users.index') }}">Usuarios</a>
+
+<a href="{{ url_for('roles.index') }}">Roles</a>
+
+<a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+
 </div>
-{% endif %}
+
 
 <div class="container">
-    <div class="card">
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <div class="flash">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
 
-        {% block content %}{% endblock %}
+{% for m in messages %}
+<div class="flash">{{ m }}</div>
+{% endfor %}
 
-    </div>
+{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
 </div>
 
 </body>

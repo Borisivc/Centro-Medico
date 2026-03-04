@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Profesionales</h2>
+
+<a href="{{ url_for('professionals.create') }}" class="btn btn-primary">
+➕ Crear Profesional
+</a>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>RUT</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Especialidad</th>
+<th>Email</th>
+<th>Teléfono</th>
+<th>Acciones</th>
+</tr>
+
+{% for p in profesionales %}
+
+<tr>
+
+<td>{{ p.id }}</td>
+<td>{{ p.rut }}</td>
+<td>{{ p.nombre }}</td>
+<td>{{ p.apellido }}</td>
+<td>{{ p.especialidad }}</td>
+<td>{{ p.email }}</td>
+<td>{{ p.telefono }}</td>
+
+<td>
+
+<a href="{{ url_for('professionals.edit', id=p.id) }}" class="btn btn-warning">
+Editar
+</a>
+
+<a href="{{ url_for('professionals.delete', id=p.id) }}"
+class="btn btn-danger"
+onclick="return confirm('¿Eliminar profesional?')">
+Eliminar
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}

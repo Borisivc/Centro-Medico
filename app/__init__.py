@@ -42,11 +42,13 @@ def create_app():
     from .patients import patients_bp
     from .users import users_bp
     from .roles import roles_bp
+    from .professionals import professionals_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(routes_bp)
     app.register_blueprint(patients_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(roles_bp)
-
+    app.register_blueprint(professionals_bp)
+    
     return app

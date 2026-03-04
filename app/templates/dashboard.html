@@ -2,21 +2,19 @@
 
 {% block content %}
 
-<div class="card">
+<div class="container mt-4">
 
-<h2>Dashboard</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-<p>
-Bienvenido, <strong>{{ session['user_nombre'] }}</strong>
-</p>
+            <h3 class="mb-3">Dashboard</h3>
 
-<p>
-Sistema de administración del Centro Médico.
-</p>
+            <p class="text-muted">
+                Bienvenido, {{ session['user_nombre'] }}
+            </p>
 
-<p>
-Utilice el menú superior para acceder a los distintos módulos del sistema.
-</p>
+        </div>
+    </div>
 
 </div>
 

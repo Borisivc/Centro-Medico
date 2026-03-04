@@ -1,55 +1,49 @@
 {% extends "base.html" %}
+
 {% block content %}
 
-<h2>Profesionales</h2>
+<h3 class="mb-4">
+Bienvenido, {{ session['user_nombre'] }}
+</h3>
 
-<a href="{{ url_for('professionals.create') }}" class="btn btn-primary">
-➕ Crear Profesional
-</a>
+<div class="row">
 
-<table>
+<div class="col-md-3">
+<div class="card card-dashboard bg-primary text-white">
+<div class="card-body">
+<h5>Pacientes</h5>
+<h2>{{ total_pacientes }}</h2>
+</div>
+</div>
+</div>
 
-<tr>
-<th>ID</th>
-<th>RUT</th>
-<th>Nombre</th>
-<th>Apellido</th>
-<th>Especialidad</th>
-<th>Email</th>
-<th>Teléfono</th>
-<th>Acciones</th>
-</tr>
+<div class="col-md-3">
+<div class="card card-dashboard bg-success text-white">
+<div class="card-body">
+<h5>Profesionales</h5>
+<h2>{{ total_profesionales }}</h2>
+</div>
+</div>
+</div>
 
-{% for p in profesionales %}
+<div class="col-md-3">
+<div class="card card-dashboard bg-warning text-white">
+<div class="card-body">
+<h5>Usuarios</h5>
+<h2>{{ total_usuarios }}</h2>
+</div>
+</div>
+</div>
 
-<tr>
+<div class="col-md-3">
+<div class="card card-dashboard bg-info text-white">
+<div class="card-body">
+<h5>Roles</h5>
+<h2>{{ total_roles }}</h2>
+</div>
+</div>
+</div>
 
-<td>{{ p.id }}</td>
-<td>{{ p.rut }}</td>
-<td>{{ p.nombre }}</td>
-<td>{{ p.apellido }}</td>
-<td>{{ p.especialidad }}</td>
-<td>{{ p.email }}</td>
-<td>{{ p.telefono }}</td>
-
-<td>
-
-<a href="{{ url_for('professionals.edit', id=p.id) }}" class="btn btn-warning">
-Editar
-</a>
-
-<a href="{{ url_for('professionals.delete', id=p.id) }}"
-class="btn btn-danger"
-onclick="return confirm('¿Eliminar profesional?')">
-Eliminar
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
+</div>
 
 {% endblock %}

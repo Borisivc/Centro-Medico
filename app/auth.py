@@ -1,59 +1,62 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, g
+from flask import Blueprint, render_template, request, redirect, url_for, session, g, flash
 from werkzeug.security import check_password_hash
+from MySQLdb.cursors import DictCursor
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+auth_bp = Blueprint(
+    "auth",
+    __name__,
+    url_prefix="/auth"
+)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
 
-    # Si ya está logueado, redirige al dashboard
-    if session.get("user_id"):
-        return redirect(url_for("routes.dashboard"))
-
     if request.method == "POST":
 
-        email = request.form.get("email")
-        password = request.form.get("password")
+        email = request.form["email"]
+        password = request.form["password"]
 
-        if not email or not password:
-            flash("Debe ingresar email y contraseña")
-            return render_template("auth/login.html")
-
-        cur = g.db.cursor()
+        cur = g.db.cursor(DictCursor)
 
         cur.execute("""
             SELECT id, nombre, email, password_hash
             FROM usuarios
-            WHERE email = %s
-        """, (email,))
+            WHERE email=%s AND activo=1
+        """,(email,))
 
         usuario = cur.fetchone()
 
-        # Usuario no existe
-        if not usuario:
-            flash("Usuario no encontrado")
-            return render_template("auth/login.html")
+        if usuario:
 
-        # Password incorrecto
-        if not check_password_hash(usuario[3], password):
-            flash("Credenciales incorrectas")
-            return render_template("auth/login.html")
+            if check_password_hash(usuario["password_hash"], password):
 
-        # Login correcto
-        session["user_id"] = usuario[0]
-        session["user_name"] = usuario[1]
+                session["user_id"] = usuario["id"]
+                session["nombre"] = usuario["nombre"]
 
-        flash(f"Bienvenido {usuario[1]}")
-        return redirect(url_for("routes.dashboard"))
+                cur.execute("""
+                    SELECT r.nombre
+                    FROM roles r
+                    JOIN usuarios_roles ur
+                    ON ur.rol_id = r.id
+                    WHERE ur.usuario_id=%s
+                """,(usuario["id"],))
 
-    return render_template("auth/login.html")
+                rol = cur.fetchone()
+
+                if rol:
+                    session["role"] = rol["nombre"]
+
+                return redirect(url_for("main.dashboard"))
+
+        flash("Usuario o contraseña incorrectos")
+
+    return render_template("login.html")
 
 
 @auth_bp.route("/logout")
 def logout():
 
     session.clear()
-    flash("Sesión cerrada correctamente")
 
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("main.dashboard"))

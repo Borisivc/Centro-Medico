@@ -1,121 +1,129 @@
-from flask import Blueprint, render_template, request, redirect, url_for, g, flash
+from flask import Blueprint, render_template, g, request, redirect, url_for
 from .decorators import login_required, role_required
+from MySQLdb.cursors import DictCursor
 
-patients_bp = Blueprint("patients", __name__, url_prefix="/patients")
+patients_bp = Blueprint(
+    "patients",
+    __name__,
+    url_prefix="/patients"
+)
 
 
 # ==============================
 # LISTAR PACIENTES
 # ==============================
+
 @patients_bp.route("/")
 @login_required
-@role_required("ADMIN")
+@role_required("admin")
 def index():
 
-    cur = g.db.cursor()
-    cur.execute("""
-        SELECT id, rut, nombre, apellido, email, fecha_nacimiento
-        FROM pacientes
-        ORDER BY id ASC
-    """)
+    cur = g.db.cursor(DictCursor)
+
+    cur.execute("SELECT * FROM pacientes")
 
     pacientes = cur.fetchall()
 
-    return render_template("patients/index.html", pacientes=pacientes)
+    return render_template(
+        "patients.html",
+        pacientes=pacientes
+    )
 
 
 # ==============================
 # CREAR PACIENTE
 # ==============================
-@patients_bp.route("/create", methods=["GET", "POST"])
+
+@patients_bp.route("/create", methods=["POST"])
 @login_required
-@role_required("ADMIN")
+@role_required("admin")
 def create():
 
-    if request.method == "POST":
+    rut = request.form["rut"]
+    nombre = request.form["nombre"]
+    apellido = request.form["apellido"]
+    fecha_nacimiento = request.form["fecha_nacimiento"]
+    email = request.form["email"]
+    telefono = request.form["telefono"]
 
-        cur = g.db.cursor()
+    cur = g.db.cursor()
 
-        cur.execute("""
-            INSERT INTO pacientes
-            (rut, nombre, apellido, email, fecha_nacimiento)
-            VALUES (%s,%s,%s,%s,%s)
-        """, (
-            request.form["rut"],
-            request.form["nombre"],
-            request.form["apellido"],
-            request.form["email"],
-            request.form["fecha_nacimiento"]
-        ))
+    cur.execute("""
+        INSERT INTO pacientes
+        (rut, nombre, apellido, fecha_nacimiento, email, telefono)
+        VALUES (%s,%s,%s,%s,%s,%s)
+    """,(
+        rut,
+        nombre,
+        apellido,
+        fecha_nacimiento,
+        email,
+        telefono
+    ))
 
-        g.db.commit()
-        flash("Paciente creado correctamente")
-        return redirect(url_for("patients.index"))
+    g.db.commit()
 
-    return render_template("patients/create.html")
+    return redirect(url_for("patients.index"))
 
 
 # ==============================
 # EDITAR PACIENTE
 # ==============================
-@patients_bp.route("/edit/<int:id>", methods=["GET", "POST"])
+
+@patients_bp.route("/edit/<int:id>", methods=["POST"])
 @login_required
-@role_required("ADMIN")
+@role_required("admin")
 def edit(id):
+
+    rut = request.form["rut"]
+    nombre = request.form["nombre"]
+    apellido = request.form["apellido"]
+    fecha_nacimiento = request.form["fecha_nacimiento"]
+    email = request.form["email"]
+    telefono = request.form["telefono"]
 
     cur = g.db.cursor()
 
-    if request.method == "POST":
-
-        cur.execute("""
-            UPDATE pacientes
-            SET rut=%s, nombre=%s, apellido=%s,
-                email=%s, fecha_nacimiento=%s
-            WHERE id=%s
-        """, (
-            request.form["rut"],
-            request.form["nombre"],
-            request.form["apellido"],
-            request.form["email"],
-            request.form["fecha_nacimiento"],
-            id
-        ))
-
-        g.db.commit()
-        flash("Paciente actualizado correctamente")
-        return redirect(url_for("patients.index"))
-
     cur.execute("""
-        SELECT id, rut, nombre, apellido, email, fecha_nacimiento
-        FROM pacientes
+        UPDATE pacientes
+        SET rut=%s,
+            nombre=%s,
+            apellido=%s,
+            fecha_nacimiento=%s,
+            email=%s,
+            telefono=%s
         WHERE id=%s
-    """, (id,))
+    """,(
+        rut,
+        nombre,
+        apellido,
+        fecha_nacimiento,
+        email,
+        telefono,
+        id
+    ))
 
-    paciente = cur.fetchone()
+    g.db.commit()
 
-    if not paciente:
-        flash("Paciente no encontrado")
-        return redirect(url_for("patients.index"))
-
-    return render_template("patients/edit.html", paciente=paciente)
+    return redirect(url_for("patients.index"))
 
 
 # ==============================
 # ELIMINAR PACIENTE
 # ==============================
+
 @patients_bp.route("/delete/<int:id>")
 @login_required
-@role_required("ADMIN")
+@role_required("admin")
 def delete(id):
 
     cur = g.db.cursor()
 
-    try:
-        cur.execute("DELETE FROM pacientes WHERE id=%s", (id,))
-        g.db.commit()
-        flash("Paciente eliminado correctamente")
-    except:
-        g.db.rollback()
-        flash("Error al eliminar paciente")
+    cur.execute(
+        "DELETE FROM pacientes WHERE id=%s",
+        (id,)
+    )
+
+    g.db.commit()
 
     return redirect(url_for("patients.index"))

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+<h4>Profesionales</h4>
+
+<button
+class="btn btn-primary"
+data-bs-toggle="modal"
+data-bs-target="#modalCrear">
+
+Crear Profesional
+
+</button>
+
+</div>
+
+
+<table class="table table-striped table-bordered">
+
+<thead class="table-dark">
+
+<tr>
+<th>ID</th>
+<th>RUT</th>
+<th>Nombre</th>
+<th>Apellido</th>
+<th>Especialidad</th>
+<th>Email</th>
+<th>Teléfono</th>
+<th width="150">Acciones</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for p in profesionales %}
+
+<tr>
+
+<td>{{ p["id"] }}</td>
+<td>{{ p["rut"] }}</td>
+<td>{{ p["nombre"] }}</td>
+<td>{{ p["apellido"] }}</td>
+<td>{{ p["especialidad"] }}</td>
+<td>{{ p["email"] }}</td>
+<td>{{ p["telefono"] }}</td>
+
+<td>
+
+<button
+class="btn btn-warning btn-sm"
+data-bs-toggle="modal"
+data-bs-target="#modalEditar{{p['id']}}">
+
+Editar
+
+</button>
+
+<button
+class="btn btn-danger btn-sm"
+onclick="eliminar('{{ url_for('professionals.delete', id=p['id']) }}')">
+
+Eliminar
+
+</button>
+
+</td>
+
+</tr>
+
+
+<!-- MODAL EDITAR -->
+
+<div class="modal fade" id="modalEditar{{p['id']}}">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+<form method="POST"
+action="{{ url_for('professionals.edit', id=p['id']) }}">
+
+<div class="modal-header">
+
+<h5 class="modal-title">Editar Profesional</h5>
+
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input class="form-control mb-2" name="rut" value="{{p['rut']}}">
+<input class="form-control mb-2" name="nombre" value="{{p['nombre']}}">
+<input class="form-control mb-2" name="apellido" value="{{p['apellido']}}">
+<input class="form-control mb-2" name="especialidad" value="{{p['especialidad']}}">
+<input class="form-control mb-2" name="email" value="{{p['email']}}">
+<input class="form-control mb-2", placeholder="Telefono" name="telefono" value="{{p['telefono']}}">
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-success">Guardar</button>
+
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+Cancelar
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- MODAL CREAR -->
+
+<div class="modal fade" id="modalCrear">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+<form method="POST"
+action="{{ url_for('professionals.create') }}">
+
+<div class="modal-header">
+
+<h5 class="modal-title">Crear Profesional</h5>
+
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input class="form-control mb-2" name="rut" placeholder="RUT">
+<input class="form-control mb-2" name="nombre" placeholder="Nombre">
+<input class="form-control mb-2" name="apellido" placeholder="Apellido">
+<input class="form-control mb-2" name="especialidad" placeholder="Especialidad">
+<input class="form-control mb-2" name="email" placeholder="Email">
+<input class="form-control mb-2" name="telefono" placeholder="Teléfono">
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-success">Guardar</button>
+
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+Cancelar
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

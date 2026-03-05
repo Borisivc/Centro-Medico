@@ -1,113 +1,156 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 
 <meta charset="UTF-8">
-<title>Sistema Centro Médico</title>
 
-<!-- Bootstrap -->
+<title>Centro Médico</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f4f6f9;
-}
-
-.sidebar{
-height:100vh;
-background:#0d6efd;
-color:white;
-}
-
-.sidebar a{
-color:white;
-text-decoration:none;
-display:block;
-padding:12px;
-}
-
-.sidebar a:hover{
-background:#084298;
-}
-
-.content{
-padding:30px;
-}
-
-.card-dashboard{
-border:none;
-border-radius:10px;
-}
-
-</style>
 
 </head>
 
 <body>
 
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
 <div class="container-fluid">
-<div class="row">
 
-<!-- SIDEBAR -->
-
-<div class="col-md-2 sidebar">
-
-<h4 class="p-3">Centro Médico</h4>
-
-<a href="{{ url_for('routes.dashboard') }}">
-<i class="bi bi-house"></i> Dashboard
+<a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
+Centro Médico
 </a>
 
-<a href="{{ url_for('patients.index') }}">
-<i class="bi bi-people"></i> Pacientes
+<button class="navbar-toggler"
+data-bs-toggle="collapse"
+data-bs-target="#menu">
+
+<span class="navbar-toggler-icon"></span>
+
+</button>
+
+<div class="collapse navbar-collapse" id="menu">
+
+<ul class="navbar-nav me-auto">
+
+<li class="nav-item">
+
+<a class="nav-link"
+href="{{ url_for('main.dashboard') }}">
+
+Inicio
+
 </a>
 
-<a href="{{ url_for('professionals.index') }}">
-<i class="bi bi-person-badge"></i> Profesionales
+</li>
+
+{% if session.get("role") and session.get("role")|lower == "admin" %}
+
+<li class="nav-item dropdown">
+
+<a class="nav-link dropdown-toggle"
+data-bs-toggle="dropdown">
+
+Administración
+
 </a>
 
-<a href="{{ url_for('users.index') }}">
-<i class="bi bi-person"></i> Usuarios
+<ul class="dropdown-menu">
+
+<li>
+<a class="dropdown-item"
+href="{{ url_for('patients.index') }}">
+Pacientes
 </a>
+</li>
 
-<a href="{{ url_for('roles.index') }}">
-<i class="bi bi-shield"></i> Roles
+<li>
+<a class="dropdown-item"
+href="{{ url_for('professionals.index') }}">
+Profesionales
 </a>
+</li>
 
-<a href="{{ url_for('auth.logout') }}">
-<i class="bi bi-box-arrow-right"></i> Cerrar sesión
+<li>
+<a class="dropdown-item"
+href="{{ url_for('users.index') }}">
+Usuarios
 </a>
+</li>
 
-</div>
+<li>
+<a class="dropdown-item"
+href="{{ url_for('roles.index') }}">
+Roles
+</a>
+</li>
 
-<!-- CONTENIDO -->
+</ul>
 
-<div class="col-md-10 content">
+</li>
 
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-{% for m in messages %}
-
-<div class="alert alert-success">
-{{ m }}
-</div>
-
-{% endfor %}
 {% endif %}
-{% endwith %}
+
+</ul>
+
+<ul class="navbar-nav">
+
+{% if session.get("user_id") %}
+
+<li class="nav-item">
+
+<span class="navbar-text me-3">
+
+{{ session.get("nombre") }}
+
+</span>
+
+</li>
+
+<li class="nav-item">
+
+<a class="nav-link"
+href="{{ url_for('auth.logout') }}">
+
+Cerrar sesión
+
+</a>
+
+</li>
+
+{% else %}
+
+<li class="nav-item">
+
+<a class="nav-link"
+href="{{ url_for('auth.login') }}">
+
+Login
+
+</a>
+
+</li>
+
+{% endif %}
+
+</ul>
+
+</div>
+
+</div>
+
+</nav>
+
+<div class="container mt-4">
 
 {% block content %}{% endblock %}
 
 </div>
 
-</div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>

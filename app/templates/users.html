@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Usuarios del Sistema</h3>
+
+<table class="table table-bordered">
+
+<thead class="table-dark">
+
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Email</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for u in usuarios %}
+
+<tr>
+
+<td>{{u["id"]}}</td>
+<td>{{u["nombre"]}}</td>
+<td>{{u["email"]}}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

@@ -4,9 +4,23 @@
 
 <div class="container mt-4">
 
-<h3>Usuarios del Sistema</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
 
-<table class="table table-bordered">
+<h4>Usuarios</h4>
+
+<button
+class="btn btn-primary"
+data-bs-toggle="modal"
+data-bs-target="#modalCrear">
+
+Crear Usuario
+
+</button>
+
+</div>
+
+
+<table class="table table-striped table-bordered">
 
 <thead class="table-dark">
 
@@ -14,6 +28,7 @@
 <th>ID</th>
 <th>Nombre</th>
 <th>Email</th>
+<th width="150">Acciones</th>
 </tr>
 
 </thead>
@@ -28,7 +43,91 @@
 <td>{{u["nombre"]}}</td>
 <td>{{u["email"]}}</td>
 
+<td>
+
+<button
+class="btn btn-warning btn-sm"
+data-bs-toggle="modal"
+data-bs-target="#modalEditar{{u['id']}}">
+
+Editar
+
+</button>
+
+<button
+class="btn btn-danger btn-sm"
+onclick="confirmarEliminar('{{ url_for('users.delete', id=u['id']) }}')">
+
+Eliminar
+
+</button>
+
+</td>
+
 </tr>
+
+
+<!-- MODAL EDITAR -->
+
+<div class="modal fade" id="modalEditar{{u['id']}}">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+<form method="POST"
+action="{{ url_for('users.edit', id=u['id']) }}">
+
+<div class="modal-header">
+
+<h5 class="modal-title">Editar Usuario</h5>
+
+<button type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+class="form-control mb-2"
+name="nombre"
+value="{{u['nombre']}}"
+placeholder="Nombre">
+
+<input
+class="form-control mb-2"
+name="email"
+value="{{u['email']}}"
+placeholder="Email">
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-success">
+Guardar
+</button>
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
 
 {% endfor %}
 
@@ -37,5 +136,144 @@
 </table>
 
 </div>
+
+
+
+<!-- MODAL CREAR -->
+
+<div class="modal fade" id="modalCrear">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+<form method="POST"
+action="{{ url_for('users.create') }}">
+
+<div class="modal-header">
+
+<h5 class="modal-title">
+Crear Usuario
+</h5>
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+class="form-control mb-2"
+name="nombre"
+placeholder="Nombre">
+
+<input
+class="form-control mb-2"
+name="email"
+placeholder="Email">
+
+<input
+type="password"
+class="form-control mb-2"
+name="password"
+placeholder="Password">
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-success">
+Guardar
+</button>
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- MODAL ELIMINAR -->
+
+<div class="modal fade" id="modalEliminar">
+
+<div class="modal-dialog modal-sm">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h5 class="modal-title">
+Confirmar
+</h5>
+
+</div>
+
+<div class="modal-body">
+
+¿Está seguro que desea eliminar este usuario?
+
+</div>
+
+<div class="modal-footer">
+
+<a id="btnEliminarConfirmado"
+class="btn btn-danger">
+
+Eliminar
+
+</a>
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+function confirmarEliminar(url){
+
+document.getElementById("btnEliminarConfirmado").href = url
+
+var modal = new bootstrap.Modal(
+document.getElementById("modalEliminar")
+)
+
+modal.show()
+
+}
+
+</script>
 
 {% endblock %}

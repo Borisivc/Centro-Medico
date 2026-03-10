@@ -8,7 +8,8 @@
 
 <h4>Pacientes</h4>
 
-<button class="btn btn-primary"
+<button
+class="btn btn-primary"
 data-bs-toggle="modal"
 data-bs-target="#modalCrear">
 
@@ -42,16 +43,17 @@ Crear
 <tr>
 
 <td>{{ p["id"] }}</td>
-<td>{{ p["rut"] }}</td>
+<td>{{ p["rut"] | format_rut }}</td>
 <td>{{ p["nombre"] }}</td>
 <td>{{ p["apellido"] }}</td>
-<td>{{ p["fecha_nacimiento"] }}</td>
+<td>{{ p["fecha_nacimiento"] | format_date }}</td>
 <td>{{ p["email"] }}</td>
 <td>{{ p["telefono"] }}</td>
 
 <td>
 
-<button class="btn btn-warning btn-sm"
+<button
+class="btn btn-warning btn-sm"
 data-bs-toggle="modal"
 data-bs-target="#modalEditar{{p['id']}}">
 
@@ -59,7 +61,8 @@ Editar
 
 </button>
 
-<button class="btn btn-danger btn-sm"
+<button
+class="btn btn-danger btn-sm"
 onclick="confirmarEliminar('{{ url_for('patients.delete', id=p['id']) }}')">
 
 Eliminar
@@ -69,6 +72,7 @@ Eliminar
 </td>
 
 </tr>
+
 
 <!-- MODAL EDITAR -->
 
@@ -83,11 +87,15 @@ action="{{ url_for('patients.edit', id=p['id']) }}">
 
 <div class="modal-header">
 
-<h5 class="modal-title">Editar Paciente</h5>
+<h5 class="modal-title">
+Editar Paciente
+</h5>
 
-<button type="button"
+<button
+type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
@@ -96,17 +104,17 @@ data-bs-dismiss="modal"></button>
 <input class="form-control mb-2"
 name="rut"
 value="{{p['rut']}}"
-placeholder="RUT del paciente">
+placeholder="RUT">
 
 <input class="form-control mb-2"
 name="nombre"
 value="{{p['nombre']}}"
-placeholder="Nombre del paciente">
+placeholder="Nombre">
 
 <input class="form-control mb-2"
 name="apellido"
 value="{{p['apellido']}}"
-placeholder="Apellido del paciente">
+placeholder="Apellido">
 
 <input type="date"
 class="form-control mb-2"
@@ -116,7 +124,7 @@ value="{{p['fecha_nacimiento']}}">
 <input class="form-control mb-2"
 name="email"
 value="{{p['email']}}"
-placeholder="Correo electrónico">
+placeholder="Email">
 
 <input class="form-control mb-2"
 name="telefono"
@@ -127,9 +135,12 @@ placeholder="Teléfono">
 
 <div class="modal-footer">
 
-<button class="btn btn-success">Guardar</button>
+<button class="btn btn-success">
+Guardar
+</button>
 
-<button type="button"
+<button
+type="button"
 class="btn btn-secondary"
 data-bs-dismiss="modal">
 
@@ -155,6 +166,7 @@ Cancelar
 
 </div>
 
+
 <!-- MODAL CREAR -->
 
 <div class="modal fade" id="modalCrear">
@@ -172,9 +184,11 @@ action="{{ url_for('patients.create') }}">
 Crear Paciente
 </h5>
 
-<button type="button"
+<button
+type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
@@ -182,15 +196,15 @@ data-bs-dismiss="modal"></button>
 
 <input class="form-control mb-2"
 name="rut"
-placeholder="RUT del paciente">
+placeholder="RUT">
 
 <input class="form-control mb-2"
 name="nombre"
-placeholder="Nombre del paciente">
+placeholder="Nombre">
 
 <input class="form-control mb-2"
 name="apellido"
-placeholder="Apellido del paciente">
+placeholder="Apellido">
 
 <input type="date"
 class="form-control mb-2"
@@ -198,7 +212,7 @@ name="fecha_nacimiento">
 
 <input class="form-control mb-2"
 name="email"
-placeholder="Correo electrónico">
+placeholder="Email">
 
 <input class="form-control mb-2"
 name="telefono"
@@ -231,6 +245,7 @@ Cancelar
 
 </div>
 
+
 <!-- MODAL ELIMINAR -->
 
 <div class="modal fade" id="modalEliminar">
@@ -249,7 +264,7 @@ Confirmar
 
 <div class="modal-body">
 
-¿Está seguro que desea eliminar este paciente?
+¿Eliminar paciente?
 
 </div>
 
@@ -278,6 +293,7 @@ Cancelar
 </div>
 
 </div>
+
 
 <script>
 

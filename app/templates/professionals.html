@@ -43,7 +43,7 @@ Crear
 <tr>
 
 <td>{{ p["id"] }}</td>
-<td>{{ p["rut"] }}</td>
+<td>{{ p["rut"] | format_rut }}</td>
 <td>{{ p["nombre"] }}</td>
 <td>{{ p["apellido"] }}</td>
 <td>{{ p["especialidad"] }}</td>
@@ -74,6 +74,8 @@ Eliminar
 </tr>
 
 
+<!-- MODAL EDITAR -->
+
 <div class="modal fade" id="modalEditar{{p['id']}}">
 
 <div class="modal-dialog">
@@ -85,48 +87,52 @@ action="{{ url_for('professionals.edit', id=p['id']) }}">
 
 <div class="modal-header">
 
-<h5 class="modal-title">Editar Profesional</h5>
+<h5 class="modal-title">
+Editar Profesional
+</h5>
 
-<button type="button"
+<button
+type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
 <div class="modal-body">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="rut"
 value="{{p['rut']}}"
-placeholder="RUT del profesional">
+placeholder="RUT">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="nombre"
 value="{{p['nombre']}}"
-placeholder="Nombre del profesional">
+placeholder="Nombre">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="apellido"
 value="{{p['apellido']}}"
-placeholder="Apellido del profesional">
+placeholder="Apellido">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="especialidad"
 value="{{p['especialidad']}}"
-placeholder="Especialidad médica">
+placeholder="Especialidad">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="email"
 value="{{p['email']}}"
-placeholder="Correo electrónico">
+placeholder="Email">
 
 <input
-class="form-control mb-3"
+class="form-control mb-2"
 name="telefono"
 value="{{p['telefono']}}"
 placeholder="Teléfono">
@@ -135,7 +141,9 @@ placeholder="Teléfono">
 
 <div class="modal-footer">
 
-<button class="btn btn-success">Guardar</button>
+<button class="btn btn-success">
+Guardar
+</button>
 
 <button
 type="button"
@@ -165,6 +173,8 @@ Cancelar
 </div>
 
 
+<!-- MODAL CREAR -->
+
 <div class="modal fade" id="modalCrear">
 
 <div class="modal-dialog">
@@ -176,37 +186,47 @@ action="{{ url_for('professionals.create') }}">
 
 <div class="modal-header">
 
-<h5 class="modal-title">Crear Profesional</h5>
+<h5 class="modal-title">
+Crear Profesional
+</h5>
 
-<button type="button"
+<button
+type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
 <div class="modal-body">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="rut"
-placeholder="RUT del profesional">
+placeholder="RUT">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="nombre"
-placeholder="Nombre del profesional">
+placeholder="Nombre">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="apellido"
-placeholder="Apellido del profesional">
+placeholder="Apellido">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="especialidad"
-placeholder="Especialidad médica">
+placeholder="Especialidad">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="email"
-placeholder="Correo electrónico">
+placeholder="Email">
 
-<input class="form-control mb-3"
+<input
+class="form-control mb-2"
 name="telefono"
 placeholder="Teléfono">
 
@@ -238,13 +258,66 @@ Cancelar
 </div>
 
 
+<!-- MODAL ELIMINAR -->
+
+<div class="modal fade" id="modalEliminar">
+
+<div class="modal-dialog modal-sm">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h5 class="modal-title">
+Confirmar
+</h5>
+
+</div>
+
+<div class="modal-body">
+
+¿Eliminar profesional?
+
+</div>
+
+<div class="modal-footer">
+
+<a id="btnEliminarConfirmado"
+class="btn btn-danger">
+
+Eliminar
+
+</a>
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancelar
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
 <script>
 
 function confirmarEliminar(url){
 
-if(confirm("¿Desea eliminar este registro?")){
-window.location = url
-}
+document.getElementById("btnEliminarConfirmado").href = url
+
+var modal = new bootstrap.Modal(
+document.getElementById("modalEliminar")
+)
+
+modal.show()
 
 }
 

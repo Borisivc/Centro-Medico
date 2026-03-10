@@ -13,12 +13,11 @@ class="btn btn-primary"
 data-bs-toggle="modal"
 data-bs-target="#modalCrear">
 
-Crear Profesional
+Crear
 
 </button>
 
 </div>
-
 
 <table class="table table-striped table-bordered">
 
@@ -32,7 +31,7 @@ Crear Profesional
 <th>Especialidad</th>
 <th>Email</th>
 <th>Teléfono</th>
-<th width="150">Acciones</th>
+<th width="160">Acciones</th>
 </tr>
 
 </thead>
@@ -64,7 +63,7 @@ Editar
 
 <button
 class="btn btn-danger btn-sm"
-onclick="eliminar('{{ url_for('professionals.delete', id=p['id']) }}')">
+onclick="confirmarEliminar('{{ url_for('professionals.delete', id=p['id']) }}')">
 
 Eliminar
 
@@ -74,8 +73,6 @@ Eliminar
 
 </tr>
 
-
-<!-- MODAL EDITAR -->
 
 <div class="modal fade" id="modalEditar{{p['id']}}">
 
@@ -90,18 +87,49 @@ action="{{ url_for('professionals.edit', id=p['id']) }}">
 
 <h5 class="modal-title">Editar Profesional</h5>
 
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<button type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
 
 </div>
 
 <div class="modal-body">
 
-<input class="form-control mb-2" name="rut" value="{{p['rut']}}">
-<input class="form-control mb-2" name="nombre" value="{{p['nombre']}}">
-<input class="form-control mb-2" name="apellido" value="{{p['apellido']}}">
-<input class="form-control mb-2" name="especialidad" value="{{p['especialidad']}}">
-<input class="form-control mb-2" name="email" value="{{p['email']}}">
-<input class="form-control mb-2", placeholder="Telefono" name="telefono" value="{{p['telefono']}}">
+<input
+class="form-control mb-3"
+name="rut"
+value="{{p['rut']}}"
+placeholder="RUT del profesional">
+
+<input
+class="form-control mb-3"
+name="nombre"
+value="{{p['nombre']}}"
+placeholder="Nombre del profesional">
+
+<input
+class="form-control mb-3"
+name="apellido"
+value="{{p['apellido']}}"
+placeholder="Apellido del profesional">
+
+<input
+class="form-control mb-3"
+name="especialidad"
+value="{{p['especialidad']}}"
+placeholder="Especialidad médica">
+
+<input
+class="form-control mb-3"
+name="email"
+value="{{p['email']}}"
+placeholder="Correo electrónico">
+
+<input
+class="form-control mb-3"
+name="telefono"
+value="{{p['telefono']}}"
+placeholder="Teléfono">
 
 </div>
 
@@ -109,8 +137,13 @@ action="{{ url_for('professionals.edit', id=p['id']) }}">
 
 <button class="btn btn-success">Guardar</button>
 
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
 Cancelar
+
 </button>
 
 </div>
@@ -132,9 +165,6 @@ Cancelar
 </div>
 
 
-
-<!-- MODAL CREAR -->
-
 <div class="modal fade" id="modalCrear">
 
 <div class="modal-dialog">
@@ -148,27 +178,53 @@ action="{{ url_for('professionals.create') }}">
 
 <h5 class="modal-title">Crear Profesional</h5>
 
-<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<button type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
 
 </div>
 
 <div class="modal-body">
 
-<input class="form-control mb-2" name="rut" placeholder="RUT">
-<input class="form-control mb-2" name="nombre" placeholder="Nombre">
-<input class="form-control mb-2" name="apellido" placeholder="Apellido">
-<input class="form-control mb-2" name="especialidad" placeholder="Especialidad">
-<input class="form-control mb-2" name="email" placeholder="Email">
-<input class="form-control mb-2" name="telefono" placeholder="Teléfono">
+<input class="form-control mb-3"
+name="rut"
+placeholder="RUT del profesional">
+
+<input class="form-control mb-3"
+name="nombre"
+placeholder="Nombre del profesional">
+
+<input class="form-control mb-3"
+name="apellido"
+placeholder="Apellido del profesional">
+
+<input class="form-control mb-3"
+name="especialidad"
+placeholder="Especialidad médica">
+
+<input class="form-control mb-3"
+name="email"
+placeholder="Correo electrónico">
+
+<input class="form-control mb-3"
+name="telefono"
+placeholder="Teléfono">
 
 </div>
 
 <div class="modal-footer">
 
-<button class="btn btn-success">Guardar</button>
+<button class="btn btn-success">
+Guardar
+</button>
 
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
 Cancelar
+
 </button>
 
 </div>
@@ -180,5 +236,18 @@ Cancelar
 </div>
 
 </div>
+
+
+<script>
+
+function confirmarEliminar(url){
+
+if(confirm("¿Desea eliminar este registro?")){
+window.location = url
+}
+
+}
+
+</script>
 
 {% endblock %}

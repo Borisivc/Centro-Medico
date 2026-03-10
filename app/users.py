@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, g, request, redirect, url_for
+from flask import Blueprint, render_template, g, request, redirect, url_for, flash
 from .decorators import login_required, role_required
 from MySQLdb.cursors import DictCursor
 from werkzeug.security import generate_password_hash
@@ -8,7 +8,6 @@ users_bp = Blueprint(
     __name__,
     url_prefix="/users"
 )
-
 
 # ==============================
 # LISTAR USUARIOS
@@ -44,6 +43,19 @@ def create():
     email = request.form["email"]
     password = request.form["password"]
 
+    cur = g.db.cursor(DictCursor)
+
+    cur.execute(
+        "SELECT id FROM usuarios WHERE email=%s",
+        (email,)
+    )
+
+    existe = cur.fetchone()
+
+    if existe:
+        flash("⚠ El email ya está registrado")
+        return redirect(url_for("users.index"))
+
     password_hash = generate_password_hash(password)
 
     cur = g.db.cursor()
@@ -59,6 +71,8 @@ def create():
     ))
 
     g.db.commit()
+
+    flash("✔ Usuario creado correctamente")
 
     return redirect(url_for("users.index"))
 
@@ -90,6 +104,8 @@ def edit(id):
 
     g.db.commit()
 
+    flash("✔ Usuario actualizado correctamente")
+
     return redirect(url_for("users.index"))
 
 
@@ -110,5 +126,7 @@ def delete(id):
     )
 
     g.db.commit()
+
+    flash("✔ Usuario eliminado")
 
     return redirect(url_for("users.index"))

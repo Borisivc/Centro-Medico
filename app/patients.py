@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, g, request, redirect, url_for
+from flask import Blueprint, render_template, g, request, redirect, url_for, flash
 from .decorators import login_required, role_required
 from MySQLdb.cursors import DictCursor
 
@@ -7,7 +7,6 @@ patients_bp = Blueprint(
     __name__,
     url_prefix="/patients"
 )
-
 
 # ==============================
 # LISTAR PACIENTES
@@ -46,11 +45,26 @@ def create():
     email = request.form["email"]
     telefono = request.form["telefono"]
 
+    cur = g.db.cursor(DictCursor)
+
+    cur.execute(
+        "SELECT id FROM pacientes WHERE rut=%s",
+        (rut,)
+    )
+
+    existe = cur.fetchone()
+
+    if existe:
+
+        flash("⚠ Ya existe un paciente con ese RUT")
+
+        return redirect(url_for("patients.index"))
+
     cur = g.db.cursor()
 
     cur.execute("""
         INSERT INTO pacientes
-        (rut, nombre, apellido, fecha_nacimiento, email, telefono)
+        (rut,nombre,apellido,fecha_nacimiento,email,telefono)
         VALUES (%s,%s,%s,%s,%s,%s)
     """,(
         rut,
@@ -62,6 +76,8 @@ def create():
     ))
 
     g.db.commit()
+
+    flash("✔ Paciente creado correctamente")
 
     return redirect(url_for("patients.index"))
 
@@ -105,6 +121,8 @@ def edit(id):
 
     g.db.commit()
 
+    flash("✔ Paciente actualizado")
+
     return redirect(url_for("patients.index"))
 
 
@@ -125,5 +143,7 @@ def delete(id):
     )
 
     g.db.commit()
+
+    flash("✔ Paciente eliminado")
 
     return redirect(url_for("patients.index"))

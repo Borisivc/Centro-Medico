@@ -9,6 +9,7 @@ users_bp = Blueprint(
     url_prefix="/users"
 )
 
+
 # ==============================
 # LISTAR USUARIOS
 # ==============================
@@ -20,13 +21,27 @@ def index():
 
     cur = g.db.cursor(DictCursor)
 
-    cur.execute("SELECT * FROM usuarios")
+    cur.execute("""
+        SELECT 
+            u.id,
+            u.nombre,
+            u.email,
+            GROUP_CONCAT(r.nombre SEPARATOR ', ') as roles
+        FROM usuarios u
+        LEFT JOIN usuarios_roles ur ON ur.usuario_id = u.id
+        LEFT JOIN roles r ON r.id = ur.rol_id
+        GROUP BY u.id
+    """)
 
     usuarios = cur.fetchall()
 
+    cur.execute("SELECT * FROM roles")
+    roles = cur.fetchall()
+
     return render_template(
         "users.html",
-        usuarios=usuarios
+        usuarios=usuarios,
+        roles=roles
     )
 
 
@@ -43,18 +58,7 @@ def create():
     email = request.form["email"]
     password = request.form["password"]
 
-    cur = g.db.cursor(DictCursor)
-
-    cur.execute(
-        "SELECT id FROM usuarios WHERE email=%s",
-        (email,)
-    )
-
-    existe = cur.fetchone()
-
-    if existe:
-        flash("⚠ El email ya está registrado")
-        return redirect(url_for("users.index"))
+    roles = request.form.getlist("roles")
 
     password_hash = generate_password_hash(password)
 
@@ -64,15 +68,21 @@ def create():
         INSERT INTO usuarios
         (nombre,email,password_hash,activo)
         VALUES (%s,%s,%s,1)
-    """,(
-        nombre,
-        email,
-        password_hash
-    ))
+    """,(nombre,email,password_hash))
+
+    usuario_id = cur.lastrowid
+
+    for rol in roles:
+
+        cur.execute("""
+            INSERT INTO usuarios_roles
+            (usuario_id,rol_id)
+            VALUES (%s,%s)
+        """,(usuario_id,rol))
 
     g.db.commit()
 
-    flash("✔ Usuario creado correctamente")
+    flash("Usuario creado correctamente")
 
     return redirect(url_for("users.index"))
 
@@ -89,6 +99,8 @@ def edit(id):
     nombre = request.form["nombre"]
     email = request.form["email"]
 
+    roles = request.form.getlist("roles")
+
     cur = g.db.cursor()
 
     cur.execute("""
@@ -96,15 +108,24 @@ def edit(id):
         SET nombre=%s,
             email=%s
         WHERE id=%s
-    """,(
-        nombre,
-        email,
-        id
-    ))
+    """,(nombre,email,id))
+
+    cur.execute(
+        "DELETE FROM usuarios_roles WHERE usuario_id=%s",
+        (id,)
+    )
+
+    for rol in roles:
+
+        cur.execute("""
+            INSERT INTO usuarios_roles
+            (usuario_id,rol_id)
+            VALUES (%s,%s)
+        """,(id,rol))
 
     g.db.commit()
 
-    flash("✔ Usuario actualizado correctamente")
+    flash("Usuario actualizado")
 
     return redirect(url_for("users.index"))
 
@@ -121,12 +142,17 @@ def delete(id):
     cur = g.db.cursor()
 
     cur.execute(
+        "DELETE FROM usuarios_roles WHERE usuario_id=%s",
+        (id,)
+    )
+
+    cur.execute(
         "DELETE FROM usuarios WHERE id=%s",
         (id,)
     )
 
     g.db.commit()
 
-    flash("✔ Usuario eliminado")
+    flash("Usuario eliminado")
 
     return redirect(url_for("users.index"))

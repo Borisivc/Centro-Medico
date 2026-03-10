@@ -27,6 +27,7 @@ Crear
 <th>ID</th>
 <th>Nombre</th>
 <th>Email</th>
+<th>Roles</th>
 <th width="150">Acciones</th>
 </tr>
 
@@ -41,6 +42,16 @@ Crear
 <td>{{u["id"]}}</td>
 <td>{{u["nombre"]}}</td>
 <td>{{u["email"]}}</td>
+
+<td>
+
+{% if u["roles"] %}
+{{ u["roles"] }}
+{% else %}
+Sin rol asociado
+{% endif %}
+
+</td>
 
 <td>
 
@@ -66,6 +77,8 @@ Eliminar
 </tr>
 
 
+<!-- MODAL EDITAR -->
+
 <div class="modal fade" id="modalEditar{{u['id']}}">
 
 <div class="modal-dialog">
@@ -77,11 +90,15 @@ action="{{ url_for('users.edit', id=u['id']) }}">
 
 <div class="modal-header">
 
-<h5 class="modal-title">Editar Usuario</h5>
+<h5 class="modal-title">
+Editar Usuario
+</h5>
 
-<button type="button"
+<button
+type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
@@ -98,6 +115,33 @@ class="form-control mb-2"
 name="email"
 value="{{u['email']}}"
 placeholder="Correo electrónico">
+
+
+<label class="mt-2"><strong>Roles</strong></label>
+
+<div class="border p-2 rounded">
+
+{% for r in roles %}
+
+<div class="form-check">
+
+<input
+class="form-check-input"
+type="checkbox"
+name="roles"
+value="{{r['id']}}">
+
+<label class="form-check-label">
+
+{{r['nombre']}}
+
+</label>
+
+</div>
+
+{% endfor %}
+
+</div>
 
 </div>
 
@@ -143,8 +187,7 @@ Cancelar
 
 <div class="modal-content">
 
-<form id="formCrearUsuario"
-method="POST"
+<form method="POST"
 action="{{ url_for('users.create') }}">
 
 <div class="modal-header">
@@ -156,7 +199,8 @@ Crear Usuario
 <button
 type="button"
 class="btn-close"
-data-bs-dismiss="modal"></button>
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
@@ -177,6 +221,33 @@ type="password"
 class="form-control mb-2"
 name="password"
 placeholder="Contraseña">
+
+
+<label class="mt-2"><strong>Roles</strong></label>
+
+<div class="border p-2 rounded">
+
+{% for r in roles %}
+
+<div class="form-check">
+
+<input
+class="form-check-input"
+type="checkbox"
+name="roles"
+value="{{r['id']}}">
+
+<label class="form-check-label">
+
+{{r['nombre']}}
+
+</label>
+
+</div>
+
+{% endfor %}
+
+</div>
 
 </div>
 
@@ -268,18 +339,6 @@ document.getElementById("modalEliminar")
 modal.show()
 
 }
-
-/* limpiar formulario crear */
-
-var modalCrear = document.getElementById('modalCrear')
-
-modalCrear.addEventListener('show.bs.modal', function () {
-
-var form = modalCrear.querySelector('form')
-
-form.reset()
-
-})
 
 </script>
 

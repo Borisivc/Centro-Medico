@@ -113,6 +113,9 @@ def create_app():
     from .roles import roles_bp
     from .specialties import specialties_bp
     from .agenda import agenda_bp
+    from .states import states_bp
+
+
 
     # ==========================
     # REGISTRAR BLUEPRINTS
@@ -126,5 +129,6 @@ def create_app():
     app.register_blueprint(roles_bp)
     app.register_blueprint(specialties_bp)
     app.register_blueprint(agenda_bp)
+    app.register_blueprint(states_bp)
 
     return app

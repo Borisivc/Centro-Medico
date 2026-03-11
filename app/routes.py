@@ -12,21 +12,23 @@ def dashboard():
 
     cur = g.db.cursor(DictCursor)
 
-    # ==============================
+    # ==========================
     # ESPECIALIDADES
-    # ==============================
+    # ==========================
 
     cur.execute("""
-        SELECT id, nombre
+        SELECT 
+            id,
+            nombre
         FROM especialidades
         ORDER BY nombre
     """)
 
-    especialidades = cur.fetchall()
+    specialties = cur.fetchall()
 
-    # ==============================
-    # PROFESIONALES + ESPECIALIDAD
-    # ==============================
+    # ==========================
+    # PROFESIONALES
+    # ==========================
 
     cur.execute("""
         SELECT 
@@ -35,14 +37,14 @@ def dashboard():
             pe.especialidad_id
         FROM profesionales p
         LEFT JOIN profesionales_especialidades pe
-        ON pe.profesional_id = p.id
+            ON p.id = pe.profesional_id
         ORDER BY p.nombre
     """)
 
-    profesionales = cur.fetchall()
+    professionals = cur.fetchall()
 
     return render_template(
         "dashboard.html",
-        especialidades=especialidades,
-        profesionales=profesionales
+        specialties=specialties,
+        professionals=professionals
     )

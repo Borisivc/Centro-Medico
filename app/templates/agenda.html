@@ -4,7 +4,7 @@
 
 <div class="container mt-4">
 
-<h3>Agenda de Evaluaciones</h3>
+<h3>Agenda</h3>
 
 <button
 class="btn btn-primary mb-3"
@@ -42,28 +42,34 @@ Crear
 <tr>
 
 <td>{{a.id}}</td>
-
 <td>{{a.rut | format_rut}}</td>
-
 <td>{{a.nombre}} {{a.apellido}}</td>
-
 <td>{{a.profesional}}</td>
-
 <td>{{a.fecha | format_date}}</td>
-
 <td>{{a.hora}}</td>
-
 <td>{{a.estado}}</td>
 
 <td>
 
-<button
+{% if a.estado != 'ANULADA' %}
+
+<a
+class="btn btn-warning btn-sm"
+href="{{ url_for('agenda.anular', id=a.id) }}">
+
+Anular
+
+</a>
+
+{% endif %}
+
+<a
 class="btn btn-danger btn-sm"
-onclick="confirmarEliminar('{{ url_for('agenda.delete', id=a.id) }}')">
+href="{{ url_for('agenda.delete', id=a.id) }}">
 
 Eliminar
 
-</button>
+</a>
 
 </td>
 
@@ -79,7 +85,7 @@ Eliminar
 
 
 
-<!-- MODAL CREAR -->
+<!-- MODAL CREAR CITA -->
 
 <div class="modal fade" id="modalCrear">
 
@@ -87,9 +93,7 @@ Eliminar
 
 <div class="modal-content">
 
-<form
-method="POST"
-action="{{ url_for('agenda.create') }}">
+<form method="POST" action="{{ url_for('agenda.create') }}">
 
 <div class="modal-header">
 
@@ -110,39 +114,52 @@ data-bs-dismiss="modal">
 
 <input
 class="form-control mb-2"
-name="paciente_id"
-placeholder="ID Paciente">
+name="rut"
+placeholder="RUT Paciente">
+
 
 <input
 class="form-control mb-2"
-name="profesional_id"
-placeholder="ID Profesional">
+name="nombre"
+placeholder="Nombre Paciente">
+
+
+<input
+class="form-control mb-2"
+name="apellido"
+placeholder="Apellido Paciente">
+
+
+<select
+class="form-control mb-2"
+name="profesional_id">
+
+<option value="">
+Seleccionar Profesional
+</option>
+
+{% for p in professionals %}
+
+<option value="{{p.id}}">
+{{p.nombre}}
+</option>
+
+{% endfor %}
+
+</select>
+
 
 <input
 type="date"
 class="form-control mb-2"
 name="fecha">
 
+
 <input
 type="time"
 class="form-control mb-2"
 name="hora">
 
-<select
-class="form-control mb-2"
-name="estado">
-
-<option value="AGENDADA">AGENDADA</option>
-<option value="CONFIRMADA">CONFIRMADA</option>
-<option value="CANCELADA">CANCELADA</option>
-
-</select>
-
-<textarea
-class="form-control"
-name="observacion"
-placeholder="Observación">
-</textarea>
 
 </div>
 
@@ -162,20 +179,5 @@ Guardar
 </div>
 
 </div>
-
-
-<script>
-
-function confirmarEliminar(url){
-
-if(confirm("¿Eliminar cita?")){
-
-window.location.href = url
-
-}
-
-}
-
-</script>
 
 {% endblock %}

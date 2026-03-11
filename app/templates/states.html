@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Estados Agenda</h3>
+
+<table class="table table-bordered">
+
+<thead class="table-dark">
+
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for s in states %}
+
+<tr>
+
+<td>{{s.id}}</td>
+<td>{{s.nombre}}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

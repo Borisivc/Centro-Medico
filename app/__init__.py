@@ -14,7 +14,7 @@ def create_app():
 
 
     # ==============================
-    # CONEXION DB GLOBAL
+    # CONEXION GLOBAL DB
     # ==============================
 
     @app.before_request
@@ -27,7 +27,7 @@ def create_app():
     # FILTRO FORMATO RUT
     # ==============================
 
-    @app.template_filter('format_rut')
+    @app.template_filter("format_rut")
     def format_rut(rut):
 
         if not rut:
@@ -47,7 +47,7 @@ def create_app():
     # FILTRO FORMATO FECHA
     # ==============================
 
-    @app.template_filter('format_date')
+    @app.template_filter("format_date")
     def format_date(fecha):
 
         if not fecha:
@@ -66,9 +66,10 @@ def create_app():
     from .routes import main_bp
     from .auth import auth_bp
     from .patients import patients_bp
+    from .professionals import professionals_bp
     from .users import users_bp
     from .roles import roles_bp
-    from .professionals import professionals_bp
+    from .specialties import specialties_bp
 
 
     # ==============================
@@ -78,9 +79,10 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(patients_bp)
+    app.register_blueprint(professionals_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(roles_bp)
-    app.register_blueprint(professionals_bp)
+    app.register_blueprint(specialties_bp)
 
 
     return app

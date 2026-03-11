@@ -38,13 +38,16 @@ data-bs-target="#menu">
 
 </button>
 
+
 <div class="collapse navbar-collapse" id="menu">
+
 
 <ul class="navbar-nav me-auto">
 
 <li class="nav-item">
 
-<a class="nav-link"
+<a
+class="nav-link"
 href="{{ url_for('main.dashboard') }}">
 
 Inicio
@@ -52,6 +55,7 @@ Inicio
 </a>
 
 </li>
+
 
 {% if session.get("role") and session.get("role")|lower == "admin" %}
 
@@ -65,37 +69,41 @@ Administración
 
 </a>
 
+
 <ul class="dropdown-menu">
 
 <li>
-<a
-class="dropdown-item"
+<a class="dropdown-item"
 href="{{ url_for('patients.index') }}">
 Pacientes
 </a>
 </li>
 
 <li>
-<a
-class="dropdown-item"
+<a class="dropdown-item"
 href="{{ url_for('professionals.index') }}">
 Profesionales
 </a>
 </li>
 
 <li>
-<a
-class="dropdown-item"
+<a class="dropdown-item"
 href="{{ url_for('users.index') }}">
 Usuarios
 </a>
 </li>
 
 <li>
-<a
-class="dropdown-item"
+<a class="dropdown-item"
 href="{{ url_for('roles.index') }}">
 Roles
+</a>
+</li>
+
+<li>
+<a class="dropdown-item"
+href="{{ url_for('specialties.index') }}">
+Especialidades
 </a>
 </li>
 
@@ -151,6 +159,7 @@ Login
 {% endif %}
 
 </ul>
+
 
 </div>
 

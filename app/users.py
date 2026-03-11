@@ -26,10 +26,12 @@ def index():
             u.id,
             u.nombre,
             u.email,
-            GROUP_CONCAT(r.nombre SEPARATOR ', ') as roles
+            GROUP_CONCAT(r.nombre SEPARATOR ', ') AS roles
         FROM usuarios u
-        LEFT JOIN usuarios_roles ur ON ur.usuario_id = u.id
-        LEFT JOIN roles r ON r.id = ur.rol_id
+        LEFT JOIN usuarios_roles ur 
+            ON ur.usuario_id = u.id
+        LEFT JOIN roles r 
+            ON r.id = ur.rol_id
         GROUP BY u.id
     """)
 
@@ -38,15 +40,23 @@ def index():
     cur.execute("SELECT * FROM roles")
     roles = cur.fetchall()
 
+    cur.execute("""
+        SELECT usuario_id, rol_id
+        FROM usuarios_roles
+    """)
+
+    usuarios_roles = cur.fetchall()
+
     return render_template(
         "users.html",
         usuarios=usuarios,
-        roles=roles
+        roles=roles,
+        usuarios_roles=usuarios_roles
     )
 
 
 # ==============================
-# CREAR USUARIO
+# CREAR
 # ==============================
 
 @users_bp.route("/create", methods=["POST"])
@@ -88,7 +98,7 @@ def create():
 
 
 # ==============================
-# EDITAR USUARIO
+# EDITAR
 # ==============================
 
 @users_bp.route("/edit/<int:id>", methods=["POST"])
@@ -131,7 +141,7 @@ def edit(id):
 
 
 # ==============================
-# ELIMINAR USUARIO
+# ELIMINAR
 # ==============================
 
 @users_bp.route("/delete/<int:id>")

@@ -8,6 +8,7 @@ professionals_bp = Blueprint(
     url_prefix="/professionals"
 )
 
+
 # ==============================
 # LISTAR PROFESIONALES
 # ==============================
@@ -19,13 +20,40 @@ def index():
 
     cur = g.db.cursor(DictCursor)
 
-    cur.execute("SELECT * FROM profesionales")
+    cur.execute("""
+        SELECT 
+            p.id,
+            p.rut,
+            p.nombre,
+            p.apellido,
+            p.email,
+            p.telefono,
+            GROUP_CONCAT(e.nombre SEPARATOR ', ') AS especialidades
+        FROM profesionales p
+        LEFT JOIN profesionales_especialidades pe 
+            ON pe.profesional_id = p.id
+        LEFT JOIN especialidades e 
+            ON e.id = pe.especialidad_id
+        GROUP BY p.id
+    """)
 
     profesionales = cur.fetchall()
 
+    cur.execute("SELECT * FROM especialidades")
+    especialidades = cur.fetchall()
+
+    cur.execute("""
+        SELECT profesional_id, especialidad_id
+        FROM profesionales_especialidades
+    """)
+
+    profesionales_especialidades = cur.fetchall()
+
     return render_template(
         "professionals.html",
-        profesionales=profesionales
+        profesionales=profesionales,
+        especialidades=especialidades,
+        profesionales_especialidades=profesionales_especialidades
     )
 
 
@@ -41,43 +69,32 @@ def create():
     rut = request.form["rut"]
     nombre = request.form["nombre"]
     apellido = request.form["apellido"]
-    especialidad = request.form["especialidad"]
     email = request.form["email"]
     telefono = request.form["telefono"]
 
-    cur = g.db.cursor(DictCursor)
-
-    cur.execute(
-        "SELECT id FROM profesionales WHERE rut=%s",
-        (rut,)
-    )
-
-    existe = cur.fetchone()
-
-    if existe:
-
-        flash("⚠ Ya existe un profesional con ese RUT")
-
-        return redirect(url_for("professionals.index"))
+    especialidades = request.form.getlist("especialidades")
 
     cur = g.db.cursor()
 
     cur.execute("""
         INSERT INTO profesionales
-        (rut,nombre,apellido,especialidad,email,telefono)
-        VALUES (%s,%s,%s,%s,%s,%s)
-    """,(
-        rut,
-        nombre,
-        apellido,
-        especialidad,
-        email,
-        telefono
-    ))
+        (rut,nombre,apellido,email,telefono)
+        VALUES (%s,%s,%s,%s,%s)
+    """,(rut,nombre,apellido,email,telefono))
+
+    profesional_id = cur.lastrowid
+
+    for esp in especialidades:
+
+        cur.execute("""
+            INSERT INTO profesionales_especialidades
+            (profesional_id,especialidad_id)
+            VALUES (%s,%s)
+        """,(profesional_id,esp))
 
     g.db.commit()
 
-    flash("✔ Profesional creado correctamente")
+    flash("Profesional creado")
 
     return redirect(url_for("professionals.index"))
 
@@ -94,9 +111,10 @@ def edit(id):
     rut = request.form["rut"]
     nombre = request.form["nombre"]
     apellido = request.form["apellido"]
-    especialidad = request.form["especialidad"]
     email = request.form["email"]
     telefono = request.form["telefono"]
+
+    especialidades = request.form.getlist("especialidades")
 
     cur = g.db.cursor()
 
@@ -105,23 +123,27 @@ def edit(id):
         SET rut=%s,
             nombre=%s,
             apellido=%s,
-            especialidad=%s,
             email=%s,
             telefono=%s
         WHERE id=%s
-    """,(
-        rut,
-        nombre,
-        apellido,
-        especialidad,
-        email,
-        telefono,
-        id
-    ))
+    """,(rut,nombre,apellido,email,telefono,id))
+
+    cur.execute(
+        "DELETE FROM profesionales_especialidades WHERE profesional_id=%s",
+        (id,)
+    )
+
+    for esp in especialidades:
+
+        cur.execute("""
+            INSERT INTO profesionales_especialidades
+            (profesional_id,especialidad_id)
+            VALUES (%s,%s)
+        """,(id,esp))
 
     g.db.commit()
 
-    flash("✔ Profesional actualizado")
+    flash("Profesional actualizado")
 
     return redirect(url_for("professionals.index"))
 
@@ -138,12 +160,17 @@ def delete(id):
     cur = g.db.cursor()
 
     cur.execute(
+        "DELETE FROM profesionales_especialidades WHERE profesional_id=%s",
+        (id,)
+    )
+
+    cur.execute(
         "DELETE FROM profesionales WHERE id=%s",
         (id,)
     )
 
     g.db.commit()
 
-    flash("✔ Profesional eliminado")
+    flash("Profesional eliminado")
 
     return redirect(url_for("professionals.index"))

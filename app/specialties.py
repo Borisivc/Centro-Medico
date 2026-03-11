@@ -2,10 +2,10 @@ from flask import Blueprint, render_template, g, request, redirect, url_for, fla
 from .decorators import login_required, role_required
 from MySQLdb.cursors import DictCursor
 
-roles_bp = Blueprint(
-    "roles",
+specialties_bp = Blueprint(
+    "specialties",
     __name__,
-    url_prefix="/roles"
+    url_prefix="/specialties"
 )
 
 
@@ -13,20 +13,20 @@ roles_bp = Blueprint(
 # LISTAR
 # ==============================
 
-@roles_bp.route("/")
+@specialties_bp.route("/")
 @login_required
 @role_required("admin")
 def index():
 
     cur = g.db.cursor(DictCursor)
 
-    cur.execute("SELECT * FROM roles")
+    cur.execute("SELECT * FROM especialidades")
 
-    roles = cur.fetchall()
+    especialidades = cur.fetchall()
 
     return render_template(
-        "roles.html",
-        roles=roles
+        "specialties.html",
+        especialidades=especialidades
     )
 
 
@@ -34,7 +34,7 @@ def index():
 # CREAR
 # ==============================
 
-@roles_bp.route("/create", methods=["POST"])
+@specialties_bp.route("/create", methods=["POST"])
 @login_required
 @role_required("admin")
 def create():
@@ -44,22 +44,22 @@ def create():
     cur = g.db.cursor()
 
     cur.execute(
-        "INSERT INTO roles (nombre) VALUES (%s)",
+        "INSERT INTO especialidades (nombre) VALUES (%s)",
         (nombre,)
     )
 
     g.db.commit()
 
-    flash("Rol creado correctamente")
+    flash("Especialidad creada")
 
-    return redirect(url_for("roles.index"))
+    return redirect(url_for("specialties.index"))
 
 
 # ==============================
 # EDITAR
 # ==============================
 
-@roles_bp.route("/edit/<int:id>", methods=["POST"])
+@specialties_bp.route("/edit/<int:id>", methods=["POST"])
 @login_required
 @role_required("admin")
 def edit(id):
@@ -69,22 +69,22 @@ def edit(id):
     cur = g.db.cursor()
 
     cur.execute(
-        "UPDATE roles SET nombre=%s WHERE id=%s",
+        "UPDATE especialidades SET nombre=%s WHERE id=%s",
         (nombre,id)
     )
 
     g.db.commit()
 
-    flash("Rol actualizado")
+    flash("Especialidad actualizada")
 
-    return redirect(url_for("roles.index"))
+    return redirect(url_for("specialties.index"))
 
 
 # ==============================
 # ELIMINAR
 # ==============================
 
-@roles_bp.route("/delete/<int:id>")
+@specialties_bp.route("/delete/<int:id>")
 @login_required
 @role_required("admin")
 def delete(id):
@@ -92,12 +92,12 @@ def delete(id):
     cur = g.db.cursor()
 
     cur.execute(
-        "DELETE FROM roles WHERE id=%s",
+        "DELETE FROM especialidades WHERE id=%s",
         (id,)
     )
 
     g.db.commit()
 
-    flash("Rol eliminado")
+    flash("Especialidad eliminada")
 
-    return redirect(url_for("roles.index"))
+    return redirect(url_for("specialties.index"))

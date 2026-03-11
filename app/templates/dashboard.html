@@ -24,9 +24,14 @@ emocionales y académicas.
 
 </p>
 
-<a class="btn btn-primary btn-lg me-2">
+<button
+class="btn btn-primary btn-lg me-2"
+data-bs-toggle="modal"
+data-bs-target="#modalAgenda">
+
 Agendar Evaluación
-</a>
+
+</button>
 
 <a class="btn btn-outline-primary btn-lg">
 Conocer Programas
@@ -138,186 +143,117 @@ en el proceso educativo.
 
 
 
-<!-- BENEFICIOS -->
+<!-- MODAL AGENDAR -->
 
-<div class="container mb-5">
+<div class="modal fade" id="modalAgenda">
 
-<h2 class="text-center mb-4">
-Nuestro Enfoque
-</h2>
+<div class="modal-dialog">
 
-<div class="row text-center g-4">
+<div class="modal-content">
 
-<div class="col-md-4">
+<form
+method="POST"
+action="{{ url_for('agenda.public_create') }}">
 
-<div class="card border-0 shadow-sm">
+<div class="modal-header">
 
-<div class="card-body">
+<h5 class="modal-title">
+Agendar Evaluación
+</h5>
 
-<h4>👨‍👩‍👧</h4>
-
-<h5>Trabajo con la Familia</h5>
-
-<p>
-
-Involucramos a la familia en el proceso
-de aprendizaje del niño.
-
-</p>
-
-</div>
-
-</div>
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal">
+</button>
 
 </div>
 
 
-<div class="col-md-4">
+<div class="modal-body">
 
-<div class="card border-0 shadow-sm">
+<input
+class="form-control mb-2"
+name="rut"
+placeholder="RUT">
 
-<div class="card-body">
+<input
+class="form-control mb-2"
+name="nombre"
+placeholder="Nombre">
 
-<h4>📊</h4>
-
-<h5>Evaluación Psicopedagógica</h5>
-
-<p>
-
-Diagnóstico completo para comprender
-las dificultades del aprendizaje.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
+<input
+class="form-control mb-2"
+name="apellido"
+placeholder="Apellido">
 
 
-<div class="col-md-4">
+<select
+class="form-control mb-2"
+name="especialidad_id"
+id="especialidad">
 
-<div class="card border-0 shadow-sm">
+<option value="">
+Seleccionar Especialidad
+</option>
 
-<div class="card-body">
+{% for e in specialties %}
 
-<h4>🌱</h4>
+<option value="{{e.id}}">
+{{e.nombre}}
+</option>
 
-<h5>Desarrollo Integral</h5>
+{% endfor %}
 
-<p>
-
-Promovemos el desarrollo emocional,
-cognitivo y académico.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
+</select>
 
 
+<select
+class="form-control mb-2"
+name="profesional_id"
+id="profesional">
 
-<!-- PROGRAMAS -->
+<option value="">
+Seleccionar Profesional
+</option>
 
-<div class="container mb-5">
+{% for p in professionals %}
 
-<h2 class="text-center mb-4">
-Programas de Intervención
-</h2>
+<option
+value="{{p.id}}"
+data-especialidad="{{p.especialidad_id}}">
 
-<div class="row g-4">
+{{p.nombre}}
 
-<div class="col-md-3">
+</option>
 
-<div class="card shadow-sm border-0 text-center">
+{% endfor %}
 
-<div class="card-body">
+</select>
 
-<h5>Estimulación Temprana</h5>
 
-<p class="text-muted">
+<input
+type="date"
+class="form-control mb-2"
+name="fecha">
 
-Apoyo en los primeros años
-de desarrollo.
-
-</p>
-
-</div>
-
-</div>
+<input
+type="time"
+class="form-control mb-2"
+name="hora">
 
 </div>
 
 
-<div class="col-md-3">
+<div class="modal-footer">
 
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Refuerzo Escolar</h5>
-
-<p class="text-muted">
-
-Apoyo académico personalizado.
-
-</p>
+<button class="btn btn-primary">
+Agendar
+</button>
 
 </div>
 
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Habilidades de Estudio</h5>
-
-<p class="text-muted">
-
-Técnicas de aprendizaje
-y organización.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Orientación Educativa</h5>
-
-<p class="text-muted">
-
-Acompañamiento en el proceso
-educativo.
-
-</p>
-
-</div>
-
-</div>
+</form>
 
 </div>
 
@@ -327,25 +263,46 @@ educativo.
 
 
 
-<!-- CTA -->
+<script>
 
-<div class="bg-primary text-white text-center p-5 rounded shadow">
+const especialidad = document.getElementById("especialidad")
+const profesional = document.getElementById("profesional")
 
-<h2>
-Agenda una Evaluación Psicopedagógica
-</h2>
+especialidad.addEventListener("change", function(){
 
-<p class="lead">
+let esp = this.value
 
-Te ayudamos a comprender y potenciar
-el proceso de aprendizaje.
+for(let option of profesional.options){
 
-</p>
+if(option.dataset.especialidad == esp || esp == ""){
 
-<a class="btn btn-light btn-lg">
-Solicitar Evaluación
-</a>
+option.style.display = "block"
 
-</div>
+}else{
+
+option.style.display = "none"
+
+}
+
+}
+
+profesional.value = ""
+
+})
+
+
+profesional.addEventListener("change", function(){
+
+let esp = this.options[this.selectedIndex].dataset.especialidad
+
+if(esp){
+
+especialidad.value = esp
+
+}
+
+})
+
+</script>
 
 {% endblock %}

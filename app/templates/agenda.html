@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>Agenda de Evaluaciones</h3>
+
+<button
+class="btn btn-primary mb-3"
+data-bs-toggle="modal"
+data-bs-target="#modalCrear">
+
+Crear
+
+</button>
+
+
+<table class="table table-bordered">
+
+<thead class="table-dark">
+
+<tr>
+
+<th>ID</th>
+<th>RUT</th>
+<th>Paciente</th>
+<th>Profesional</th>
+<th>Fecha</th>
+<th>Hora</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for a in agenda %}
+
+<tr>
+
+<td>{{a.id}}</td>
+
+<td>{{a.rut | format_rut}}</td>
+
+<td>{{a.nombre}} {{a.apellido}}</td>
+
+<td>{{a.profesional}}</td>
+
+<td>{{a.fecha | format_date}}</td>
+
+<td>{{a.hora}}</td>
+
+<td>{{a.estado}}</td>
+
+<td>
+
+<button
+class="btn btn-danger btn-sm"
+onclick="confirmarEliminar('{{ url_for('agenda.delete', id=a.id) }}')">
+
+Eliminar
+
+</button>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- MODAL CREAR -->
+
+<div class="modal fade" id="modalCrear">
+
+<div class="modal-dialog">
+
+<div class="modal-content">
+
+<form
+method="POST"
+action="{{ url_for('agenda.create') }}">
+
+<div class="modal-header">
+
+<h5 class="modal-title">
+Crear Cita
+</h5>
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal">
+</button>
+
+</div>
+
+
+<div class="modal-body">
+
+<input
+class="form-control mb-2"
+name="paciente_id"
+placeholder="ID Paciente">
+
+<input
+class="form-control mb-2"
+name="profesional_id"
+placeholder="ID Profesional">
+
+<input
+type="date"
+class="form-control mb-2"
+name="fecha">
+
+<input
+type="time"
+class="form-control mb-2"
+name="hora">
+
+<select
+class="form-control mb-2"
+name="estado">
+
+<option value="AGENDADA">AGENDADA</option>
+<option value="CONFIRMADA">CONFIRMADA</option>
+<option value="CANCELADA">CANCELADA</option>
+
+</select>
+
+<textarea
+class="form-control"
+name="observacion"
+placeholder="Observación">
+</textarea>
+
+</div>
+
+
+<div class="modal-footer">
+
+<button class="btn btn-success">
+Guardar
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function confirmarEliminar(url){
+
+if(confirm("¿Eliminar cita?")){
+
+window.location.href = url
+
+}
+
+}
+
+</script>
+
+{% endblock %}

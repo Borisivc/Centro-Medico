@@ -15,12 +15,12 @@ roles_bp = Blueprint(
 
 @roles_bp.route("/")
 @login_required
-@role_required("admin")
+@role_required("ADMIN")
 def index():
 
     cur = g.db.cursor(DictCursor)
 
-    cur.execute("SELECT * FROM roles")
+    cur.execute("SELECT * FROM roles ORDER BY nombre")
 
     roles = cur.fetchall()
 
@@ -36,10 +36,10 @@ def index():
 
 @roles_bp.route("/create", methods=["POST"])
 @login_required
-@role_required("admin")
+@role_required("ADMIN")
 def create():
 
-    nombre = request.form["nombre"].upper()
+    nombre = request.form["nombre"].strip().upper()
 
     cur = g.db.cursor()
 
@@ -61,16 +61,16 @@ def create():
 
 @roles_bp.route("/edit/<int:id>", methods=["POST"])
 @login_required
-@role_required("admin")
+@role_required("ADMIN")
 def edit(id):
 
-    nombre = request.form["nombre"].upper()
+    nombre = request.form["nombre"].strip().upper()
 
     cur = g.db.cursor()
 
     cur.execute(
         "UPDATE roles SET nombre=%s WHERE id=%s",
-        (nombre,id)
+        (nombre, id)
     )
 
     g.db.commit()
@@ -86,7 +86,7 @@ def edit(id):
 
 @roles_bp.route("/delete/<int:id>")
 @login_required
-@role_required("admin")
+@role_required("ADMIN")
 def delete(id):
 
     cur = g.db.cursor()

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, g, flash
+from flask import Blueprint, request, redirect, url_for, session, g, flash
 from werkzeug.security import check_password_hash
 from MySQLdb.cursors import DictCursor
 
@@ -9,50 +9,58 @@ auth_bp = Blueprint(
 )
 
 
-@auth_bp.route("/login", methods=["GET", "POST"])
+# ======================================
+# LOGIN
+# ======================================
+
+@auth_bp.route("/login", methods=["POST"])
 def login():
 
-    if request.method == "POST":
+    email = request.form["email"].strip().lower()
+    password = request.form["password"]
 
-        email = request.form["email"]
-        password = request.form["password"]
+    cur = g.db.cursor(DictCursor)
 
-        cur = g.db.cursor(DictCursor)
+    cur.execute("""
+        SELECT id,nombre,email,password_hash
+        FROM usuarios
+        WHERE email=%s AND activo=1
+    """, (email,))
+
+    usuario = cur.fetchone()
+
+    if usuario and check_password_hash(usuario["password_hash"], password):
+
+        session.clear()
+
+        session["user_id"] = usuario["id"]
+        session["nombre"] = usuario["nombre"]
 
         cur.execute("""
-            SELECT id, nombre, email, password_hash
-            FROM usuarios
-            WHERE email=%s AND activo=1
-        """,(email,))
+            SELECT r.nombre
+            FROM roles r
+            JOIN usuarios_roles ur
+            ON ur.rol_id = r.id
+            WHERE ur.usuario_id=%s
+        """, (usuario["id"],))
 
-        usuario = cur.fetchone()
+        roles = [r["nombre"].upper() for r in cur.fetchall()]
 
-        if usuario:
+        session["roles"] = roles
 
-            if check_password_hash(usuario["password_hash"], password):
+        return redirect(url_for("main.dashboard"))
 
-                session["user_id"] = usuario["id"]
-                session["nombre"] = usuario["nombre"]
+    flash(
+        "Usuario o contraseña incorrectos. Si su cuenta está bloqueada contacte al administrador.",
+        "login_error"
+    )
 
-                cur.execute("""
-                    SELECT r.nombre
-                    FROM roles r
-                    JOIN usuarios_roles ur
-                    ON ur.rol_id = r.id
-                    WHERE ur.usuario_id=%s
-                """,(usuario["id"],))
+    return redirect(url_for("main.dashboard"))
 
-                rol = cur.fetchone()
 
-                if rol:
-                    session["role"] = rol["nombre"]
-
-                return redirect(url_for("main.dashboard"))
-
-        flash("Usuario o contraseña incorrectos")
-
-    return render_template("login.html")
-
+# ======================================
+# LOGOUT
+# ======================================
 
 @auth_bp.route("/logout")
 def logout():

@@ -16,7 +16,8 @@ def login_required(f):
 
             flash("Debe iniciar sesión")
 
-            return redirect(url_for("auth.login"))
+            # redirige al dashboard donde está el login modal
+            return redirect(url_for("main.dashboard"))
 
         return f(*args, **kwargs)
 
@@ -40,7 +41,7 @@ def role_required(*roles):
 
                 flash("Debe iniciar sesión")
 
-                return redirect(url_for("auth.login"))
+                return redirect(url_for("main.dashboard"))
 
             cur = g.db.cursor(DictCursor)
 

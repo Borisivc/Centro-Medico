@@ -1,6 +1,7 @@
-from flask import Flask, g
+from flask import Flask, g, request
 from .config import Config
 import MySQLdb
+import logging
 
 
 def create_app():
@@ -8,6 +9,20 @@ def create_app():
     app = Flask(__name__)
 
     app.config.from_object(Config)
+
+    # ======================================
+    # LOGGING
+    # ======================================
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s"
+    )
+
+    logger = logging.getLogger(__name__)
+
+    logger.info("Aplicación iniciada")
+
 
     # ======================================
     # FILTROS JINJA
@@ -62,6 +77,8 @@ def create_app():
 
         g.db = get_db()
 
+        logger.info(f"{request.method} {request.path}")
+
 
     @app.teardown_appcontext
     def teardown_db(exception):
@@ -70,6 +87,38 @@ def create_app():
 
         if db is not None:
             db.close()
+
+
+    # ======================================
+    # MANEJO DE ERRORES
+    # ======================================
+
+    @app.errorhandler(404)
+    def not_found(error):
+
+        logger.error(f"404 Not Found: {request.url}")
+
+        return "Página no encontrada", 404
+
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+
+        logger.error(
+            f"405 Method Not Allowed: {request.method} {request.url}"
+        )
+
+        return "Method Not Allowed", 405
+
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+
+        logger.exception(
+            f"Error en {request.method} {request.url}"
+        )
+
+        return "Error interno del servidor", 500
 
 
     # ======================================

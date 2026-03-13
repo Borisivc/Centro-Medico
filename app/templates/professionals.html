@@ -4,14 +4,18 @@
 
 <div class="container mt-4">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="card shadow">
 
-<h4>Profesionales</h4>
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0">
+Profesionales
+</h5>
 
 <button
-class="btn btn-primary"
+class="btn btn-primary btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalCrear">
+data-bs-target="#modalCreate">
 
 Crear
 
@@ -20,9 +24,11 @@ Crear
 </div>
 
 
-<table class="table table-striped table-bordered">
+<div class="card-body">
 
-<thead class="table-dark">
+<table class="table table-bordered table-hover">
+
+<thead class="table-light">
 
 <tr>
 <th>ID</th>
@@ -32,7 +38,7 @@ Crear
 <th>Email</th>
 <th>Teléfono</th>
 <th>Especialidades</th>
-<th width="160">Acciones</th>
+<th width="150">Acciones</th>
 </tr>
 
 </thead>
@@ -43,37 +49,25 @@ Crear
 
 <tr>
 
-<td>{{ p["id"] }}</td>
-<td>{{ p["rut"] | format_rut }}</td>
-<td>{{ p["nombre"] }}</td>
-<td>{{ p["apellido"] }}</td>
-<td>{{ p["email"] }}</td>
-<td>{{ p["telefono"] }}</td>
-
-<td>
-
-{% if p["especialidades"] %}
-{{ p["especialidades"] }}
-{% else %}
-Sin especialidad
-{% endif %}
-
-</td>
+<td>{{p.id}}</td>
+<td>{{p.rut}}</td>
+<td>{{p.nombre}}</td>
+<td>{{p.apellido}}</td>
+<td>{{p.email}}</td>
+<td>{{p.telefono}}</td>
+<td>{{p.especialidades}}</td>
 
 <td>
 
 <button
-class="btn btn-warning btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalEditar{{p['id']}}">
+class="btn btn-warning btn-sm">
 
 Editar
 
 </button>
 
 <button
-class="btn btn-danger btn-sm"
-onclick="confirmarEliminar('{{ url_for('professionals.delete', id=p['id']) }}')">
+class="btn btn-danger btn-sm">
 
 Eliminar
 
@@ -83,126 +77,6 @@ Eliminar
 
 </tr>
 
-
-<!-- MODAL EDITAR -->
-
-<div class="modal fade" id="modalEditar{{p['id']}}">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST"
-action="{{ url_for('professionals.edit', id=p['id']) }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Editar Profesional
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-</button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control mb-2"
-name="rut"
-value="{{p['rut']}}"
-placeholder="RUT">
-
-<input
-class="form-control mb-2"
-name="nombre"
-value="{{p['nombre']}}"
-placeholder="Nombre">
-
-<input
-class="form-control mb-2"
-name="apellido"
-value="{{p['apellido']}}"
-placeholder="Apellido">
-
-<input
-class="form-control mb-2"
-name="email"
-value="{{p['email']}}"
-placeholder="Email">
-
-<input
-class="form-control mb-2"
-name="telefono"
-value="{{p['telefono']}}"
-placeholder="Teléfono">
-
-
-<label class="mt-2"><strong>Especialidades</strong></label>
-
-<div class="border p-2 rounded">
-
-{% for e in especialidades %}
-
-<div class="form-check">
-
-<input
-class="form-check-input"
-type="checkbox"
-name="especialidades"
-value="{{e['id']}}"
-
-{% for pe in profesionales_especialidades %}
-{% if pe["profesional_id"] == p["id"] and pe["especialidad_id"] == e["id"] %}
-checked
-{% endif %}
-{% endfor %}
-
->
-
-<label class="form-check-label">
-
-{{e['nombre']}}
-
-</label>
-
-</div>
-
-{% endfor %}
-
-</div>
-
-</div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
 {% endfor %}
 
 </tbody>
@@ -211,189 +85,8 @@ Cancelar
 
 </div>
 
-
-<!-- MODAL CREAR -->
-
-<div class="modal fade" id="modalCrear">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form
-id="formCrearProfesional"
-method="POST"
-action="{{ url_for('professionals.create') }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Crear Profesional
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-</button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control mb-2"
-name="rut"
-placeholder="RUT">
-
-<input
-class="form-control mb-2"
-name="nombre"
-placeholder="Nombre">
-
-<input
-class="form-control mb-2"
-name="apellido"
-placeholder="Apellido">
-
-<input
-class="form-control mb-2"
-name="email"
-placeholder="Email">
-
-<input
-class="form-control mb-2"
-name="telefono"
-placeholder="Teléfono">
-
-
-<label class="mt-2"><strong>Especialidades</strong></label>
-
-<div class="border p-2 rounded">
-
-{% for e in especialidades %}
-
-<div class="form-check">
-
-<input
-class="form-check-input"
-type="checkbox"
-name="especialidades"
-value="{{e['id']}}">
-
-<label class="form-check-label">
-
-{{e['nombre']}}
-
-</label>
-
-</div>
-
-{% endfor %}
-
 </div>
 
 </div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- MODAL ELIMINAR -->
-
-<div class="modal fade" id="modalEliminar">
-
-<div class="modal-dialog modal-sm">
-
-<div class="modal-content">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Confirmar
-</h5>
-
-</div>
-
-<div class="modal-body">
-
-¿Eliminar profesional?
-
-</div>
-
-<div class="modal-footer">
-
-<a
-id="btnEliminarConfirmado"
-class="btn btn-danger">
-
-Eliminar
-
-</a>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<script>
-
-function confirmarEliminar(url){
-
-document.getElementById("btnEliminarConfirmado").href = url
-
-var modal = new bootstrap.Modal(
-document.getElementById("modalEliminar")
-)
-
-modal.show()
-
-}
-
-
-var modalCrearProfesional = document.getElementById('modalCrear')
-
-modalCrearProfesional.addEventListener('show.bs.modal', function () {
-
-document.getElementById('formCrearProfesional').reset()
-
-})
-
-</script>
 
 {% endblock %}

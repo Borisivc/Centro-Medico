@@ -4,14 +4,18 @@
 
 <div class="container mt-4">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="card shadow">
 
-<h4>Pacientes</h4>
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0">
+Pacientes
+</h5>
 
 <button
-class="btn btn-primary"
+class="btn btn-primary btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalCrear">
+data-bs-target="#modalCreate">
 
 Crear
 
@@ -19,9 +23,31 @@ Crear
 
 </div>
 
-<table class="table table-striped table-bordered">
 
-<thead class="table-dark">
+<div class="card-body">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+
+{% for category, message in messages %}
+
+<div class="alert alert-{{category}} alert-dismissible fade show">
+
+{{message}}
+
+<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+{% endwith %}
+
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-light">
 
 <tr>
 <th>ID</th>
@@ -31,7 +57,7 @@ Crear
 <th>Fecha Nacimiento</th>
 <th>Email</th>
 <th>Teléfono</th>
-<th width="160">Acciones</th>
+<th width="150">Acciones</th>
 </tr>
 
 </thead>
@@ -42,32 +68,41 @@ Crear
 
 <tr>
 
-<td>{{ p["id"] }}</td>
-<td>{{ p["rut"] | format_rut }}</td>
-<td>{{ p["nombre"] }}</td>
-<td>{{ p["apellido"] }}</td>
-<td>{{ p["fecha_nacimiento"] | format_date }}</td>
-<td>{{ p["email"] }}</td>
-<td>{{ p["telefono"] }}</td>
+<td>{{p.id}}</td>
+<td>{{p.rut}}</td>
+<td>{{p.nombre}}</td>
+<td>{{p.apellido}}</td>
+<td>{{p.fecha_nacimiento}}</td>
+<td>{{p.email}}</td>
+<td>{{p.telefono}}</td>
 
 <td>
 
 <button
 class="btn btn-warning btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalEditar{{p['id']}}">
+data-bs-target="#modalEdit{{p.id}}">
 
 Editar
 
 </button>
 
+
+<form
+method="POST"
+action="{{ url_for('patients.delete', id=p.id) }}"
+style="display:inline;">
+
 <button
+type="submit"
 class="btn btn-danger btn-sm"
-onclick="confirmarEliminar('{{ url_for('patients.delete', id=p['id']) }}')">
+onclick="return confirm('¿Eliminar paciente?')">
 
 Eliminar
 
 </button>
+
+</form>
 
 </td>
 
@@ -76,14 +111,13 @@ Eliminar
 
 <!-- MODAL EDITAR -->
 
-<div class="modal fade" id="modalEditar{{p['id']}}">
+<div class="modal fade" id="modalEdit{{p.id}}">
 
 <div class="modal-dialog">
 
 <div class="modal-content">
 
-<form method="POST"
-action="{{ url_for('patients.edit', id=p['id']) }}">
+<form method="POST" action="{{ url_for('patients.edit', id=p.id) }}">
 
 <div class="modal-header">
 
@@ -95,56 +129,58 @@ Editar Paciente
 type="button"
 class="btn-close"
 data-bs-dismiss="modal">
+
 </button>
 
 </div>
+
 
 <div class="modal-body">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="rut"
-value="{{p['rut']}}"
-placeholder="RUT">
+value="{{p.rut}}"
+required>
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="nombre"
-value="{{p['nombre']}}"
-placeholder="Nombre">
+value="{{p.nombre}}"
+required>
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="apellido"
-value="{{p['apellido']}}"
-placeholder="Apellido">
+value="{{p.apellido}}"
+required>
 
-<input type="date"
+<input
+type="date"
 class="form-control mb-2"
 name="fecha_nacimiento"
-value="{{p['fecha_nacimiento']}}">
+value="{{p.fecha_nacimiento}}">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="email"
-value="{{p['email']}}"
-placeholder="Email">
+value="{{p.email}}">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="telefono"
-value="{{p['telefono']}}"
-placeholder="Teléfono">
+value="{{p.telefono}}">
 
 </div>
 
+
 <div class="modal-footer">
 
-<button class="btn btn-success">
-Guardar
-</button>
-
 <button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
+type="submit"
+class="btn btn-primary">
 
-Cancelar
+Guardar
 
 </button>
 
@@ -166,17 +202,21 @@ Cancelar
 
 </div>
 
+</div>
+
+</div>
+
+
 
 <!-- MODAL CREAR -->
 
-<div class="modal fade" id="modalCrear">
+<div class="modal fade" id="modalCreate">
 
 <div class="modal-dialog">
 
 <div class="modal-content">
 
-<form method="POST"
-action="{{ url_for('patients.create') }}">
+<form method="POST" action="{{ url_for('patients.create') }}">
 
 <div class="modal-header">
 
@@ -188,50 +228,57 @@ Crear Paciente
 type="button"
 class="btn-close"
 data-bs-dismiss="modal">
+
 </button>
 
 </div>
 
+
 <div class="modal-body">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="rut"
-placeholder="RUT">
+placeholder="RUT"
+required>
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="nombre"
-placeholder="Nombre">
+placeholder="Nombre"
+required>
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="apellido"
-placeholder="Apellido">
+placeholder="Apellido"
+required>
 
-<input type="date"
+<input
+type="date"
 class="form-control mb-2"
 name="fecha_nacimiento">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="email"
 placeholder="Email">
 
-<input class="form-control mb-2"
+<input
+class="form-control mb-2"
 name="telefono"
 placeholder="Teléfono">
 
 </div>
 
+
 <div class="modal-footer">
 
-<button class="btn btn-success">
-Guardar
-</button>
-
 <button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
+type="submit"
+class="btn btn-primary">
 
-Cancelar
+Crear
 
 </button>
 
@@ -244,71 +291,5 @@ Cancelar
 </div>
 
 </div>
-
-
-<!-- MODAL ELIMINAR -->
-
-<div class="modal fade" id="modalEliminar">
-
-<div class="modal-dialog modal-sm">
-
-<div class="modal-content">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Confirmar
-</h5>
-
-</div>
-
-<div class="modal-body">
-
-¿Eliminar paciente?
-
-</div>
-
-<div class="modal-footer">
-
-<a id="btnEliminarConfirmado"
-class="btn btn-danger">
-
-Eliminar
-
-</a>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<script>
-
-function confirmarEliminar(url){
-
-document.getElementById("btnEliminarConfirmado").href = url
-
-var modal = new bootstrap.Modal(
-document.getElementById("modalEliminar")
-)
-
-modal.show()
-
-}
-
-</script>
 
 {% endblock %}

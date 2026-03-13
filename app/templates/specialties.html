@@ -4,14 +4,18 @@
 
 <div class="container mt-4">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="card shadow">
 
-<h4>Especialidades</h4>
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0">
+Especialidades
+</h5>
 
 <button
-class="btn btn-primary"
+class="btn btn-primary btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalCrear">
+data-bs-target="#modalCreate">
 
 Crear
 
@@ -20,9 +24,11 @@ Crear
 </div>
 
 
-<table class="table table-striped table-bordered">
+<div class="card-body">
 
-<thead class="table-dark">
+<table class="table table-bordered table-hover">
+
+<thead class="table-light">
 
 <tr>
 <th>ID</th>
@@ -38,23 +44,20 @@ Crear
 
 <tr>
 
-<td>{{e["id"]}}</td>
-<td>{{e["nombre"]}}</td>
+<td>{{e.id}}</td>
+<td>{{e.nombre}}</td>
 
 <td>
 
 <button
-class="btn btn-warning btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalEditar{{e['id']}}">
+class="btn btn-warning btn-sm">
 
 Editar
 
 </button>
 
 <button
-class="btn btn-danger btn-sm"
-onclick="confirmarEliminar('{{ url_for('specialties.delete', id=e['id']) }}')">
+class="btn btn-danger btn-sm">
 
 Eliminar
 
@@ -64,67 +67,6 @@ Eliminar
 
 </tr>
 
-
-<!-- MODAL EDITAR -->
-
-<div class="modal fade" id="modalEditar{{e['id']}}">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST"
-action="{{ url_for('specialties.edit', id=e['id']) }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Editar Especialidad
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-</button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control"
-name="nombre"
-value="{{e['nombre']}}"
-placeholder="Nombre de la especialidad">
-
-</div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
 {% endfor %}
 
 </tbody>
@@ -133,131 +75,8 @@ Cancelar
 
 </div>
 
-
-<!-- MODAL CREAR -->
-
-<div class="modal fade" id="modalCrear">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST"
-action="{{ url_for('specialties.create') }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Crear Especialidad
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-</button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control"
-name="nombre"
-placeholder="Nombre de la especialidad">
-
-</div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
 </div>
 
 </div>
-
-</div>
-
-
-<!-- MODAL ELIMINAR -->
-
-<div class="modal fade" id="modalEliminar">
-
-<div class="modal-dialog modal-sm">
-
-<div class="modal-content">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Confirmar eliminación
-</h5>
-
-</div>
-
-<div class="modal-body">
-
-¿Está seguro que desea eliminar esta especialidad?
-
-</div>
-
-<div class="modal-footer">
-
-<a
-id="btnEliminarConfirmado"
-class="btn btn-danger">
-
-Eliminar
-
-</a>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<script>
-
-function confirmarEliminar(url){
-
-document.getElementById("btnEliminarConfirmado").href = url
-
-var modal = new bootstrap.Modal(
-document.getElementById("modalEliminar")
-)
-
-modal.show()
-
-}
-
-</script>
 
 {% endblock %}

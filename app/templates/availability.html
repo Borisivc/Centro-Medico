@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h4>Disponibilidad Profesional</h4>
+
+<div class="card mb-4">
+
+<div class="card-body">
+
+<form method="POST" action="{{ url_for('availability.create') }}">
+
+<select name="profesional_id" class="form-control mb-2">
+
+{% for p in profesionales %}
+<option value="{{p.id}}">
+{{p.nombre}}
+</option>
+{% endfor %}
+
+</select>
+
+
+<select name="dia_semana" class="form-control mb-2">
+
+<option value="0">Lunes</option>
+<option value="1">Martes</option>
+<option value="2">Miércoles</option>
+<option value="3">Jueves</option>
+<option value="4">Viernes</option>
+<option value="5">Sábado</option>
+<option value="6">Domingo</option>
+
+</select>
+
+<input type="date" name="fecha_inicio" class="form-control mb-2">
+<input type="date" name="fecha_fin" class="form-control mb-2">
+
+<input type="time" name="hora_inicio" class="form-control mb-2">
+<input type="time" name="hora_fin" class="form-control mb-2">
+
+<input
+type="number"
+name="duracion_cita"
+class="form-control mb-2"
+value="30">
+
+<button class="btn btn-primary">
+Guardar disponibilidad
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+
+<table class="table table-striped">
+
+<thead class="table-dark">
+
+<tr>
+
+<th>Profesional</th>
+<th>Día</th>
+<th>Inicio</th>
+<th>Fin</th>
+<th>Duración</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for d in disponibilidad %}
+
+<tr>
+
+<td>{{d.profesional}}</td>
+<td>{{d.dia_semana}}</td>
+<td>{{d.hora_inicio}}</td>
+<td>{{d.hora_fin}}</td>
+<td>{{d.duracion_cita}}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

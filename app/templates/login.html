@@ -2,41 +2,94 @@
 
 {% block content %}
 
-<div class="row justify-content-center">
+<div class="container" style="max-width:500px; margin-top:80px;">
 
-<div class="col-md-4">
+<div class="card shadow">
 
-<h4 class="mb-3">Iniciar sesión</h4>
+<div class="card-header text-center bg-primary text-white">
 
-<form method="POST">
+<h4 class="mb-0">
+Iniciar Sesión
+</h4>
+
+</div>
+
+
+<div class="card-body">
+
+<!-- MENSAJES DE ERROR -->
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+
+<div class="alert alert-danger">
+
+{{ messages[0] }}
+
+</div>
+
+{% endif %}
+{% endwith %}
+
+
+<form method="POST" action="{{ url_for('auth.login') }}">
 
 <div class="mb-3">
+
+<label class="form-label">
+Correo electrónico
+</label>
 
 <input
 type="email"
 name="email"
 class="form-control"
-placeholder="Correo electrónico del usuario"
+placeholder="usuario@correo.com"
 required>
 
 </div>
 
+
 <div class="mb-3">
+
+<label class="form-label">
+Contraseña
+</label>
 
 <input
 type="password"
 name="password"
 class="form-control"
-placeholder="Contraseña del usuario"
+placeholder="Ingrese su contraseña"
 required>
 
 </div>
 
-<button class="btn btn-primary w-100">
+
+<div class="d-grid">
+
+<button class="btn btn-primary">
+
 Ingresar
+
 </button>
 
+</div>
+
 </form>
+
+
+<hr>
+
+
+<div class="text-center text-muted">
+
+Si no puede acceder contacte al administrador del sistema.
+
+</div>
+
+
+</div>
 
 </div>
 

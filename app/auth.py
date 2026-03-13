@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, session, g, flash
-from werkzeug.security import check_password_hash
 from MySQLdb.cursors import DictCursor
+from werkzeug.security import check_password_hash
+import logging
 
 auth_bp = Blueprint(
     "auth",
@@ -9,58 +10,56 @@ auth_bp = Blueprint(
 )
 
 
-# ======================================
 # LOGIN
-# ======================================
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
 
-    email = request.form["email"].strip().lower()
-    password = request.form["password"]
+    try:
 
-    cur = g.db.cursor(DictCursor)
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-    cur.execute("""
-        SELECT id,nombre,email,password_hash
-        FROM usuarios
-        WHERE email=%s AND activo=1
-    """, (email,))
-
-    usuario = cur.fetchone()
-
-    if usuario and check_password_hash(usuario["password_hash"], password):
-
-        session.clear()
-
-        session["user_id"] = usuario["id"]
-        session["nombre"] = usuario["nombre"]
+        cur = g.db.cursor(DictCursor)
 
         cur.execute("""
-            SELECT r.nombre
-            FROM roles r
-            JOIN usuarios_roles ur
-            ON ur.rol_id = r.id
-            WHERE ur.usuario_id=%s
-        """, (usuario["id"],))
+            SELECT id, nombre, email, password_hash, activo
+            FROM usuarios
+            WHERE email = %s
+        """, (email,))
 
-        roles = [r["nombre"].upper() for r in cur.fetchall()]
+        user = cur.fetchone()
 
-        session["roles"] = roles
+        if not user:
+            flash("Credenciales incorrectas", "login_error")
+            return redirect(url_for("main.dashboard"))
+
+        if user["activo"] != 1:
+            flash("Usuario deshabilitado", "login_error")
+            return redirect(url_for("main.dashboard"))
+
+        if not check_password_hash(user["password_hash"], password):
+            flash("Credenciales incorrectas", "login_error")
+            return redirect(url_for("main.dashboard"))
+
+        session["user_id"] = user["id"]
+        session["user_nombre"] = user["nombre"]
+        session["user_email"] = user["email"]
+
+        logging.info(f"Login exitoso: {user['email']}")
 
         return redirect(url_for("main.dashboard"))
 
-    flash(
-        "Usuario o contraseña incorrectos. Si su cuenta está bloqueada contacte al administrador.",
-        "login_error"
-    )
+    except Exception as e:
 
-    return redirect(url_for("main.dashboard"))
+        logging.exception("Error en login")
+
+        flash("Error al iniciar sesión", "login_error")
+
+        return redirect(url_for("main.dashboard"))
 
 
-# ======================================
 # LOGOUT
-# ======================================
 
 @auth_bp.route("/logout")
 def logout():

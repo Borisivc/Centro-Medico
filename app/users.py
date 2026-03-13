@@ -10,10 +10,6 @@ users_bp = Blueprint(
 )
 
 
-# ==============================
-# LISTAR USUARIOS
-# ==============================
-
 @users_bp.route("/")
 @login_required
 @role_required("admin")
@@ -55,10 +51,6 @@ def index():
     )
 
 
-# ==============================
-# CREAR
-# ==============================
-
 @users_bp.route("/create", methods=["POST"])
 @login_required
 @role_required("admin")
@@ -68,7 +60,7 @@ def create():
     email = request.form["email"]
     password = request.form["password"]
 
-    roles = request.form.getlist("roles")
+    roles = request.form.getlist("roles[]")
 
     password_hash = generate_password_hash(password)
 
@@ -92,14 +84,10 @@ def create():
 
     g.db.commit()
 
-    flash("Usuario creado correctamente")
+    flash("Usuario creado")
 
     return redirect(url_for("users.index"))
 
-
-# ==============================
-# EDITAR
-# ==============================
 
 @users_bp.route("/edit/<int:id>", methods=["POST"])
 @login_required
@@ -109,7 +97,7 @@ def edit(id):
     nombre = request.form["nombre"]
     email = request.form["email"]
 
-    roles = request.form.getlist("roles")
+    roles = request.form.getlist("roles[]")
 
     cur = g.db.cursor()
 
@@ -140,11 +128,7 @@ def edit(id):
     return redirect(url_for("users.index"))
 
 
-# ==============================
-# ELIMINAR
-# ==============================
-
-@users_bp.route("/delete/<int:id>")
+@users_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 @role_required("admin")
 def delete(id):

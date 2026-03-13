@@ -4,72 +4,71 @@
 
 <div class="container mt-4">
 
-<h3>Agenda</h3>
+<div class="card shadow">
+
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0">
+Agenda
+</h5>
 
 <button
-class="btn btn-primary mb-3"
+class="btn btn-primary btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalCrear">
+data-bs-target="#modalCreate">
 
 Crear
 
 </button>
 
+</div>
 
-<table class="table table-bordered">
 
-<thead class="table-dark">
+<div class="card-body">
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-light">
 
 <tr>
-
 <th>ID</th>
-<th>RUT</th>
 <th>Paciente</th>
 <th>Profesional</th>
 <th>Fecha</th>
 <th>Hora</th>
-<th>Estado</th>
-<th>Acciones</th>
-
+<th width="120">Acciones</th>
 </tr>
 
 </thead>
 
 <tbody>
 
-{% for a in agenda %}
+{% for a in citas %}
 
 <tr>
 
 <td>{{a.id}}</td>
-<td>{{a.rut | format_rut}}</td>
-<td>{{a.nombre}} {{a.apellido}}</td>
+<td>{{a.paciente}}</td>
 <td>{{a.profesional}}</td>
-<td>{{a.fecha | format_date}}</td>
+<td>{{a.fecha}}</td>
 <td>{{a.hora}}</td>
-<td>{{a.estado}}</td>
 
 <td>
 
-{% if a.estado != 'ANULADA' %}
+<form
+method="POST"
+action="{{ url_for('agenda.delete', id=a.id) }}"
+style="display:inline;">
 
-<a
-class="btn btn-warning btn-sm"
-href="{{ url_for('agenda.anular', id=a.id) }}">
-
-Anular
-
-</a>
-
-{% endif %}
-
-<a
+<button
 class="btn btn-danger btn-sm"
-href="{{ url_for('agenda.delete', id=a.id) }}">
+onclick="return confirm('¿Eliminar cita?')">
 
 Eliminar
 
-</a>
+</button>
+
+</form>
 
 </td>
 
@@ -83,11 +82,15 @@ Eliminar
 
 </div>
 
+</div>
+
+</div>
+
 
 
 <!-- MODAL CREAR CITA -->
 
-<div class="modal fade" id="modalCrear">
+<div class="modal fade" id="modalCreate">
 
 <div class="modal-dialog">
 
@@ -105,6 +108,7 @@ Crear Cita
 type="button"
 class="btn-close"
 data-bs-dismiss="modal">
+
 </button>
 
 </div>
@@ -114,60 +118,39 @@ data-bs-dismiss="modal">
 
 <input
 class="form-control mb-2"
-name="rut"
-placeholder="RUT Paciente">
-
-
-<input
-class="form-control mb-2"
-name="nombre"
-placeholder="Nombre Paciente">
-
+name="paciente_id"
+placeholder="ID Paciente"
+required>
 
 <input
 class="form-control mb-2"
-name="apellido"
-placeholder="Apellido Paciente">
-
-
-<select
-class="form-control mb-2"
-name="profesional_id">
-
-<option value="">
-Seleccionar Profesional
-</option>
-
-{% for p in professionals %}
-
-<option value="{{p.id}}">
-{{p.nombre}}
-</option>
-
-{% endfor %}
-
-</select>
-
+name="profesional_id"
+placeholder="ID Profesional"
+required>
 
 <input
 type="date"
 class="form-control mb-2"
-name="fecha">
-
+name="fecha"
+required>
 
 <input
 type="time"
 class="form-control mb-2"
-name="hora">
-
+name="hora"
+required>
 
 </div>
 
 
 <div class="modal-footer">
 
-<button class="btn btn-success">
-Guardar
+<button
+type="submit"
+class="btn btn-primary">
+
+Crear
+
 </button>
 
 </div>

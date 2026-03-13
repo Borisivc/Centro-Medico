@@ -162,195 +162,6 @@ en el proceso educativo.
 
 
 
-<!-- BENEFICIOS -->
-
-<div class="container mb-5">
-
-<h2 class="text-center mb-4">
-Nuestro Enfoque
-</h2>
-
-<div class="row text-center g-4">
-
-<div class="col-md-4">
-
-<div class="card border-0 shadow-sm">
-
-<div class="card-body">
-
-<h4>👨‍👩‍👧</h4>
-
-<h5>Trabajo con la Familia</h5>
-
-<p>
-
-Involucramos a la familia en el proceso
-de aprendizaje del niño.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-4">
-
-<div class="card border-0 shadow-sm">
-
-<div class="card-body">
-
-<h4>📊</h4>
-
-<h5>Evaluación Psicopedagógica</h5>
-
-<p>
-
-Diagnóstico completo para comprender
-las dificultades del aprendizaje.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-4">
-
-<div class="card border-0 shadow-sm">
-
-<div class="card-body">
-
-<h4>🌱</h4>
-
-<h5>Desarrollo Integral</h5>
-
-<p>
-
-Promovemos el desarrollo emocional,
-cognitivo y académico.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- PROGRAMAS -->
-
-<div class="container mb-5">
-
-<h2 class="text-center mb-4">
-Programas de Intervención
-</h2>
-
-<div class="row g-4">
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Estimulación Temprana</h5>
-
-<p class="text-muted">
-
-Apoyo en los primeros años
-de desarrollo.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Refuerzo Escolar</h5>
-
-<p class="text-muted">
-
-Apoyo académico personalizado.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Habilidades de Estudio</h5>
-
-<p class="text-muted">
-
-Técnicas de aprendizaje
-y organización.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="col-md-3">
-
-<div class="card shadow-sm border-0 text-center">
-
-<div class="card-body">
-
-<h5>Orientación Educativa</h5>
-
-<p class="text-muted">
-
-Acompañamiento en el proceso
-educativo.
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-
 <!-- CTA -->
 
 <div class="bg-primary text-white text-center p-5 rounded shadow">
@@ -387,7 +198,7 @@ Solicitar Evaluación
 
 <div class="modal-content">
 
-<form method="POST" action="{{ url_for('agenda.public_create') }}">
+<form method="POST" action="{{ url_for('agenda.create') }}">
 
 <div class="modal-header">
 
@@ -414,8 +225,8 @@ Agendar Evaluación
 <option value="">Seleccionar Especialidad</option>
 
 {% for e in specialties %}
-<option value="{{e.id}}">
-{{e.nombre}}
+<option value="{{e[0]}}">
+{{e[1]}}
 </option>
 {% endfor %}
 
@@ -425,12 +236,6 @@ Agendar Evaluación
 <select class="form-control mb-2" name="profesional_id" id="profesional">
 
 <option value="">Seleccionar Profesional</option>
-
-{% for p in professionals %}
-<option value="{{p.id}}" data-especialidad="{{p.especialidad_id}}">
-{{p.nombre}}
-</option>
-{% endfor %}
 
 </select>
 
@@ -469,28 +274,28 @@ especialidad.addEventListener("change", function(){
 
 let esp = this.value
 
-for(let option of profesional.options){
+profesional.innerHTML = '<option value="">Seleccionar Profesional</option>'
 
-if(option.dataset.especialidad == esp || esp == ""){
-option.style.display = "block"
-}else{
-option.style.display = "none"
-}
+if(!esp) return
 
-}
+fetch("/profesionales/" + esp)
 
-profesional.value = ""
+.then(res => res.json())
+
+.then(data => {
+
+data.forEach(p => {
+
+let option = document.createElement("option")
+
+option.value = p.id
+option.textContent = p.nombre
+
+profesional.appendChild(option)
 
 })
 
-
-profesional.addEventListener("change", function(){
-
-let esp = this.options[this.selectedIndex].dataset.especialidad
-
-if(esp){
-especialidad.value = esp
-}
+})
 
 })
 

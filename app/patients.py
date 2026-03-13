@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, g, request, redirect, url_for, flash
-from .decorators import login_required, role_required
 from MySQLdb.cursors import DictCursor
+from .decorators import login_required, role_required
 
 patients_bp = Blueprint(
     "patients",
@@ -8,9 +8,9 @@ patients_bp = Blueprint(
     url_prefix="/patients"
 )
 
-# ==============================
+# =====================================
 # LISTAR PACIENTES
-# ==============================
+# =====================================
 
 @patients_bp.route("/")
 @login_required
@@ -19,7 +19,11 @@ def index():
 
     cur = g.db.cursor(DictCursor)
 
-    cur.execute("SELECT * FROM pacientes")
+    cur.execute("""
+        SELECT *
+        FROM pacientes
+        ORDER BY nombre
+    """)
 
     pacientes = cur.fetchall()
 
@@ -29,9 +33,9 @@ def index():
     )
 
 
-# ==============================
+# =====================================
 # CREAR PACIENTE
-# ==============================
+# =====================================
 
 @patients_bp.route("/create", methods=["POST"])
 @login_required
@@ -56,7 +60,7 @@ def create():
 
     if existe:
 
-        flash("⚠ Ya existe un paciente con ese RUT")
+        flash("El paciente ya existe con ese RUT", "warning")
 
         return redirect(url_for("patients.index"))
 
@@ -77,14 +81,14 @@ def create():
 
     g.db.commit()
 
-    flash("✔ Paciente creado correctamente")
+    flash("Paciente creado correctamente", "success")
 
     return redirect(url_for("patients.index"))
 
 
-# ==============================
+# =====================================
 # EDITAR PACIENTE
-# ==============================
+# =====================================
 
 @patients_bp.route("/edit/<int:id>", methods=["POST"])
 @login_required
@@ -121,16 +125,16 @@ def edit(id):
 
     g.db.commit()
 
-    flash("✔ Paciente actualizado")
+    flash("Paciente actualizado", "success")
 
     return redirect(url_for("patients.index"))
 
 
-# ==============================
+# =====================================
 # ELIMINAR PACIENTE
-# ==============================
+# =====================================
 
-@patients_bp.route("/delete/<int:id>")
+@patients_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 @role_required("admin")
 def delete(id):
@@ -144,6 +148,6 @@ def delete(id):
 
     g.db.commit()
 
-    flash("✔ Paciente eliminado")
+    flash("Paciente eliminado", "success")
 
     return redirect(url_for("patients.index"))

@@ -35,11 +35,12 @@ def index():
         LEFT JOIN especialidades e 
             ON e.id = pe.especialidad_id
         GROUP BY p.id
+        ORDER BY p.nombre
     """)
 
     profesionales = cur.fetchall()
 
-    cur.execute("SELECT * FROM especialidades")
+    cur.execute("SELECT * FROM especialidades ORDER BY nombre")
     especialidades = cur.fetchall()
 
     cur.execute("""
@@ -72,7 +73,7 @@ def create():
     email = request.form["email"]
     telefono = request.form["telefono"]
 
-    especialidades = request.form.getlist("especialidades")
+    especialidades = request.form.getlist("especialidades[]")
 
     cur = g.db.cursor()
 
@@ -114,7 +115,7 @@ def edit(id):
     email = request.form["email"]
     telefono = request.form["telefono"]
 
-    especialidades = request.form.getlist("especialidades")
+    especialidades = request.form.getlist("especialidades[]")
 
     cur = g.db.cursor()
 
@@ -152,7 +153,7 @@ def edit(id):
 # ELIMINAR PROFESIONAL
 # ==============================
 
-@professionals_bp.route("/delete/<int:id>")
+@professionals_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 @role_required("admin")
 def delete(id):

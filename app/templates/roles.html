@@ -4,14 +4,18 @@
 
 <div class="container mt-4">
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="card shadow">
 
-<h4>Roles</h4>
+<div class="card-header d-flex justify-content-between align-items-center">
+
+<h5 class="mb-0">
+Roles
+</h5>
 
 <button
-class="btn btn-primary"
+class="btn btn-primary btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalCrear">
+data-bs-target="#modalCreate">
 
 Crear
 
@@ -19,9 +23,12 @@ Crear
 
 </div>
 
-<table class="table table-striped table-bordered">
 
-<thead class="table-dark">
+<div class="card-body">
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-light">
 
 <tr>
 <th>ID</th>
@@ -37,86 +44,38 @@ Crear
 
 <tr>
 
-<td>{{r["id"]}}</td>
-<td>{{r["nombre"]}}</td>
+<td>{{r.id}}</td>
+<td>{{r.nombre}}</td>
 
 <td>
 
 <button
 class="btn btn-warning btn-sm"
 data-bs-toggle="modal"
-data-bs-target="#modalEditar{{r['id']}}">
+data-bs-target="#modalEdit{{r.id}}">
 
 Editar
 
 </button>
 
+<form
+method="POST"
+action="{{ url_for('roles.delete', id=r.id) }}"
+style="display:inline;">
+
 <button
 class="btn btn-danger btn-sm"
-onclick="confirmarEliminar('{{ url_for('roles.delete', id=r['id']) }}')">
+onclick="return confirm('¿Eliminar rol?')">
 
 Eliminar
 
 </button>
 
+</form>
+
 </td>
 
 </tr>
-
-
-<div class="modal fade" id="modalEditar{{r['id']}}">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST"
-action="{{ url_for('roles.edit', id=r['id']) }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">Editar Rol</h5>
-
-<button type="button"
-class="btn-close"
-data-bs-dismiss="modal"></button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control"
-name="nombre"
-value="{{r['nombre']}}"
-placeholder="Nombre del rol">
-
-</div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
 
 {% endfor %}
 
@@ -126,142 +85,8 @@ Cancelar
 
 </div>
 
-
-<!-- MODAL CREAR -->
-
-<div class="modal fade" id="modalCrear">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form id="formCrearRol"
-method="POST"
-action="{{ url_for('roles.create') }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Crear Rol
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal"></button>
-
-</div>
-
-<div class="modal-body">
-
-<input
-class="form-control"
-name="nombre"
-placeholder="Nombre del rol">
-
-</div>
-
-<div class="modal-footer">
-
-<button class="btn btn-success">
-Guardar
-</button>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</form>
-
 </div>
 
 </div>
-
-</div>
-
-
-<!-- MODAL ELIMINAR -->
-
-<div class="modal fade" id="modalEliminar">
-
-<div class="modal-dialog modal-sm">
-
-<div class="modal-content">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Confirmar
-</h5>
-
-</div>
-
-<div class="modal-body">
-
-¿Está seguro que desea eliminar este rol?
-
-</div>
-
-<div class="modal-footer">
-
-<a id="btnEliminarConfirmado"
-class="btn btn-danger">
-
-Eliminar
-
-</a>
-
-<button
-type="button"
-class="btn btn-secondary"
-data-bs-dismiss="modal">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<script>
-
-function confirmarEliminar(url){
-
-document.getElementById("btnEliminarConfirmado").href = url
-
-var modal = new bootstrap.Modal(
-document.getElementById("modalEliminar")
-)
-
-modal.show()
-
-}
-
-/* limpiar formulario crear */
-
-var modalCrear = document.getElementById('modalCrear')
-
-modalCrear.addEventListener('show.bs.modal', function () {
-
-var form = modalCrear.querySelector('form')
-
-form.reset()
-
-})
-
-</script>
 
 {% endblock %}

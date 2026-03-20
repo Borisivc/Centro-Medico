@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
-            <h2 class="fw-bold modal-integra-title text-start m-0">Gestor de Pacientes</h2>
-            <p class="text-muted small mb-0 fw-bold">Base de datos de alumnos y pacientes</p>
+            <h2 class="modal-integra-title text-start m-0">Gestor de Pacientes</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Base de datos de alumnos y pacientes</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalMantenedor" onclick="limpiarFormPac()">NUEVO</button>
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalMantenedor" onclick="limpiarFormPac()">
+                <i class="fas fa-plus me-2"></i>NUEVO
+            </button>
         </div>
     </div>
 
-    <div class="card shadow-sm bg-white p-3">
-        <div class="table-responsive table-responsive-scroll">
+    <div class="card shadow-sm border-0 p-3">
+        <div class="table-responsive-scroll">
             <table id="tablaPacientes" class="table table-hover align-middle mb-0 w-100">
                 <thead class="bg-light">
                     <tr class="small text-muted text-uppercase">
@@ -26,18 +28,15 @@
                     {% for p in pacientes %}
                     <tr>
                         <td class="fw-bold text-navy-integra">{{ p.rut | formatear_rut }}</td>
-                        <td class="small">{{ p.nombre }} {{ p.apellido }}</td>
-                        <td class="small text-muted">{{ p.fecha_nacimiento.strftime('%d-%m-%Y') if p.fecha_nacimiento else '---' }}</td>
+                        <td>{{ p.nombre }} {{ p.apellido }}</td>
+                        <td>{{ p.fecha_nacimiento }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-integra me-1" 
-                                    data-bs-toggle="modal" data-bs-target="#modalMantenedor"
-                                    onclick="llenarModalPac(this)"
-                                    data-id="{{ p.id }}" data-rut="{{ p.rut }}"
-                                    data-nombre="{{ p.nombre }}" data-apellido="{{ p.apellido }}"
-                                    data-fecha="{{ p.fecha_nacimiento.strftime('%Y-%m-%d') if p.fecha_nacimiento else '' }}">
+                            <button class="btn-editar-integra me-1" onclick="editarPac(this)" 
+                                data-id="{{ p.id }}" data-rut="{{ p.rut }}" data-nombre="{{ p.nombre }}" 
+                                data-apellido="{{ p.apellido }}" data-fecha="{{ p.fecha_nacimiento }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-integra" onclick="confirmarEliminacion('{{p.id}}', '{{p.nombre}} {{p.apellido}}')">
+                            <button class="btn-eliminar-integra" onclick="confirmarEliminacion('{{ p.id }}', '{{ p.nombre }} {{ p.apellido }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -49,72 +48,27 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalMantenedor" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-body">
-                <h6 class="modal-integra-title" id="tituloModal">Paciente</h6>
-                <form id="formMantenedor" action="{{ url_for('patients.save') }}" method="POST">
-                    <input type="hidden" name="pac_id" id="input_id">
-                    <div class="mb-3"><label class="label-integra">RUT</label><input type="text" name="rut" id="input_rut" class="form-control form-control-integra" required onblur="verificarExistencia(this.value)"></div>
-                    <div class="mb-3"><label class="label-integra">Nombre</label><input type="text" name="nombre" id="input_nombre" class="form-control form-control-integra" required></div>
-                    <div class="mb-3"><label class="label-integra">Apellido</label><input type="text" name="apellido" id="input_apellido" class="form-control form-control-integra" required></div>
-                    <div class="mb-4"><label class="label-integra">Fecha de Nacimiento</label><input type="date" name="fecha_nacimiento" id="input_fecha" class="form-control form-control-integra"></div>
-                    <button type="submit" id="btn-submit" class="btn-integra-confirm w-100">GUARDAR</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#tablaPacientes')) {
-            $('#tablaPacientes').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-                "pageLength": 10,
-                "dom": '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6"p>>'
-            });
-        }
-    });
-
-    function limpiarFormPac() {
-        const form = document.getElementById('formMantenedor');
-        form.reset();
-        document.getElementById('tituloModal').innerText = 'Nuevo Paciente';
-        document.getElementById('input_id').value = '';
-        document.getElementById('input_rut').readOnly = false;
-    }
-
-    function llenarModalPac(btn) {
-        limpiarFormPac();
-        document.getElementById('tituloModal').innerText = 'Editar Paciente';
-        document.getElementById('input_id').value = btn.getAttribute('data-id');
-        document.getElementById('input_rut').value = btn.getAttribute('data-rut');
-        document.getElementById('input_nombre').value = btn.getAttribute('data-nombre');
-        document.getElementById('input_apellido').value = btn.getAttribute('data-apellido');
-        document.getElementById('input_fecha').value = btn.getAttribute('data-fecha');
-        document.getElementById('input_rut').readOnly = true;
-    }
-
-    function verificarExistencia(rut) {
-        if (!rut || document.getElementById('input_id').value) return;
-        fetch(`/administracion/pacientes/verificar/${rut}`).then(res => res.json()).then(data => {
-            if (data.existe) {
-                Swal.fire({ title: 'RUT Duplicado', icon: 'warning', confirmButtonColor: '#001f3f' });
-                document.getElementById('btn-submit').disabled = true;
-            } else { document.getElementById('btn-submit').disabled = false; }
+        $('#tablaPacientes').DataTable({
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            "dom": '<"top"f>rt<"bottom"lp><"clear">'
         });
-    }
+    });
 
     function confirmarEliminacion(id, nombre) {
         Swal.fire({
-            title: '¿Eliminar?', text: nombre, icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'ELIMINAR'
+            title: '¿Eliminar Paciente?',
+            text: nombre,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
+            buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/administracion/pacientes/delete/${id}`, { method: 'POST' })
-                .then(res => res.json()).then(data => { if(data.status === 'success') location.reload(); });
+                // Lógica de eliminación aquí
             }
         });
     }

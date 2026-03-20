@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h2 class="modal-integra-title text-start m-0">Gestor de Profesionales</h2>
-            <p class="text-muted small mb-0 fw-bold">Administración del staff médico y terapeutas</p>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración del staff médico</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalMantenedor" onclick="limpiarFormProf()">NUEVO</button>
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalMantenedor" onclick="limpiarFormProf()">
+                <i class="fas fa-plus me-2"></i>NUEVO
+            </button>
         </div>
     </div>
 
-    <div class="card p-3 shadow-sm bg-white">
+    <div class="card shadow-sm border-0 p-3">
         <div class="table-responsive-scroll">
             <table id="tablaProfesionales" class="table table-hover align-middle mb-0 w-100">
                 <thead class="bg-light">
@@ -27,31 +29,18 @@
                     {% for p in profesionales %}
                     <tr>
                         <td>
-                            <span class="badge {% if p.estado_nombre == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3">
+                            <span class="badge {% if p.estado_nombre == 'ACTIVO' %}bg-success-light text-success{% else %}bg-danger-light text-danger{% endif %} px-3">
                                 {{ p.estado_nombre }}
                             </span>
                         </td>
                         <td class="fw-bold text-navy-integra">{{ p.rut | formatear_rut }}</td>
-                        <td class="small">{{ p.nombre }} {{ p.apellido }}</td>
-                        <td class="small">
-                            {% if p.especialidades_nombres %}
-                                {% for esp in p.especialidades_nombres.split(', ') %}
-                                <span class="badge bg-light text-dark border px-2 rounded-pill small mb-1">{{ esp }}</span>
-                                {% endfor %}
-                            {% else %}
-                                <span class="text-muted fst-italic small">Sin asignar</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ p.nombre }}</td>
+                        <td><span class="badge bg-light text-navy-integra border">{{ p.especialidades_nombres }}</span></td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-integra me-1" 
-                                    data-bs-toggle="modal" data-bs-target="#modalMantenedor"
-                                    onclick="llenarModalProf(this)"
-                                    data-id="{{ p.id }}" data-rut="{{ p.rut }}"
-                                    data-nombre="{{ p.nombre }}" data-apellido="{{ p.apellido }}"
-                                    data-estado="{{ p.estado_id }}" data-especialidades="{{ p.especialidades_ids }}">
+                            <button class="btn-editar-integra me-1" onclick="editarProf(this)" data-id="{{ p.id }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-integra" onclick="confirmarEliminacion('{{p.id}}', '{{p.nombre}} {{p.apellido}}')">
+                            <button class="btn-eliminar-integra" onclick="confirmarEliminacion('{{ p.id }}', '{{ p.nombre }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -63,104 +52,27 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalMantenedor" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-body">
-                <h6 class="modal-integra-title" id="tituloModal">Profesional</h6>
-                <form id="formMantenedor" action="{{ url_for('professionals.save') }}" method="POST">
-                    <input type="hidden" name="prof_id" id="input_id">
-                    <div class="row">
-                        <div class="col-md-7 mb-3">
-                            <label class="label-integra">RUT</label>
-                            <input type="text" name="rut" id="input_rut" class="form-control form-control-integra" required onblur="verificarExistencia(this.value)">
-                        </div>
-                        <div class="col-md-5 mb-3">
-                            <label class="label-integra">Estado</label>
-                            <select name="activo" id="input_estado" class="form-select form-control-integra" required>
-                                {% for est in estados %}
-                                <option value="{{ est.id }}">{{ est.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3"><label class="label-integra">Nombre</label><input type="text" name="nombre" id="input_nombre" class="form-control form-control-integra" required></div>
-                    <div class="mb-3"><label class="label-integra">Apellido</label><input type="text" name="apellido" id="input_apellido" class="form-control form-control-integra" required></div>
-                    <div class="mb-4">
-                        <label class="label-integra">Especialidades</label>
-                        <div class="p-3 border rounded-3 bg-white overflow-auto" id="container-especialidades">
-                            {% for e in todas_especialidades %}
-                            <div class="form-check small mb-1">
-                                <input class="form-check-input check-esp" type="checkbox" name="especialidades" value="{{ e.id }}" id="esp_{{ e.id }}">
-                                <label class="form-check-label fw-bold" for="esp_{{ e.id }}">{{ e.nombre }}</label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <button type="submit" id="btn-submit" class="btn-integra-confirm">GUARDAR</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#tablaProfesionales')) {
-            $('#tablaProfesionales').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-                "pageLength": 10,
-                "autoWidth": false, // Desactivamos el auto-ancho para que respete el contenedor
-                "dom": '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6"p>>'
-            });
-        }
-    });
-
-    function limpiarFormProf() {
-        document.getElementById('formMantenedor').reset();
-        document.getElementById('tituloModal').innerText = 'Nuevo Profesional';
-        document.getElementById('input_id').value = '';
-        document.getElementById('input_rut').readOnly = false;
-        document.querySelectorAll('.check-esp').forEach(c => c.checked = false);
-    }
-
-    function llenarModalProf(btn) {
-        limpiarFormProf();
-        document.getElementById('tituloModal').innerText = 'Editar Profesional';
-        document.getElementById('input_id').value = btn.getAttribute('data-id');
-        document.getElementById('input_rut').value = btn.getAttribute('data-rut');
-        document.getElementById('input_nombre').value = btn.getAttribute('data-nombre');
-        document.getElementById('input_apellido').value = btn.getAttribute('data-apellido');
-        document.getElementById('input_estado').value = btn.getAttribute('data-estado');
-        document.getElementById('input_rut').readOnly = true;
-
-        const idsStr = btn.getAttribute('data-especialidades');
-        if (idsStr) {
-            idsStr.split(',').forEach(id => {
-                const ck = document.getElementById('esp_' + id.trim());
-                if(ck) ck.checked = true;
-            });
-        }
-    }
-
-    function verificarExistencia(rut) {
-        if (!rut || document.getElementById('input_id').value) return;
-        fetch(`/administracion/profesionales/verificar/${rut}`).then(res => res.json()).then(data => {
-            if (data.existe) {
-                Swal.fire({ title: 'RUT Duplicado', icon: 'warning', confirmButtonColor: '#001f3f' });
-                document.getElementById('btn-submit').disabled = true;
-            } else { document.getElementById('btn-submit').disabled = false; }
+        $('#tablaProfesionales').DataTable({
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            "dom": '<"top"f>rt<"bottom"lp><"clear">'
         });
-    }
+    });
 
     function confirmarEliminacion(id, nombre) {
         Swal.fire({
-            title: '¿Eliminar?', text: nombre, icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'ELIMINAR'
+            title: '¿Eliminar Profesional?',
+            text: nombre,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
+            buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/administracion/profesionales/delete/${id}`, { method: 'POST' })
-                .then(res => res.json()).then(data => { if(data.status === 'success') location.reload(); });
+                // Lógica de eliminación aquí
             }
         });
     }

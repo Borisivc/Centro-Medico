@@ -1,114 +1,57 @@
-import logging
-import MySQLdb
-
-from flask import Flask, g, request
-
-from .config import Config
-
+import os
+from flask import Flask, g
+from .db import get_db_connection
 
 def create_app():
-
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.secret_key = os.getenv("SECRET_KEY", "integra_2026_key")
 
-    # ======================================
-    # LOGGING
-    # ======================================
+    # ==========================================================================
+    # FILTRO DE JINJA PARA RUT (ESTÁNDAR VISUAL)
+    # ==========================================================================
+    @app.template_filter('formatear_rut')
+    def formatear_rut(rut):
+        if not rut: return ""
+        rut = str(rut).replace(".", "").replace("-", "").strip()
+        if len(rut) < 2: return rut
+        cuerpo, dv = rut[:-1], rut[-1]
+        c_formateado = ""
+        while len(cuerpo) > 3:
+            c_formateado = "." + cuerpo[-3:] + c_formateado
+            cuerpo = cuerpo[:-3]
+        return cuerpo + c_formateado + "-" + dv
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s"
-    )
+    # Importaciones siguiendo tus nombres de archivos físicos
+    from .routes import main_bp
+    from .agenda import agenda_bp
+    from .professionals import professionals_bp
+    from .patients import patients_bp
+    from .roles import roles_bp
+    from .users import users_bp
+    from .specialties import specialties_bp
+    from .states import states_bp
+    from app.availability import availability_bp
 
-    app.logger.info("Aplicación iniciada")
-
-    # ======================================
-    # FILTROS JINJA
-    # ======================================
-
-    from .filters import format_rut, format_date
-
-    app.jinja_env.filters["format_rut"] = format_rut
-    app.jinja_env.filters["format_date"] = format_date
-
-    # ======================================
-    # CONEXION BASE DE DATOS
-    # ======================================
-
-    def get_db():
-
-        if "db" not in g:
-
-            g.db = MySQLdb.connect(
-                host=app.config["MYSQL_HOST"],
-                user=app.config["MYSQL_USER"],
-                passwd=app.config["MYSQL_PASSWORD"],
-                db=app.config["MYSQL_DB"],
-                charset="utf8mb4"
-            )
-
-        return g.db
-
-
-    # ======================================
-    # BEFORE REQUEST
-    # ======================================
+    # Registro de Blueprints
+    app.register_blueprint(main_bp)
+    app.register_blueprint(agenda_bp, url_prefix='/administracion')
+    app.register_blueprint(professionals_bp, url_prefix='/administracion')
+    app.register_blueprint(patients_bp, url_prefix='/administracion')
+    app.register_blueprint(roles_bp, url_prefix='/administracion')
+    app.register_blueprint(users_bp, url_prefix='/administracion')
+    app.register_blueprint(specialties_bp, url_prefix='/administracion')
+    app.register_blueprint(states_bp, url_prefix='/administracion')
+    app.register_blueprint(availability_bp, url_prefix='/administracion')
 
     @app.before_request
     def before_request():
+        if 'db' not in g:
+            g.db = get_db_connection()
 
-        g.db = get_db()
-
-        app.logger.info(
-            f"{request.method} {request.path}"
-        )
-
-
-    # ======================================
-    # TEARDOWN
-    # ======================================
-
-    @app.teardown_request
-    def teardown_request(exception):
-
-        db = g.pop("db", None)
-
+    @app.teardown_appcontext
+    def teardown_db(error):
+        db = g.pop('db', None)
         if db is not None:
             db.close()
-
-    # ======================================
-    # BLUEPRINTS
-    # ======================================
-
-    from .routes import main_bp
-    app.register_blueprint(main_bp)
-
-    from .auth import auth_bp
-    app.register_blueprint(auth_bp)
-
-    from .patients import patients_bp
-    app.register_blueprint(patients_bp)
-
-    from .users import users_bp
-    app.register_blueprint(users_bp)
-
-    from .roles import roles_bp
-    app.register_blueprint(roles_bp)
-
-    from .specialties import specialties_bp
-    app.register_blueprint(specialties_bp)
-
-    from .states import states_bp
-    app.register_blueprint(states_bp)
-
-    from .professionals import professionals_bp
-    app.register_blueprint(professionals_bp)
-
-    from .agenda import agenda_bp
-    app.register_blueprint(agenda_bp)
-
-    # NUEVO MODULO DISPONIBILIDAD
-    from .availability import availability_bp
-    app.register_blueprint(availability_bp)
 
     return app

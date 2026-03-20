@@ -1,166 +1,193 @@
 {% extends "base.html" %}
-
 {% block content %}
+<div class="container py-5">
+    
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold modal-integra-title text-start m-0" style="text-align: left !important;">Gestor de Agenda</h2>
+            <p class="text-muted small mb-0 fw-bold">Listado completo de evaluaciones y citas registradas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn-nuevo-integra" onclick="abrirModal()">
+                <i class="fas fa-plus me-1"></i> NUEVA CITA
+            </button>
+        </div>
+    </div>
 
-<div class="container mt-4">
-
-<div class="card shadow">
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-<h5 class="mb-0">
-Agenda
-</h5>
-
-<button
-class="btn btn-primary btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalCreate">
-
-Crear
-
-</button>
-
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="small text-muted text-uppercase">
+                        <th class="ps-4">FECHA / HORA</th>
+                        <th>PACIENTE</th>
+                        <th>PROFESIONAL</th>
+                        <th>ESTADO</th>
+                        <th class="text-center">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in citas %}
+                    <tr>
+                        <td class="ps-4 fw-bold" style="color: var(--navy-integra);">
+                            <i class="far fa-calendar-alt me-2 text-primary"></i>{{ c.fecha.strftime('%d/%m/%Y') }} - {{ c.hora }}
+                        </td>
+                        <td class="small">{{ c.pac_nom }} {{ c.pac_ape }}</td>
+                        <td class="small"><span class="badge bg-light text-dark border">{{ c.prof_nom }} {{ c.prof_ape }}</span></td>
+                        <td>
+                            {% if c.estado == 'AGENDADA' %}<span class="badge bg-primary px-3 rounded-pill">AGENDADA</span>
+                            {% elif c.estado == 'CONFIRMADA' %}<span class="badge bg-info text-dark px-3 rounded-pill">CONFIRMADA</span>
+                            {% elif c.estado == 'ATENDIDA' %}<span class="badge bg-success px-3 rounded-pill">ATENDIDA</span>
+                            {% elif c.estado == 'ANULADA' %}<span class="badge bg-danger px-3 rounded-pill">ANULADA</span>
+                            {% else %}<span class="badge bg-secondary px-3 rounded-pill">{{ c.estado }}</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <button class="btn-editar-integra me-1" onclick="abrirModal('{{c.id}}', '{{c.pac_id}}', '{{c.prof_id}}', '{{c.fecha.strftime('%Y-%m-%d')}}', '{{c.hora}}', '{{c.estado}}')" title="Editar Cita">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <button class="btn-eliminar-integra" onclick="confirmarEliminacion('{{c.id}}', '{{c.pac_nom}} {{c.pac_ape}}')" title="Eliminar Cita">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted small">
+                            <i class="far fa-folder-open fa-3x mb-3 text-light"></i><br>
+                            No hay citas registradas en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<div class="modal fade" id="modalAgenda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h6 class="modal-integra-title" id="ag_titulo">Agendar Evaluación</h6>
+                
+                <form id="formAgenda" action="{{ url_for('agenda.save') }}" method="POST" autocomplete="off">
+                    <input type="hidden" name="ag_id" id="ag_id">
+                    
+                    <div class="mb-3">
+                        <label class="label-integra">Paciente</label>
+                        <select name="paciente_id" id="ag_paciente" class="form-select form-control-integra" required>
+                            <option value="">Seleccione un paciente...</option>
+                            {% for p in pacientes %}
+                            <option value="{{ p.id }}">{{ p.nombre }} {{ p.apellido }} ({{ p.rut }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-<div class="card-body">
+                    <div class="mb-3">
+                        <label class="label-integra">Profesional</label>
+                        <select name="profesional_id" id="ag_profesional" class="form-select form-control-integra" required>
+                            <option value="">Seleccione un profesional...</option>
+                            {% for pr in profesionales %}
+                            <option value="{{ pr.id }}">{{ pr.nombre }} {{ pr.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-<table class="table table-bordered table-hover">
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="label-integra">Fecha</label>
+                            <input type="date" name="fecha" id="ag_fecha" class="form-control form-control-integra" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-integra">Hora</label>
+                            <input type="time" name="hora" id="ag_hora" class="form-control form-control-integra" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4" id="div_estado" style="display: none;">
+                        <label class="label-integra">Estado</label>
+                        <select name="estado_id" id="ag_estado" class="form-select form-control-integra">
+                            {% for e in estados %}
+                            <option value="{{ e.id }}">{{ e.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-<thead class="table-light">
-
-<tr>
-<th>ID</th>
-<th>Paciente</th>
-<th>Profesional</th>
-<th>Fecha</th>
-<th>Hora</th>
-<th width="120">Acciones</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for a in citas %}
-
-<tr>
-
-<td>{{a.id}}</td>
-<td>{{a.paciente}}</td>
-<td>{{a.profesional}}</td>
-<td>{{a.fecha}}</td>
-<td>{{a.hora}}</td>
-
-<td>
-
-<form
-method="POST"
-action="{{ url_for('agenda.delete', id=a.id) }}"
-style="display:inline;">
-
-<button
-class="btn btn-danger btn-sm"
-onclick="return confirm('¿Eliminar cita?')">
-
-Eliminar
-
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
+                    <button type="submit" class="btn-integra-confirm w-100">CONFIRMAR REGISTRO</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
-</div>
+<script>
+const modalBS = new bootstrap.Modal(document.getElementById('modalAgenda'));
 
-</div>
+function abrirModal(id='', pac='', prof='', fecha='', hora='', estado='') {
+    document.getElementById('formAgenda').reset();
+    document.getElementById('ag_id').value = id;
+    
+    if(id) {
+        document.getElementById('ag_titulo').innerText = 'Editar Cita';
+        document.getElementById('ag_paciente').value = pac;
+        document.getElementById('ag_profesional').value = prof;
+        document.getElementById('ag_fecha').value = fecha;
+        document.getElementById('ag_hora').value = hora.substring(0,5);
+        
+        const comboEstado = document.getElementById('ag_estado');
+        for(let i=0; i<comboEstado.options.length; i++){
+            if(comboEstado.options[i].text === estado) {
+                comboEstado.selectedIndex = i;
+                break;
+            }
+        }
+        document.getElementById('div_estado').style.display = 'block';
+    } else {
+        document.getElementById('ag_titulo').innerText = 'Agendar Nueva Cita';
+        document.getElementById('div_estado').style.display = 'none';
+        document.getElementById('ag_estado').value = "1";
+    }
+    modalBS.show();
+}
 
-
-
-<!-- MODAL CREAR CITA -->
-
-<div class="modal fade" id="modalCreate">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST" action="{{ url_for('agenda.create') }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Crear Cita
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-
-</button>
-
-</div>
-
-
-<div class="modal-body">
-
-<input
-class="form-control mb-2"
-name="paciente_id"
-placeholder="ID Paciente"
-required>
-
-<input
-class="form-control mb-2"
-name="profesional_id"
-placeholder="ID Profesional"
-required>
-
-<input
-type="date"
-class="form-control mb-2"
-name="fecha"
-required>
-
-<input
-type="time"
-class="form-control mb-2"
-name="hora"
-required>
-
-</div>
-
-
-<div class="modal-footer">
-
-<button
-type="submit"
-class="btn btn-primary">
-
-Crear
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
+// LÓGICA DE ELIMINACIÓN CON SWEETALERT
+function confirmarEliminacion(id, paciente_nombre) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: `Se eliminará permanentemente la cita de ${paciente_nombre}`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Rojo Integra
+        cancelButtonColor: '#001f3f',  // Navy Integra
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/administracion/agenda/delete/${id}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: data.message,
+                        confirmButtonColor: '#001f3f'
+                    }).then(() => {
+                        location.reload(); // Recargar para actualizar la grilla
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Hubo un problema de conexión al intentar eliminar.', 'error');
+            });
+        }
+    });
+}
+</script>
 {% endblock %}

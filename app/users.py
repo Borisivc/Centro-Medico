@@ -1,152 +1,98 @@
-from flask import Blueprint, render_template, g, request, redirect, url_for, flash
-from .decorators import login_required, role_required
-from MySQLdb.cursors import DictCursor
+from flask import Blueprint, render_template, g, request, redirect, url_for, flash, jsonify
 from werkzeug.security import generate_password_hash
 
-users_bp = Blueprint(
-    "users",
-    __name__,
-    url_prefix="/users"
-)
+users_bp = Blueprint('users', __name__)
 
-
-@users_bp.route("/")
-@login_required
-@role_required("admin")
+@users_bp.route('/usuarios')
 def index():
+    cur = g.db.cursor()
+    
+    # Consulta robusta: Traemos los datos básicos del usuario y su rol
+    # Si 'rol_id' no está en 'usuarios', lo buscamos en la tabla 'usuarios_roles'
+    try:
+        cur.execute("""
+            SELECT 
+                u.id, 
+                u.nombre, 
+                u.email, 
+                u.activo as estado_id,
+                CASE WHEN u.activo = 1 THEN 'ACTIVO' ELSE 'INACTIVO' END as estado_nombre,
+                r.id as rol_id,
+                r.nombre as rol_nombre
+            FROM usuarios u
+            LEFT JOIN usuarios_roles ur ON u.id = ur.usuario_id
+            LEFT JOIN roles r ON ur.rol_id = r.id
+        """)
+        usuarios = cur.fetchall()
+    except Exception:
+        # Fallback si tu estructura es directa (rol_id en tabla usuarios)
+        cur.execute("""
+            SELECT 
+                u.id, u.nombre, u.email, u.activo as estado_id,
+                CASE WHEN u.activo = 1 THEN 'ACTIVO' ELSE 'INACTIVO' END as estado_nombre,
+                u.rol_id, r.nombre as rol_nombre
+            FROM usuarios u
+            LEFT JOIN roles r ON u.rol_id = r.id
+        """)
+        usuarios = cur.fetchall()
 
-    cur = g.db.cursor(DictCursor)
-
-    cur.execute("""
-        SELECT 
-            u.id,
-            u.nombre,
-            u.email,
-            GROUP_CONCAT(r.nombre SEPARATOR ', ') AS roles
-        FROM usuarios u
-        LEFT JOIN usuarios_roles ur 
-            ON ur.usuario_id = u.id
-        LEFT JOIN roles r 
-            ON r.id = ur.rol_id
-        GROUP BY u.id
-    """)
-
-    usuarios = cur.fetchall()
-
-    cur.execute("SELECT * FROM roles")
+    # Traemos los roles para los selects del modal
+    cur.execute("SELECT id, nombre FROM roles")
     roles = cur.fetchall()
+    
+    # Listado de estados para el modal
+    estados = [
+        {'id': 1, 'nombre': 'ACTIVO'},
+        {'id': 0, 'nombre': 'INACTIVO'}
+    ]
+    
+    cur.close()
+    return render_template('users.html', usuarios=usuarios, roles=roles, estados=estados)
 
-    cur.execute("""
-        SELECT usuario_id, rol_id
-        FROM usuarios_roles
-    """)
-
-    usuarios_roles = cur.fetchall()
-
-    return render_template(
-        "users.html",
-        usuarios=usuarios,
-        roles=roles,
-        usuarios_roles=usuarios_roles
-    )
-
-
-@users_bp.route("/create", methods=["POST"])
-@login_required
-@role_required("admin")
-def create():
-
-    nombre = request.form["nombre"]
-    email = request.form["email"]
-    password = request.form["password"]
-
-    roles = request.form.getlist("roles[]")
-
-    password_hash = generate_password_hash(password)
+@users_bp.route('/usuarios/save', methods=['POST'])
+def save():
+    user_id = request.form.get('user_id')
+    nombre = request.form.get('nombre')
+    email = request.form.get('email')
+    rol_id = request.form.get('rol_id')
+    activo = request.form.get('activo')
+    password = request.form.get('password')
 
     cur = g.db.cursor()
-
-    cur.execute("""
-        INSERT INTO usuarios
-        (nombre,email,password_hash,activo)
-        VALUES (%s,%s,%s,1)
-    """,(nombre,email,password_hash))
-
-    usuario_id = cur.lastrowid
-
-    for rol in roles:
-
-        cur.execute("""
-            INSERT INTO usuarios_roles
-            (usuario_id,rol_id)
-            VALUES (%s,%s)
-        """,(usuario_id,rol))
-
-    g.db.commit()
-
-    flash("Usuario creado")
-
-    return redirect(url_for("users.index"))
-
-
-@users_bp.route("/edit/<int:id>", methods=["POST"])
-@login_required
-@role_required("admin")
-def edit(id):
-
-    nombre = request.form["nombre"]
-    email = request.form["email"]
-
-    roles = request.form.getlist("roles[]")
-
-    cur = g.db.cursor()
-
-    cur.execute("""
-        UPDATE usuarios
-        SET nombre=%s,
-            email=%s
-        WHERE id=%s
-    """,(nombre,email,id))
-
-    cur.execute(
-        "DELETE FROM usuarios_roles WHERE usuario_id=%s",
-        (id,)
-    )
-
-    for rol in roles:
-
-        cur.execute("""
-            INSERT INTO usuarios_roles
-            (usuario_id,rol_id)
-            VALUES (%s,%s)
-        """,(id,rol))
-
-    g.db.commit()
-
-    flash("Usuario actualizado")
-
-    return redirect(url_for("users.index"))
-
-
-@users_bp.route("/delete/<int:id>", methods=["POST"])
-@login_required
-@role_required("admin")
-def delete(id):
-
-    cur = g.db.cursor()
-
-    cur.execute(
-        "DELETE FROM usuarios_roles WHERE usuario_id=%s",
-        (id,)
-    )
-
-    cur.execute(
-        "DELETE FROM usuarios WHERE id=%s",
-        (id,)
-    )
-
-    g.db.commit()
-
-    flash("Usuario eliminado")
-
-    return redirect(url_for("users.index"))
+    try:
+        if user_id:
+            # ACTUALIZACIÓN
+            if password:
+                hash_pass = generate_password_hash(password)
+                cur.execute("""
+                    UPDATE usuarios SET nombre=%s, email=%s, activo=%s, password_hash=%s 
+                    WHERE id=%s
+                """, (nombre, email, activo, hash_pass, user_id))
+            else:
+                cur.execute("""
+                    UPDATE usuarios SET nombre=%s, email=%s, activo=%s 
+                    WHERE id=%s
+                """, (nombre, email, activo, user_id))
+            
+            # Actualizar Rol en tabla intermedia
+            cur.execute("DELETE FROM usuarios_roles WHERE usuario_id=%s", (user_id,))
+            cur.execute("INSERT INTO usuarios_roles (usuario_id, rol_id) VALUES (%s, %s)", (user_id, rol_id))
+        else:
+            # INSERCIÓN NUEVA
+            hash_pass = generate_password_hash(password)
+            cur.execute("""
+                INSERT INTO usuarios (nombre, email, password_hash, activo) 
+                VALUES (%s, %s, %s, %s)
+            """, (nombre, email, hash_pass, activo))
+            new_id = cur.lastrowid
+            cur.execute("INSERT INTO usuarios_roles (usuario_id, rol_id) VALUES (%s, %s)", (new_id, rol_id))
+        
+        g.db.commit()
+        flash('Usuario procesado correctamente', 'success')
+    except Exception as e:
+        g.db.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    finally:
+        cur.close()
+    
+    return redirect(url_for('users.index'))

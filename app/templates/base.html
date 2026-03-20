@@ -1,283 +1,101 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Centro Médico</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro Médico Integra</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 </head>
-
 <body>
 
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-
-<div class="container">
-
-<a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
-Centro Médico
-</a>
-
-<button class="navbar-toggler"
-type="button"
-data-bs-toggle="collapse"
-data-bs-target="#navbarNav">
-
-<span class="navbar-toggler-icon"></span>
-
-</button>
-
-
-<div class="collapse navbar-collapse" id="navbarNav">
-
-
-{% if session.get("user_id") %}
-
-<ul class="navbar-nav">
-
-<li class="nav-item dropdown">
-
-<a class="nav-link dropdown-toggle"
-href="#"
-role="button"
-data-bs-toggle="dropdown">
-
-Administración
-
-</a>
-
-<ul class="dropdown-menu">
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('agenda.index') }}">
-Agenda
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('specialties.index') }}">
-Especialidades
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('states.index') }}">
-Estados
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('patients.index') }}">
-Pacientes
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('professionals.index') }}">
-Profesionales
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('roles.index') }}">
-Roles
-</a>
-</li>
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('users.index') }}">
-Usuarios
-</a>
-</li>
-
-</ul>
-
-</li>
-
-</ul>
-
-{% endif %}
-
-
-
-<ul class="navbar-nav ms-auto">
-
-{% if session.get("user_id") %}
-
-<li class="nav-item dropdown">
-
-<a class="nav-link dropdown-toggle"
-href="#"
-role="button"
-data-bs-toggle="dropdown">
-
-👤 {{ session["user_nombre"] }}
-
-</a>
-
-<ul class="dropdown-menu dropdown-menu-end">
-
-<li>
-<a class="dropdown-item"
-href="{{ url_for('auth.logout') }}">
-Cerrar sesión
-</a>
-</li>
-
-</ul>
-
-</li>
-
-{% else %}
-
-<li class="nav-item">
-
-<a class="nav-link"
-href="#"
-data-bs-toggle="modal"
-data-bs-target="#loginModal">
-
-Iniciar sesión
-
-</a>
-
-</li>
-
-{% endif %}
-
-</ul>
-
-</div>
-
-</div>
-
-</nav>
-
-
-
-<!-- CONTENIDO -->
-
-<div class="container mt-4">
-
-{% block content %}{% endblock %}
-
-</div>
-
-
-
-<!-- MODAL LOGIN -->
-
-<div class="modal fade" id="loginModal">
-
-<div class="modal-dialog">
-
-<div class="modal-content">
-
-<form method="POST" action="{{ url_for('auth.login') }}">
-
-<div class="modal-header">
-
-<h5 class="modal-title">
-Iniciar sesión
-</h5>
-
-<button
-type="button"
-class="btn-close"
-data-bs-dismiss="modal">
-</button>
-
-</div>
-
-
-<div class="modal-body">
-
-{% with messages = get_flashed_messages(category_filter=["login_error"]) %}
-{% if messages %}
-
-<div class="alert alert-danger">
-{{ messages[0] }}
-</div>
-
-{% endif %}
-{% endwith %}
-
-
-<input
-type="email"
-name="email"
-class="form-control mb-2"
-placeholder="Correo electrónico"
-required>
-
-
-<input
-type="password"
-name="password"
-class="form-control"
-placeholder="Contraseña"
-required>
-
-</div>
-
-
-<div class="modal-footer">
-
-<button class="btn btn-primary">
-
-Ingresar
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
-{% with messages = get_flashed_messages(category_filter=["login_error"]) %}
-{% if messages %}
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function(){
-
-var loginModal = new bootstrap.Modal(
-document.getElementById('loginModal')
-)
-
-loginModal.show()
-
-})
-
-</script>
-
-{% endif %}
-{% endwith %}
-
-
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-hospital me-2"></i>CENTRO MÉDICO
+            </a>
+            
+            <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if not session.get('user_id') %}
+                        <li class="nav-item">
+                            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">
+                                <i class="fas fa-sign-in-alt me-2"></i>INGRESAR
+                            </button>
+                        </li>
+                    {% else %}
+                        <li class="nav-item me-3">
+                            <a class="nav-link text-white small fw-bold" href="{{ url_for('main.dashboard') }}">
+                                <i class="fas fa-chart-pie me-1 icon-dashboard"></i> DASHBOARD
+                            </a>
+                        </li>
+
+                        <li class="nav-item me-3">
+                            <a class="nav-link text-white small fw-bold" href="{{ url_for('agenda.index') }}">
+                                <i class="fas fa-calendar-check me-1 icon-citas-totales"></i> AGENDA
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown me-3">
+                            <a class="nav-link dropdown-toggle text-white small fw-bold" href="#" id="adminMenu" data-bs-toggle="dropdown">
+                                <i class="fas fa-tools me-1 icon-admin"></i> ADMINISTRACIÓN
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item py-2" href="{{ url_for('patients.index') }}"><i class="fas fa-user-injured me-2 icon-pacientes"></i>Pacientes</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('professionals.index') }}"><i class="fas fa-user-md me-2 icon-profesionales"></i>Profesionales</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('users.index') }}"><i class="fas fa-users-cog me-2 icon-users"></i>Usuarios</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('availability.index') }}"><i class="fas fa-clock me-2 icon-availability"></i>Disponibilidad</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('specialties.index') }}"><i class="fas fa-tags me-2 icon-specialties"></i>Especialidades</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('roles.index') }}"><i class="fas fa-user-tag me-2 icon-roles"></i>Roles</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('states.index') }}"><i class="fas fa-info-circle me-2 icon-states"></i>Estados</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ url_for('main.logout') }}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                                <i class="fas fa-power-off me-1"></i> SALIR
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-body p-4">
+                    <h5 class="modal-integra-title"><i class="fas fa-lock me-2"></i>ACCESO AL PORTAL</h5>
+                    <form action="{{ url_for('main.login') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="label-integra">Email Corporativo</label>
+                            <input type="email" name="email" class="form-control form-control-integra" required placeholder="ejemplo@integra.cl">
+                        </div>
+                        <div class="mb-4">
+                            <label class="label-integra">Contraseña</label>
+                            <input type="password" name="password" class="form-control form-control-integra" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn-integra-confirm">INGRESAR</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
-
 </html>

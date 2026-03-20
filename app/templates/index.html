@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="display-3 fw-bold mb-4" style="color: var(--navy-integra);">Tu bienestar empieza aquí.</h1>
+            <p class="lead text-muted mb-5">Atención profesional para el desarrollo y aprendizaje con especialistas certificados.</p>
+            <a href="#" class="btn-agendar-home" data-bs-toggle="modal" data-bs-target="#modalAgendarPublico">AGENDAR EVALUACIÓN</a>
+        </div>
+        <div class="col-lg-6">
+            <div class="area-contenedor">
+                <img src="{{ url_for('static', filename='img/home-bg.png') }}" class="area-img" alt="Hero">
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5 text-center">
+        <h2 class="fw-bold text-navy mb-5 text-uppercase">Nuestras Áreas de Apoyo</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="area-contenedor"><img src="{{ url_for('static', filename='img/area_salud_integral.png') }}" class="area-img" alt="Salud"></div>
+                <h6 class="fw-bold mt-2" style="color: var(--navy-integra);">SALUL INTEGRAL</h6>
+            </div>
+            <div class="col-md-4">
+                <div class="area-contenedor"><img src="{{ url_for('static', filename='img/area_aprendizaje.png') }}" class="area-img" alt="Aprendizaje"></div>
+                <h6 class="fw-bold mt-2" style="color: var(--navy-integra);">APRENDIZAJE Y DESARROLLO</h6>
+            </div>
+            <div class="col-md-4">
+                <div class="area-contenedor"><img src="{{ url_for('static', filename='img/area_terapias.png') }}" class="area-img" alt="Terapias"></div>
+                <h6 class="fw-bold mt-2" style="color: var(--navy-integra);">TERAPIAS ESPECIALIZADAS</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAgendarPublico" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h5 class="modal-integra-title">Agendar Evaluación</h5>
+                
+                <form action="{{ url_for('agenda.save') }}" method="POST" id="formAgendamiento">
+                    
+                    <div class="mb-3">
+                        <label class="label-integra">RUT Paciente (Sin puntos ni guion)</label>
+                        <input type="text" name="rut" id="rut_paciente" class="form-control form-control-integra" 
+                               placeholder="12345678K" required onblur="verificarPaciente()">
+                        <small id="rut-status" class="form-text"></small>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="label-integra">Nombre</label>
+                            <input type="text" name="nombre" id="pac_nombre" class="form-control form-control-integra" required>
+                        </div>
+                        <div class="col">
+                            <label class="label-integra">Apellido</label>
+                            <input type="text" name="apellido" id="pac_apellido" class="form-control form-control-integra" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="label-integra">Profesional</label>
+                        <select name="profesional_id" class="form-control form-control-integra" required>
+                            <option value="">Seleccione profesional...</option>
+                            {% for p in profesionales %}
+                            <option value="{{ p.id }}">{{ p.nombre }} {{ p.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="label-integra">Fecha</label>
+                            <input type="date" name="fecha" class="form-control form-control-integra" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-integra">Hora</label>
+                            <input type="time" name="hora" class="form-control form-control-integra" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-integra-confirm">Confirmar Cita</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function verificarPaciente() {
+    const rut = document.getElementById('rut_paciente').value;
+    const nomField = document.getElementById('pac_nombre');
+    const apeField = document.getElementById('pac_apellido');
+    const status = document.getElementById('rut-status');
+
+    if (rut.length < 7) return;
+
+    fetch(`/buscar_paciente/${rut}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.existe) {
+                nomField.value = data.nombre;
+                apeField.value = data.apellido;
+                nomField.readOnly = true;
+                apeField.readOnly = true;
+                status.innerHTML = '<span class="text-success small">Paciente registrado. Datos bloqueados.</span>';
+            } else {
+                nomField.value = "";
+                apeField.value = "";
+                nomField.readOnly = false;
+                apeField.readOnly = false;
+                status.innerHTML = '<span class="text-muted small">Nuevo paciente. Ingrese datos.</span>';
+            }
+        })
+        .catch(err => console.error('Error en búsqueda:', err));
+}
+</script>
+{% endblock %}

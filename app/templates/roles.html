@@ -1,92 +1,34 @@
 {% extends "base.html" %}
-
 {% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold m-0 header-navy">Roles de Sistema</h3>
+            <p class="text-muted small mb-0">Definición de perfiles y permisos</p>
+        </div>
+    </div>
 
-<div class="container mt-4">
-
-<div class="card shadow">
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-<h5 class="mb-0">
-Roles
-</h5>
-
-<button
-class="btn btn-primary btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalCreate">
-
-Crear
-
-</button>
-
+    <div class="table-container-scroll shadow-sm bg-white">
+        <table class="table table-integra align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Nombre del Rol</th>
+                    <th class="text-center">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in roles %}
+                <tr>
+                    <td class="ps-4 text-muted small">#{{ r.id }}</td>
+                    <td><span class="fw-bold text-uppercase">{{ r.nombre }}</span></td>
+                    <td class="text-center">
+                        <span class="badge bg-success rounded-pill px-3">Activo</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-
-
-<div class="card-body">
-
-<table class="table table-bordered table-hover">
-
-<thead class="table-light">
-
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th width="150">Acciones</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for r in roles %}
-
-<tr>
-
-<td>{{r.id}}</td>
-<td>{{r.nombre}}</td>
-
-<td>
-
-<button
-class="btn btn-warning btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalEdit{{r.id}}">
-
-Editar
-
-</button>
-
-<form
-method="POST"
-action="{{ url_for('roles.delete', id=r.id) }}"
-style="display:inline;">
-
-<button
-class="btn btn-danger btn-sm"
-onclick="return confirm('¿Eliminar rol?')">
-
-Eliminar
-
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
 {% endblock %}

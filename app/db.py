@@ -1,8 +1,17 @@
-# app/db.py
-from flask import g
+import MySQLdb
+import MySQLdb.cursors
+import os
+from dotenv import load_dotenv
 
-def get_db():
-    """
-    Retorna la conexión actual de la base de datos de Flask.
-    """
-    return g.db
+# Cargar las variables del archivo .env que ya tienes creado
+load_dotenv()
+
+def get_db_connection():
+    """Establece la conexión usando las variables de entorno del usuario."""
+    return MySQLdb.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWORD"),
+        db=os.getenv("DB_NAME"),
+        cursorclass=MySQLdb.cursors.DictCursor
+    )

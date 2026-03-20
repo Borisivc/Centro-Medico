@@ -1,98 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container d-flex justify-content-center align-items-center mt-5">
+    <div class="card shadow-sm border-0 w-100" style="max-width: 400px; border-radius: 15px;">
+        <div class="card-body p-4 bg-white">
+            <h4 class="modal-integra-title mb-4">Iniciar Sesión</h4>
 
-<div class="container" style="max-width:500px; margin-top:80px;">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-danger small fw-bold rounded-3">
+                        {{ messages[0] }}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-<div class="card shadow">
-
-<div class="card-header text-center bg-primary text-white">
-
-<h4 class="mb-0">
-Iniciar Sesión
-</h4>
-
+            <form method="POST" action="{{ url_for('auth.login') }}" autocomplete="off">
+                <div class="mb-3">
+                    <label class="label-integra">Correo electrónico</label>
+                    <input type="email" name="email" class="form-control form-control-integra" placeholder="usuario@correo.com" required autocomplete="off">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="label-integra">Contraseña</label>
+                    <input type="password" name="password" class="form-control form-control-integra" placeholder="Ingrese su contraseña" required autocomplete="new-password">
+                </div>
+                
+                <button type="submit" class="btn-integra-confirm w-100">INGRESAR</button>
+            </form>
+        </div>
+    </div>
 </div>
-
-
-<div class="card-body">
-
-<!-- MENSAJES DE ERROR -->
-
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-
-<div class="alert alert-danger">
-
-{{ messages[0] }}
-
-</div>
-
-{% endif %}
-{% endwith %}
-
-
-<form method="POST" action="{{ url_for('auth.login') }}">
-
-<div class="mb-3">
-
-<label class="form-label">
-Correo electrónico
-</label>
-
-<input
-type="email"
-name="email"
-class="form-control"
-placeholder="usuario@correo.com"
-required>
-
-</div>
-
-
-<div class="mb-3">
-
-<label class="form-label">
-Contraseña
-</label>
-
-<input
-type="password"
-name="password"
-class="form-control"
-placeholder="Ingrese su contraseña"
-required>
-
-</div>
-
-
-<div class="d-grid">
-
-<button class="btn btn-primary">
-
-Ingresar
-
-</button>
-
-</div>
-
-</form>
-
-
-<hr>
-
-
-<div class="text-center text-muted">
-
-Si no puede acceder contacte al administrador del sistema.
-
-</div>
-
-
-</div>
-
-</div>
-
-</div>
-
 {% endblock %}

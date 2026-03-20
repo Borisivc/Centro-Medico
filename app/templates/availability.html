@@ -1,99 +1,103 @@
 {% extends "base.html" %}
-
 {% block content %}
+<div class="container py-5">
+    
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="modal-integra-title text-start m-0">Disponibilidad Horaria</h2>
+            <p class="text-muted small mb-0 fw-bold">Configuración de jornadas por profesional</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalHorario" onclick="limpiarFormDisp()">NUEVO HORARIO</button>
+        </div>
+    </div>
 
-<div class="container mt-4">
-
-<h4>Disponibilidad Profesional</h4>
-
-<div class="card mb-4">
-
-<div class="card-body">
-
-<form method="POST" action="{{ url_for('availability.create') }}">
-
-<select name="profesional_id" class="form-control mb-2">
-
-{% for p in profesionales %}
-<option value="{{p.id}}">
-{{p.nombre}}
-</option>
-{% endfor %}
-
-</select>
-
-
-<select name="dia_semana" class="form-control mb-2">
-
-<option value="0">Lunes</option>
-<option value="1">Martes</option>
-<option value="2">Miércoles</option>
-<option value="3">Jueves</option>
-<option value="4">Viernes</option>
-<option value="5">Sábado</option>
-<option value="6">Domingo</option>
-
-</select>
-
-<input type="date" name="fecha_inicio" class="form-control mb-2">
-<input type="date" name="fecha_fin" class="form-control mb-2">
-
-<input type="time" name="hora_inicio" class="form-control mb-2">
-<input type="time" name="hora_fin" class="form-control mb-2">
-
-<input
-type="number"
-name="duracion_cita"
-class="form-control mb-2"
-value="30">
-
-<button class="btn btn-primary">
-Guardar disponibilidad
-</button>
-
-</form>
-
+    <div class="card shadow-sm bg-white p-3">
+        <div class="table-responsive table-responsive-scroll">
+            <table id="tablaDisponibilidad" class="table table-hover align-middle mb-0 w-100">
+                <thead class="bg-light">
+                    <tr class="small text-muted text-uppercase">
+                        <th>Profesional</th>
+                        <th>Día de Atención</th>
+                        <th>Hora Inicio</th>
+                        <th>Hora Término</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in horarios %}
+                    <tr>
+                        <td class="fw-bold text-navy-integra">{{ h.profesional }}</td>
+                        <td><span class="badge bg-light text-navy-integra border px-3">{{ h.dia_semana }}</span></td>
+                        <td>{{ h.hora_inicio }}</td>
+                        <td>{{ h.hora_fin }}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn-editar-integra me-1" onclick="llenarModalDisp(this)" data-id="{{ h.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn-eliminar-integra">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<div class="modal fade" id="modalHorario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h6 class="modal-integra-title" id="tituloModalDisp">Gestión de Horario</h6>
+                <form id="formDisponibilidad" action="{{ url_for('availability.save') }}" method="POST">
+                    <input type="hidden" name="disp_id" id="d_id">
+                    
+                    <div class="mb-3">
+                        <label class="label-integra">Profesional</label>
+                        <select name="profesional_id" class="form-select form-control-integra" required>
+                            <option value="">Seleccione al profesional...</option>
+                            {% for p in profesionales %}
+                            <option value="{{ p.id }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="label-integra">Día</label>
+                            <select name="dia" class="form-select form-control-integra" required>
+                                <option value="Lunes">Lunes</option>
+                                <option value="Martes">Martes</option>
+                                <option value="Miércoles">Miércoles</option>
+                                <option value="Jueves">Jueves</option>
+                                <option value="Viernes">Viernes</option>
+                                <option value="Sábado">Sábado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="label-integra">Inicio</label>
+                            <input type="time" name="inicio" class="form-control form-control-integra" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="label-integra">Término</label>
+                            <input type="time" name="fin" class="form-control form-control-integra" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-integra-confirm">GUARDAR DISPONIBILIDAD</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
-
-<table class="table table-striped">
-
-<thead class="table-dark">
-
-<tr>
-
-<th>Profesional</th>
-<th>Día</th>
-<th>Inicio</th>
-<th>Fin</th>
-<th>Duración</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for d in disponibilidad %}
-
-<tr>
-
-<td>{{d.profesional}}</td>
-<td>{{d.dia_semana}}</td>
-<td>{{d.hora_inicio}}</td>
-<td>{{d.hora_fin}}</td>
-<td>{{d.duracion_cita}}</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
+<script>
+    function limpiarFormDisp() {
+        document.getElementById('formDisponibilidad').reset();
+        document.getElementById('d_id').value = '';
+    }
+</script>
 {% endblock %}

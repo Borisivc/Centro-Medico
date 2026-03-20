@@ -1,82 +1,104 @@
 {% extends "base.html" %}
-
 {% block content %}
+<div class="container py-5">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="modal-integra-title text-start m-0">Especialidades Médicas</h2>
+            <p class="text-muted small mb-0 fw-bold">Gestión de áreas de atención del centro</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalEspecialidad" onclick="limpiarFormEsp()">NUEVO</button>
+        </div>
+    </div>
 
-<div class="container mt-4">
-
-<div class="card shadow">
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-<h5 class="mb-0">
-Especialidades
-</h5>
-
-<button
-class="btn btn-primary btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#modalCreate">
-
-Crear
-
-</button>
-
+    <div class="card p-3 shadow-sm bg-white">
+        <div class="table-responsive">
+            <table id="tablaEspecialidades" class="table table-hover align-middle mb-0 w-100">
+                <thead class="bg-light">
+                    <tr class="small text-muted text-uppercase">
+                        <th>ID</th>
+                        <th>Especialidad</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in especialidades %}
+                    <tr>
+                        <td class="fw-bold text-muted">{{ e.id }}</td>
+                        <td class="fw-bold text-navy-integra">{{ e.nombre }}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn-editar-integra me-1" 
+                                    data-bs-toggle="modal" data-bs-target="#modalEspecialidad"
+                                    onclick="llenarModalEsp(this)"
+                                    data-id="{{ e.id }}" data-nombre="{{ e.nombre }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn-eliminar-integra" onclick="confirmarEliminacionEsp('{{e.id}}', '{{e.nombre}}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-
-<div class="card-body">
-
-<table class="table table-bordered table-hover">
-
-<thead class="table-light">
-
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th width="150">Acciones</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for e in especialidades %}
-
-<tr>
-
-<td>{{e.id}}</td>
-<td>{{e.nombre}}</td>
-
-<td>
-
-<button
-class="btn btn-warning btn-sm">
-
-Editar
-
-</button>
-
-<button
-class="btn btn-danger btn-sm">
-
-Eliminar
-
-</button>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
+<div class="modal fade" id="modalEspecialidad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-body">
+                <h6 class="modal-integra-title" id="tituloModalEsp">Especialidad</h6>
+                <form id="formEspecialidad" action="{{ url_for('specialties.save') }}" method="POST">
+                    <input type="hidden" name="esp_id" id="e_id">
+                    <div class="mb-4">
+                        <label class="label-integra">Nombre de Especialidad</label>
+                        <input type="text" name="nombre" id="e_nombre" class="form-control form-control-integra" required>
+                    </div>
+                    <button type="submit" class="btn-integra-confirm">GUARDAR</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
-</div>
+<script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('#tablaEspecialidades')) {
+            $('#tablaEspecialidades').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+                "pageLength": 10,
+                "scrollY": "450px", // Scroll activado
+                "scrollCollapse": true,
+                "paging": true
+            });
+        }
+    });
 
-</div>
+    function limpiarFormEsp() {
+        document.getElementById('formEspecialidad').reset();
+        document.getElementById('tituloModalEsp').innerText = 'Nueva Especialidad';
+        document.getElementById('e_id').value = '';
+    }
 
+    function llenarModalEsp(btn) {
+        limpiarFormEsp();
+        document.getElementById('tituloModalEsp').innerText = 'Editar Especialidad';
+        document.getElementById('e_id').value = btn.getAttribute('data-id');
+        document.getElementById('e_nombre').value = btn.getAttribute('data-nombre');
+    }
+
+    function confirmarEliminacionEsp(id, nombre) {
+        Swal.fire({
+            title: '¿Eliminar especialidad?', text: nombre, icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'ELIMINAR'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/administracion/especialidades/delete/${id}`, { method: 'POST' })
+                .then(res => res.json()).then(data => { if(data.status === 'success') location.reload(); });
+            }
+        });
+    }
+</script>
 {% endblock %}

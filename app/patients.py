@@ -1,85 +1,91 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, g, session
+from flask import Blueprint, render_template, g, request, redirect, url_for, flash, jsonify
+from .utils import limpiar_rut, validar_rut
 
 patients_bp = Blueprint('patients', __name__)
 
-@patients_bp.route('/pacientes')
+@patients_bp.route('/')
 def index():
-    if not session.get('user_id'):
-        return redirect(url_for('main.index'))
+    cur = g.db.cursor()
+    # Obtenemos los datos. Usamos DictCursor para acceder por nombre de columna
+    cur.execute("SELECT id, rut, nombre, apellido, fecha_nacimiento FROM pacientes ORDER BY nombre ASC")
+    pacientes = cur.fetchall()
+    cur.close()
+    return render_template('patients.html', pacientes=pacientes)
+
+@patients_bp.route('/verificar_rut/<string:rut>')
+def verificar_rut_ajax(rut):
+    """Valida RUT real y disponibilidad en base de datos."""
+    rut_plano = limpiar_rut(rut)
+    
+    if not validar_rut(rut_plano):
+        return jsonify({"status": "error", "message": "RUT no válido"})
     
     cur = g.db.cursor()
-    cur.execute("SELECT id, rut, nombre, apellido, fecha_nacimiento FROM pacientes ORDER BY id DESC")
-    pacs = cur.fetchall()
+    cur.execute("SELECT id FROM pacientes WHERE rut = %s", (rut_plano,))
+    existe = cur.fetchone()
     cur.close()
     
-    return render_template('patients.html', pacientes=pacs)
-
-@patients_bp.route('/pacientes/verificar/<string:rut>')
-def verificar_rut(rut):
-    cur = g.db.cursor()
-    try:
-        cur.execute("SELECT id, nombre, apellido, fecha_nacimiento FROM pacientes WHERE rut = %s", (rut,))
-        p = cur.fetchone()
-        if p:
-            return jsonify({
-                "existe": True, 
-                "nombre": p['nombre'], 
-                "apellido": p['apellido'],
-                "fecha": p['fecha_nacimiento'].strftime('%Y-%m-%d') if p['fecha_nacimiento'] else ''
-            })
-        return jsonify({"existe": False})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cur.close()
-
-@patients_bp.route('/pacientes/save', methods=['POST'])
-def save():
-    pac_id = request.form.get('pac_id')
-    rut = request.form.get('rut')
-    nombre = request.form.get('nombre')
-    apellido = request.form.get('apellido')
-    fecha_nac = request.form.get('fecha_nacimiento')
+    if existe:
+        return jsonify({"status": "duplicado", "message": "RUT ya registrado"})
     
-    # Si la fecha viene vacía del input date, la hacemos None para MySQL
-    if not fecha_nac:
-        fecha_nac = None
+    return jsonify({"status": "ok"})
 
+@patients_bp.route('/save', methods=['POST'])
+def save():
+    pac_id = request.form.get('id')
+    rut_raw = request.form.get('rut')
+    nombre = request.form.get('nombre', '').strip().upper()
+    apellido = request.form.get('apellido', '').strip().upper()
+    fecha = request.form.get('fecha_nacimiento')
+
+    if not rut_raw or not nombre or not apellido or not fecha:
+        flash("Complete todos los campos", "warning")
+        return redirect(url_for('patients.index'))
+
+    rut_plano = limpiar_rut(rut_raw)
     cur = g.db.cursor()
+    
     try:
-        if pac_id:
-            cur.execute("""
-                UPDATE pacientes 
-                SET rut=%s, nombre=%s, apellido=%s, fecha_nacimiento=%s 
-                WHERE id=%s
-            """, (rut, nombre, apellido, fecha_nac, pac_id))
-            flash('Paciente actualizado correctamente.', 'success')
+        # Lógica para Nuevo Registro
+        if not pac_id or pac_id == "" or pac_id == "None":
+            cur.execute("SELECT id FROM pacientes WHERE rut = %s", (rut_plano,))
+            if cur.fetchone():
+                flash("RUT ya registrado", "warning")
+            else:
+                cur.execute("""
+                    INSERT INTO pacientes (rut, nombre, apellido, fecha_nacimiento) 
+                    VALUES (%s, %s, %s, %s)
+                """, (rut_plano, nombre, apellido, fecha))
+                flash('Paciente registrado', 'success')
+        
+        # Lógica para Actualización (Edición)
         else:
             cur.execute("""
-                INSERT INTO pacientes (rut, nombre, apellido, fecha_nacimiento, activo) 
-                VALUES (%s, %s, %s, %s, 1)
-            """, (rut, nombre, apellido, fecha_nac))
-            flash('Paciente registrado con éxito.', 'success')
+                UPDATE pacientes 
+                SET nombre=%s, apellido=%s, fecha_nacimiento=%s 
+                WHERE id=%s
+            """, (nombre, apellido, fecha, pac_id))
+            flash('Cambios guardados', 'success')
             
         g.db.commit()
     except Exception as e:
         g.db.rollback()
-        print(f"Error al guardar paciente: {e}")
-        flash('Error al guardar los datos del paciente.', 'danger')
+        flash(f'Error al procesar: {str(e)}', 'danger')
     finally:
         cur.close()
         
     return redirect(url_for('patients.index'))
 
-@patients_bp.route('/pacientes/delete/<int:id>', methods=['POST'])
+@patients_bp.route('/delete/<int:id>')
 def delete(id):
     cur = g.db.cursor()
     try:
         cur.execute("DELETE FROM pacientes WHERE id = %s", (id,))
         g.db.commit()
-        return jsonify({'status': 'success', 'message': 'Paciente eliminado correctamente.'})
-    except Exception as e:
+        flash('Registro eliminado', 'warning')
+    except:
         g.db.rollback()
-        return jsonify({'status': 'error', 'message': 'No se puede eliminar: el paciente tiene registros asociados.'})
+        flash('No se pudo eliminar el registro', 'danger')
     finally:
         cur.close()
+    return redirect(url_for('patients.index'))

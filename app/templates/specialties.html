@@ -1,41 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-5">
+<div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h2 class="modal-integra-title text-start m-0">Especialidades Médicas</h2>
-            <p class="text-muted small mb-0 fw-bold">Gestión de áreas de atención del centro</p>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Gestión de áreas de atención</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalEspecialidad" onclick="limpiarFormEsp()">NUEVO</button>
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalEsp" onclick="nuevaEsp()">
+                <i class="fas fa-tags me-2"></i>NUEVO
+            </button>
         </div>
     </div>
 
-    <div class="card p-3 shadow-sm bg-white">
-        <div class="table-responsive">
-            <table id="tablaEspecialidades" class="table table-hover align-middle mb-0 w-100">
-                <thead class="bg-light">
+    <div class="card border-0 shadow-sm p-3">
+        <div class="table-responsive-scroll">
+            <table id="tablaEsp" class="table table-hover align-middle mb-0 w-100">
+                <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>ID</th>
-                        <th>Especialidad</th>
+                        <th>Especialidad / Área</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for e in especialidades %}
                     <tr>
-                        <td class="fw-bold text-muted">{{ e.id }}</td>
-                        <td class="fw-bold text-navy-integra">{{ e.nombre }}</td>
+                        <td class="text-muted small">#{{ e[0] }}</td>
+                        <td class="fw-bold text-navy-integra text-uppercase">{{ e[1] }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-integra me-1" 
-                                    data-bs-toggle="modal" data-bs-target="#modalEspecialidad"
-                                    onclick="llenarModalEsp(this)"
-                                    data-id="{{ e.id }}" data-nombre="{{ e.nombre }}">
+                            <button class="btn-editar-integra me-1" onclick="editarEsp('{{ e[0] }}', '{{ e[1] }}')">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-integra" onclick="confirmarEliminacionEsp('{{e.id}}', '{{e.nombre}}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <form action="{{ url_for('specialties.delete', id=e[0]) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn-eliminar-integra"><i class="fas fa-trash"></i></button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -45,18 +44,18 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalEspecialidad" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalEsp" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-body">
-                <h6 class="modal-integra-title" id="tituloModalEsp">Especialidad</h6>
-                <form id="formEspecialidad" action="{{ url_for('specialties.save') }}" method="POST">
-                    <input type="hidden" name="esp_id" id="e_id">
+        <div class="modal-content border-0">
+            <div class="modal-body p-4">
+                <h5 class="modal-integra-title" id="mTitle">CONFIGURAR ÁREA</h5>
+                <form action="{{ url_for('specialties.save') }}" method="POST" id="formEsp">
+                    <input type="hidden" name="id" id="esp_id">
                     <div class="mb-4">
-                        <label class="label-integra">Nombre de Especialidad</label>
-                        <input type="text" name="nombre" id="e_nombre" class="form-control form-control-integra" required>
+                        <label class="label-integra">Nombre de Especialidad *</label>
+                        <input type="text" name="nombre" id="esp_nombre" class="form-control form-control-integra text-uppercase" required>
                     </div>
-                    <button type="submit" class="btn-integra-confirm">GUARDAR</button>
+                    <button type="submit" class="btn-integra-confirm">GUARDAR CAMBIOS</button>
                 </form>
             </div>
         </div>
@@ -65,40 +64,25 @@
 
 <script>
     $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#tablaEspecialidades')) {
-            $('#tablaEspecialidades').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-                "pageLength": 10,
-                "scrollY": "450px", // Scroll activado
-                "scrollCollapse": true,
-                "paging": true
-            });
-        }
+        $('#tablaEsp').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}
+                Swal.fire({ title: 'Sistema Integra', text: "{{ message }}", icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", customClass: { confirmButton: 'btn-integra-confirm' }, buttonsStyling: false });
+            {% endfor %}{% endif %}
+        {% endwith %}
     });
 
-    function limpiarFormEsp() {
-        document.getElementById('formEspecialidad').reset();
-        document.getElementById('tituloModalEsp').innerText = 'Nueva Especialidad';
-        document.getElementById('e_id').value = '';
+    function nuevaEsp() {
+        document.getElementById('formEsp').reset();
+        document.getElementById('esp_id').value = '';
+        document.getElementById('mTitle').innerText = 'NUEVA ESPECIALIDAD';
     }
 
-    function llenarModalEsp(btn) {
-        limpiarFormEsp();
-        document.getElementById('tituloModalEsp').innerText = 'Editar Especialidad';
-        document.getElementById('e_id').value = btn.getAttribute('data-id');
-        document.getElementById('e_nombre').value = btn.getAttribute('data-nombre');
-    }
-
-    function confirmarEliminacionEsp(id, nombre) {
-        Swal.fire({
-            title: '¿Eliminar especialidad?', text: nombre, icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'ELIMINAR'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/administracion/especialidades/delete/${id}`, { method: 'POST' })
-                .then(res => res.json()).then(data => { if(data.status === 'success') location.reload(); });
-            }
-        });
+    function editarEsp(id, nombre) {
+        document.getElementById('esp_id').value = id;
+        document.getElementById('esp_nombre').value = nombre;
+        document.getElementById('mTitle').innerText = 'EDITAR ESPECIALIDAD';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEsp')).show();
     }
 </script>
 {% endblock %}

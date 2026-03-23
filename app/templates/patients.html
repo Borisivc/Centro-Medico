@@ -4,19 +4,19 @@
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h2 class="modal-integra-title text-start m-0">Gestor de Pacientes</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Base de datos de alumnos y pacientes</p>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración Integra Medical</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalMantenedor" onclick="limpiarFormPac()">
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalPacientes" onclick="nuevoPac()">
                 <i class="fas fa-plus me-2"></i>NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 p-3">
+    <div class="card border-0 shadow-sm p-3">
         <div class="table-responsive-scroll">
             <table id="tablaPacientes" class="table table-hover align-middle mb-0 w-100">
-                <thead class="bg-light">
+                <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>RUT</th>
                         <th>Nombre Completo</th>
@@ -27,16 +27,22 @@
                 <tbody>
                     {% for p in pacientes %}
                     <tr>
-                        <td class="fw-bold text-navy-integra">{{ p.rut | formatear_rut }}</td>
-                        <td>{{ p.nombre }} {{ p.apellido }}</td>
-                        <td>{{ p.fecha_nacimiento }}</td>
+                        <td class="fw-bold text-navy-integra">{{ p['rut'] | formatear_rut }}</td>
+                        <td class="text-uppercase">{{ p['nombre'] }} {{ p['apellido'] }}</td>
+                        <td>
+                            {# Formateo seguro para la tabla #}
+                            {{ p['fecha_nacimiento'].strftime('%d/%m/%Y') if p['fecha_nacimiento'] and p['fecha_nacimiento'].strftime else (p['fecha_nacimiento'] or '---') }}
+                        </td>
                         <td class="text-center">
                             <button class="btn-editar-integra me-1" onclick="editarPac(this)" 
-                                data-id="{{ p.id }}" data-rut="{{ p.rut }}" data-nombre="{{ p.nombre }}" 
-                                data-apellido="{{ p.apellido }}" data-fecha="{{ p.fecha_nacimiento }}">
+                                data-id="{{ p['id'] }}" 
+                                data-rut="{{ p['rut'] | formatear_rut }}" 
+                                data-nombre="{{ p['nombre'] }}" 
+                                data-apellido="{{ p['apellido'] }}" 
+                                data-fecha="{{ p['fecha_nacimiento'].strftime('%Y-%m-%d') if p['fecha_nacimiento'] and p['fecha_nacimiento'].strftime else (p['fecha_nacimiento'] or '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-eliminar-integra" onclick="confirmarEliminacion('{{ p.id }}', '{{ p.nombre }} {{ p.apellido }}')">
+                            <button class="btn-eliminar-integra" onclick="confirmarEliminar('{{ p['id'] }}', '{{ p['nombre'] }} {{ p['apellido'] }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -48,27 +54,131 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalPacientes" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-body p-4">
+                <h5 class="modal-integra-title" id="titlePac">PACIENTE</h5>
+                <form action="{{ url_for('patients.save') }}" method="POST" id="formPac">
+                    <input type="hidden" name="id" id="pac_id">
+                    
+                    <div class="mb-3">
+                        <label class="label-integra">RUT *</label>
+                        <input type="text" name="rut" id="pac_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" onblur="validarRutRealTime(this.value)" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="label-integra">Nombre *</label>
+                        <input type="text" name="nombre" id="pac_nombre" class="form-control form-control-integra text-uppercase" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="label-integra">Apellido *</label>
+                        <input type="text" name="apellido" id="pac_apellido" class="form-control form-control-integra text-uppercase" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="label-integra">Fecha Nacimiento *</label>
+                        <input type="date" name="fecha_nacimiento" id="pac_fecha" class="form-control form-control-integra" required>
+                    </div>
+                    <button type="submit" class="btn-integra-confirm w-100">GUARDAR REGISTRO</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    let isValidating = false;
+    let lastChecked = "";
+
     $(document).ready(function() {
-        $('#tablaPacientes').DataTable({
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": '<"top"f>rt<"bottom"lp><"clear">'
-        });
+        $('#tablaPacientes').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                Swal.fire({
+                    title: 'Sistema Integra',
+                    text: "{{ message }}",
+                    icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
+                    customClass: { confirmButton: 'btn-integra-confirm' },
+                    buttonsStyling: false
+                });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     });
 
-    function confirmarEliminacion(id, nombre) {
+    function validarRutRealTime(rut) {
+        if (!rut || rut === lastChecked || isValidating) return;
+        
+        const pac_id = document.getElementById('pac_id').value;
+        if (rut.length > 7 && !pac_id) {
+            isValidating = true;
+            lastChecked = rut;
+            
+            fetch(`/administracion/pacientes/verificar_rut/${rut}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== "ok") {
+                        Swal.fire({
+                            text: data.message,
+                            icon: 'warning',
+                            customClass: { confirmButton: 'btn-integra-confirm' },
+                            buttonsStyling: false
+                        }).then(() => {
+                            document.getElementById('pac_rut').value = "";
+                            lastChecked = "";
+                            document.getElementById('pac_rut').focus();
+                        });
+                    }
+                })
+                .finally(() => {
+                    isValidating = false;
+                });
+        }
+    }
+
+    function rutificadorUI(input) {
+        let v = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+        if (v.length > 1) {
+            let cuerpo = v.slice(0, -1).slice(0, 8);
+            let dv = v.slice(-1);
+            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
+        }
+    }
+
+    function nuevoPac() {
+        document.getElementById('formPac').reset();
+        document.getElementById('pac_id').value = '';
+        lastChecked = "";
+        document.getElementById('pac_rut').readOnly = false;
+        document.getElementById('titlePac').innerText = 'NUEVO PACIENTE';
+    }
+
+    function editarPac(btn) {
+        document.getElementById('pac_id').value = btn.dataset.id;
+        document.getElementById('pac_rut').value = btn.dataset.rut;
+        document.getElementById('pac_nombre').value = btn.dataset.nombre;
+        document.getElementById('pac_apellido').value = btn.dataset.apellido;
+        document.getElementById('pac_fecha').value = btn.dataset.fecha;
+        
+        document.getElementById('pac_rut').readOnly = true;
+        document.getElementById('titlePac').innerText = 'EDITAR PACIENTE';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPacientes')).show();
+    }
+
+    function confirmarEliminar(id, nombre) {
         Swal.fire({
-            title: '¿Eliminar Paciente?',
+            title: '¿Eliminar?',
             text: nombre,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'SÍ, ELIMINAR',
-            cancelButtonText: 'CANCELAR',
+            confirmButtonText: 'SÍ',
+            cancelButtonText: 'NO',
             customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
             buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-                // Lógica de eliminación aquí
+                window.location.href = "{{ url_for('patients.index') }}delete/" + id;
             }
         });
     }

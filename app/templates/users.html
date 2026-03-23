@@ -2,21 +2,21 @@
 {% block content %}
 <div class="container py-4">
     <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h2 class="modal-integra-title text-start m-0">Gestión de Usuarios</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración de perfiles</p>
+        <div class="col-md-8 text-start">
+            <h2 class="modal-integra-title m-0">Gestión de Usuarios</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración de perfiles y accesos</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalUser" onclick="limpiarForm()">
+            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalUser" onclick="nuevoUser()">
                 <i class="fas fa-plus me-2"></i>NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 p-3">
+    <div class="card border-0 shadow-sm p-3">
         <div class="table-responsive-scroll">
-            <table id="tablaUsuarios" class="table table-hover align-middle mb-0 w-100">
-                <thead class="bg-light">
+            <table class="table table-hover align-middle mb-0 w-100" id="tablaUsuarios">
+                <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>Nombre</th>
                         <th>Email</th>
@@ -28,22 +28,13 @@
                 <tbody>
                     {% for u in usuarios %}
                     <tr>
-                        <td class="fw-bold text-navy-integra">{{ u.nombre }}</td>
+                        <td class="fw-bold text-navy-integra text-uppercase">{{ u.nombre }}</td>
                         <td>{{ u.email }}</td>
-                        <td><span class="badge bg-light text-navy-integra border">{{ u.roles_nombres }}</span></td>
-                        <td>
-                            {% if u.activo %}
-                                <span class="badge bg-success-light text-success px-3">ACTIVO</span>
-                            {% else %}
-                                <span class="badge bg-danger-light text-danger px-3">INACTIVO</span>
-                            {% endif %}
-                        </td>
+                        <td><span class="badge bg-light text-navy-integra border">{{ u.roles_nombres or 'N/A' }}</span></td>
+                        <td>{% if u.activo %}<span class="badge bg-success-light text-success px-3">ACTIVO</span>{% else %}<span class="badge bg-danger-light text-danger px-3">INACTIVO</span>{% endif %}</td>
                         <td class="text-center">
-                            <button class="btn-editar-integra me-1" onclick="prepararEdicion(this)" data-id="{{ u.id }}">
+                            <button type="button" class="btn-editar-integra" onclick="editarUser(this)" data-id="{{ u.id }}" data-nombre="{{ u.nombre }}" data-email="{{ u.email }}" data-rol="{{ u.roles_ids.split(',')[0] if u.roles_ids else '' }}" data-activo="{{ u.activo }}">
                                 <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-eliminar-integra" onclick="confirmarEliminacion('{{ u.id }}', '{{ u.nombre }}')">
-                                <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
@@ -54,29 +45,35 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-body p-4">
+                <h5 class="modal-integra-title" id="mTitle">CONFIGURAR USUARIO</h5>
+                <form id="formUser" action="{{ url_for('users.save') }}" method="POST">
+                    <input type="hidden" name="user_id" id="u_id">
+                    <div class="mb-3"><label class="label-integra">Nombre *</label><input type="text" name="nombre" id="u_nombre" class="form-control form-control-integra text-uppercase" required></div>
+                    <div class="mb-3"><label class="label-integra">Email *</label><input type="email" name="email" id="u_email" class="form-control form-control-integra" required></div>
+                    <div class="row mb-3">
+                        <div class="col-6"><label class="label-integra">Rol *</label><select name="rol_id" id="u_rol" class="form-select form-control-integra" required><option value="">Seleccione...</option>{% for r in roles %}<option value="{{ r.id }}">{{ r.nombre }}</option>{% endfor %}</select></div>
+                        <div class="col-6"><label class="label-integra">Estado</label><select name="activo" id="u_activo" class="form-select form-control-integra"><option value="1">ACTIVO</option><option value="0">INACTIVO</option></select></div>
+                    </div>
+                    <div class="mb-4"><label class="label-integra">Contraseña</label><input type="password" name="password" id="u_pass" class="form-control form-control-integra"></div>
+                    <button type="submit" class="btn-integra-confirm">GUARDAR CAMBIOS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     $(document).ready(function() {
-        $('#tablaUsuarios').DataTable({
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": '<"top"f>rt<"bottom"lp><"clear">'
-        });
+        $('#tablaUsuarios').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" }, "dom": '<"top"f>rt<"bottom"lp><"clear">' });
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}Swal.fire({ title: 'Sistema Integra', text: "{{ message }}", icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", customClass: { confirmButton: 'btn-integra-confirm' }, buttonsStyling: false });{% endfor %}{% endif %}
+        {% endwith %}
     });
-
-    function confirmarEliminacion(id, nombre) {
-        Swal.fire({
-            title: '¿Eliminar Usuario?',
-            text: nombre,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'SÍ, ELIMINAR',
-            cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = "{{ url_for('users.index') }}delete/" + id;
-            }
-        });
-    }
+    function nuevoUser() { document.getElementById('formUser').reset(); document.getElementById('u_id').value = ''; document.getElementById('u_pass').required = true; document.getElementById('mTitle').innerText = 'NUEVO USUARIO'; }
+    function editarUser(btn) { document.getElementById('u_id').value = btn.dataset.id; document.getElementById('u_nombre').value = btn.dataset.nombre; document.getElementById('u_email').value = btn.dataset.email; document.getElementById('u_rol').value = btn.dataset.rol; document.getElementById('u_activo').value = btn.dataset.activo; document.getElementById('u_pass').required = false; document.getElementById('mTitle').innerText = 'EDITAR USUARIO'; bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUser')).show(); }
 </script>
 {% endblock %}

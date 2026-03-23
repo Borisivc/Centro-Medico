@@ -85,7 +85,7 @@
                             <label class="label-integra">Contraseña</label>
                             <input type="password" name="password" class="form-control form-control-integra" required placeholder="••••••••">
                         </div>
-                        <button type="submit" class="btn-integra-confirm">INGRESAR</button>
+                        <button type="submit" class="btn-integra-confirm w-100">INGRESAR</button>
                     </form>
                 </div>
             </div>
@@ -97,5 +97,25 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        Swal.fire({
+                            title: 'Sistema Integra',
+                            text: "{{ message }}",
+                            icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
+                            customClass: { confirmButton: 'btn btn-primary px-4 rounded-pill' },
+                            buttonsStyling: false
+                        });
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
 </body>
 </html>

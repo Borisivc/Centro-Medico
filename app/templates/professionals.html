@@ -4,45 +4,48 @@
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h2 class="modal-integra-title text-start m-0">Gestor de Profesionales</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración del staff médico</p>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Cuerpo Médico Integra</p>
         </div>
         <div class="col-md-4 text-end">
             <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalProf" onclick="nuevoProf()">
-                <i class="fas fa-plus me-2"></i>NUEVO
+                <i class="fas fa-user-md me-2"></i>NUEVO
             </button>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm p-3">
         <div class="table-responsive-scroll">
-            <table id="tablaProfesionales" class="table table-hover align-middle mb-0 w-100">
-                <thead class="bg-light">
+            <table id="tablaProf" class="table table-hover align-middle mb-0 w-100">
+                <thead>
                     <tr class="small text-muted text-uppercase">
-                        <th>Estado</th>
                         <th>RUT</th>
-                        <th>Profesional</th>
+                        <th>Nombre Profesional</th>
                         <th>Especialidades</th>
+                        <th>Estado</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in profesionales %}
                     <tr>
+                        <td class="fw-bold text-navy-integra">{{ p['rut'] | formatear_rut }}</td>
+                        <td class="text-uppercase">{{ p['nombre'] }} {{ p['apellido'] }}</td>
+                        <td class="small text-muted">{{ p['especialidades_nombres'] or 'SIN ASIGNAR' }}</td>
                         <td>
-                            <span class="badge {% if p.estado_nombre == 'ACTIVO' %}bg-success-light text-success{% else %}bg-danger-light text-danger{% endif %} px-3">
-                                {{ p.estado_nombre }}
+                            <span class="badge {{ 'bg-success' if p['activo'] == 1 else 'bg-secondary' }}">
+                                {{ p['estado_nombre'] }}
                             </span>
                         </td>
-                        <td class="fw-bold text-navy-integra">{{ p.rut }}</td>
-                        <td>{{ p.nombre }}</td>
-                        <td><span class="badge bg-light text-navy-integra border">{{ p.especialidades_nombres }}</span></td>
                         <td class="text-center">
                             <button class="btn-editar-integra me-1" onclick="editarProf(this)" 
-                                data-id="{{ p.id }}" data-rut="{{ p.rut }}" data-nombre="{{ p.nombre }}"
-                                data-estado="{{ p.estado_id }}" data-especialidades="{{ p.especialidades_ids }}">
+                                data-id="{{ p['id'] }}" 
+                                data-rut="{{ p['rut'] | formatear_rut }}" 
+                                data-nombre="{{ p['nombre'] }}" 
+                                data-apellido="{{ p['apellido'] }}"
+                                data-estado="{{ p['activo'] }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-eliminar-integra" onclick="confirmarEliminarProf('{{ p.id }}', '{{ p.nombre }}')">
+                            <button class="btn-eliminar-integra" onclick="confirmarEliminar('{{ p['id'] }}', '{{ p['nombre'] }} {{ p['apellido'] }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -55,41 +58,50 @@
 </div>
 
 <div class="modal fade" id="modalProf" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0">
             <div class="modal-body p-4">
-                <h5 class="modal-integra-title" id="titleProf">CONFIGURAR PROFESIONAL</h5>
-                <form id="formProf" action="{{ url_for('professionals.save') }}" method="POST">
+                <h5 class="modal-integra-title" id="titleProf">FICHA PROFESIONAL</h5>
+                <form action="{{ url_for('professionals.save') }}" method="POST" id="formProf">
                     <input type="hidden" name="id" id="prof_id">
-                    <div class="mb-3">
-                        <label class="label-integra">RUT</label>
-                        <input type="text" name="rut" id="prof_rut" class="form-control form-control-integra" 
-                               placeholder="12.345.678-9" oninput="rutificador(this)" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="label-integra">RUT *</label>
+                            <input type="text" name="rut" id="prof_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" onblur="validarRutRealTime(this.value)" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="label-integra">Estado *</label>
+                            <select name="estado_id" id="prof_estado" class="form-select form-control-integra" required>
+                                {% for est in estados %}
+                                <option value="{{ est['id'] }}">{{ est['nombre'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="label-integra">Nombre Completo</label>
-                        <input type="text" name="nombre" id="prof_nombre" class="form-control form-control-integra" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="label-integra">Estado</label>
-                        <select name="estado_id" id="prof_estado" class="form-select form-control-integra">
-                            {% for e in estados %}
-                            <option value="{{ e.id }}">{{ e.nombre }}</option>
-                            {% endfor %}
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="label-integra">Nombre *</label>
+                            <input type="text" name="nombre" id="prof_nombre" class="form-control form-control-integra text-uppercase" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="label-integra">Apellido *</label>
+                            <input type="text" name="apellido" id="prof_apellido" class="form-control form-control-integra text-uppercase" required>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="label-integra">Especialidades</label>
-                        <div class="table-responsive-scroll">
-                            {% for e in especialidades %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="especialidades" value="{{ e.id }}" id="esp_{{ e.id }}">
-                                <label class="form-check-label small" for="esp_{{ e.id }}">{{ e.nombre }}</label>
+                        <div class="row g-2 p-2 border rounded bg-light" style="max-height: 150px; overflow-y: auto;">
+                            {% for esp in especialidades %}
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="especialidades" value="{{ esp['id'] }}" id="esp_{{ esp['id'] }}">
+                                    <label class="form-check-label small" for="esp_{{ esp['id'] }}">{{ esp['nombre'] }}</label>
+                                </div>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-                    <button type="submit" id="btnGuardarProf" class="btn-integra-confirm">GUARDAR PROFESIONAL</button>
+                    <button type="submit" class="btn-integra-confirm w-100">GUARDAR PROFESIONAL</button>
                 </form>
             </div>
         </div>
@@ -97,81 +109,73 @@
 </div>
 
 <script>
+    let isValidating = false;
+    let lastChecked = "";
+
     $(document).ready(function() {
-        $('#tablaProfesionales').DataTable({
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": '<"top"f>rt<"bottom"lp><"clear">'
-        });
+        $('#tablaProf').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
     });
 
-    function rutificador(input) {
-        let valor = input.value.replace(/\./g, '').replace(/-/g, '');
-        if (valor.length > 1) {
-            let cuerpo = valor.slice(0, -1);
-            let dv = valor.slice(-1).toUpperCase();
-            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
+    function validarRutRealTime(rut) {
+        if (!rut || rut === lastChecked || isValidating) return;
+        const prof_id = document.getElementById('prof_id').value;
+        if (rut.length > 7 && !prof_id) {
+            isValidating = true;
+            lastChecked = rut;
+            fetch(`/administracion/profesionales/verificar_rut/${rut}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== "ok") {
+                        Swal.fire({ text: data.message, icon: 'warning', confirmButtonText: 'OK' })
+                        .then(() => { document.getElementById('prof_rut').value = ""; lastChecked = ""; document.getElementById('prof_rut').focus(); });
+                    }
+                }).finally(() => { isValidating = false; });
         }
-        validarRut(input);
     }
 
-    function validarRut(input) {
-        let valor = input.value.replace(/\./g, '').replace(/-/g, '');
-        if (valor.length < 8) return;
-        let cuerpo = valor.slice(0, -1);
-        let dv = valor.slice(-1).toUpperCase();
-        let suma = 0;
-        let multiplo = 2;
-        for (let i = 1; i <= cuerpo.length; i++) {
-            index = multiplo * valor.charAt(cuerpo.length - i);
-            suma = suma + index;
-            if (multiplo < 7) multiplo = multiplo + 1; else multiplo = 2;
-        }
-        dvEsperado = 11 - (suma % 11);
-        dv = (dv == 'K') ? 10 : dv;
-        dv = (dv == 0) ? 11 : dv;
-        if (dvEsperado != dv) {
-            input.classList.add('is-invalid');
-            document.getElementById('btnGuardarProf').disabled = true;
-        } else {
-            input.classList.remove('is-invalid');
-            document.getElementById('btnGuardarProf').disabled = false;
+    function rutificadorUI(input) {
+        let v = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+        if (v.length > 1) {
+            let cuerpo = v.slice(0, -1).slice(0, 8);
+            let dv = v.slice(-1);
+            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
         }
     }
 
     function nuevoProf() {
         document.getElementById('formProf').reset();
         document.getElementById('prof_id').value = '';
+        lastChecked = "";
         document.getElementById('prof_rut').readOnly = false;
         document.getElementById('titleProf').innerText = 'NUEVO PROFESIONAL';
     }
 
     function editarProf(btn) {
-        nuevoProf();
+        document.getElementById('formProf').reset();
         document.getElementById('prof_id').value = btn.dataset.id;
         document.getElementById('prof_rut').value = btn.dataset.rut;
         document.getElementById('prof_nombre').value = btn.dataset.nombre;
+        document.getElementById('prof_apellido').value = btn.dataset.apellido;
         document.getElementById('prof_estado').value = btn.dataset.estado;
         document.getElementById('prof_rut').readOnly = true;
-        
-        const ids = btn.dataset.especialidades;
-        if(ids) {
-            ids.split(',').forEach(id => {
-                const ck = document.getElementById('esp_' + id.trim());
-                if(ck) ck.checked = true;
-            });
-        }
         document.getElementById('titleProf').innerText = 'EDITAR PROFESIONAL';
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalProf')).show();
     }
 
-    function confirmarEliminarProf(id, nombre) {
-        Swal.fire({
-            title: '¿Eliminar Profesional?', text: nombre, icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'ELIMINAR', cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) window.location.href = "{{ url_for('professionals.index') }}delete/" + id;
+    function confirmarEliminar(id, nombre) {
+        Swal.fire({ 
+            title: '¿Eliminar Profesional?', 
+            text: `Se verificará el historial de ${nombre} antes de borrar.`, 
+            icon: 'warning', 
+            showCancelButton: true, 
+            confirmButtonText: 'SÍ, ELIMINAR', 
+            cancelButtonText: 'CANCELAR', 
+            customClass: { confirmButton: 'btn btn-danger px-4 rounded-pill me-2', cancelButton: 'btn btn-secondary px-4 rounded-pill' }, 
+            buttonsStyling: false 
+        }).then((result) => { 
+            if (result.isConfirmed) { 
+                window.location.href = "{{ url_for('professionals.index') }}delete/" + id; 
+            } 
         });
     }
 </script>

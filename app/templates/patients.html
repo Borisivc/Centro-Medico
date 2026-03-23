@@ -29,10 +29,7 @@
                     <tr>
                         <td class="fw-bold text-navy-integra">{{ p['rut'] | formatear_rut }}</td>
                         <td class="text-uppercase">{{ p['nombre'] }} {{ p['apellido'] }}</td>
-                        <td>
-                            {# Formateo seguro para la tabla #}
-                            {{ p['fecha_nacimiento'].strftime('%d/%m/%Y') if p['fecha_nacimiento'] and p['fecha_nacimiento'].strftime else (p['fecha_nacimiento'] or '---') }}
-                        </td>
+                        <td>{{ p['fecha_nacimiento'].strftime('%d/%m/%Y') if p['fecha_nacimiento'] and p['fecha_nacimiento'].strftime else (p['fecha_nacimiento'] or '---') }}</td>
                         <td class="text-center">
                             <button class="btn-editar-integra me-1" onclick="editarPac(this)" 
                                 data-id="{{ p['id'] }}" 
@@ -61,7 +58,6 @@
                 <h5 class="modal-integra-title" id="titlePac">PACIENTE</h5>
                 <form action="{{ url_for('patients.save') }}" method="POST" id="formPac">
                     <input type="hidden" name="id" id="pac_id">
-                    
                     <div class="mb-3">
                         <label class="label-integra">RUT *</label>
                         <input type="text" name="rut" id="pac_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" onblur="validarRutRealTime(this.value)" required>
@@ -91,49 +87,22 @@
 
     $(document).ready(function() {
         $('#tablaPacientes').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                Swal.fire({
-                    title: 'Sistema Integra',
-                    text: "{{ message }}",
-                    icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
-                    customClass: { confirmButton: 'btn-integra-confirm' },
-                    buttonsStyling: false
-                });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
     });
 
     function validarRutRealTime(rut) {
         if (!rut || rut === lastChecked || isValidating) return;
-        
         const pac_id = document.getElementById('pac_id').value;
         if (rut.length > 7 && !pac_id) {
             isValidating = true;
             lastChecked = rut;
-            
             fetch(`/administracion/pacientes/verificar_rut/${rut}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.status !== "ok") {
-                        Swal.fire({
-                            text: data.message,
-                            icon: 'warning',
-                            customClass: { confirmButton: 'btn-integra-confirm' },
-                            buttonsStyling: false
-                        }).then(() => {
-                            document.getElementById('pac_rut').value = "";
-                            lastChecked = "";
-                            document.getElementById('pac_rut').focus();
-                        });
+                        Swal.fire({ text: data.message, icon: 'warning', confirmButtonText: 'OK' })
+                        .then(() => { document.getElementById('pac_rut').value = ""; lastChecked = ""; document.getElementById('pac_rut').focus(); });
                     }
-                })
-                .finally(() => {
-                    isValidating = false;
-                });
+                }).finally(() => { isValidating = false; });
         }
     }
 
@@ -160,7 +129,6 @@
         document.getElementById('pac_nombre').value = btn.dataset.nombre;
         document.getElementById('pac_apellido').value = btn.dataset.apellido;
         document.getElementById('pac_fecha').value = btn.dataset.fecha;
-        
         document.getElementById('pac_rut').readOnly = true;
         document.getElementById('titlePac').innerText = 'EDITAR PACIENTE';
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPacientes')).show();
@@ -172,9 +140,9 @@
             text: nombre,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'SÍ',
-            cancelButtonText: 'NO',
-            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
+            confirmButtonText: 'ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            customClass: { confirmButton: 'btn btn-danger rounded-pill px-4', cancelButton: 'btn btn-secondary rounded-pill px-4' },
             buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {

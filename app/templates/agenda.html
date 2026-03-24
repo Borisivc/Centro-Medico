@@ -2,20 +2,20 @@
 {% block content %}
 <div class="container py-4">
     <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h2 class="modal-integra-title text-start m-0">Agenda Médica</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Gestión de turnos y citas</p>
+        <div class="col-md-8 text-start">
+            <h2 class="modal-centro-title m-0">Agenda Médica</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Control de Citas y Reservas</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalAgenda" onclick="nuevaCita()">
-                <i class="fas fa-calendar-plus me-2"></i>NUEVO
+            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalAgenda" onclick="nuevaCita()">
+                NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm p-3">
+    <div class="card p-3 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table id="tablaAgenda" class="table table-hover align-middle mb-0 w-100">
+            <table class="table table-hover align-middle w-100">
                 <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>Fecha/Hora</th>
@@ -28,27 +28,34 @@
                 <tbody>
                     {% for c in citas %}
                     <tr>
-                        <td>
-                            <div class="fw-bold text-navy-integra">{{ c[1] }}</div>
-                            <div class="small text-muted">{{ c[2] }}</div>
+                        <td class="small">
+                            <div class="fw-bold text-navy-centro">{{ c.fecha }}</div>
+                            <div class="text-muted">{{ c.hora }}</div>
                         </td>
                         <td>
-                            <div class="fw-bold">{{ c[4] }} {{ c[5] }}</div>
-                            <div class="small text-muted">{{ c[6] | formatear_rut }}</div>
+                            <div class="text-uppercase fw-bold" style="font-size: 0.9rem;">{{ c.pac_nom }} {{ c.pac_ape }}</div>
+                            <div class="x-small text-muted">{{ c.pac_rut | formatear_rut }}</div>
                         </td>
-                        <td>{{ c[8] }} {{ c[9] }}</td>
+                        <td class="text-uppercase small">{{ c.prof_nom }} {{ c.prof_ape }}</td>
                         <td>
-                            <span class="badge bg-light text-navy-integra border">{{ c[10] }}</span>
+                            {% set est = c.estado_nom %}
+                            <span class="badge rounded-pill px-3 
+                                {% if est == 'ANULADA' %}bg-danger
+                                {% elif est == 'CONFIRMADA' %}bg-success
+                                {% elif est == 'ATENDIDA' %}bg-secondary
+                                {% else %}bg-primary{% endif %}">
+                                {{ est }}
+                            </span>
                         </td>
                         <td class="text-center">
-                            <button class="btn-editar-integra me-1" onclick="editarCita(this)" 
-                                data-id="{{ c[0] }}" data-fecha="{{ c[1] }}" data-hora="{{ c[2] }}"
-                                data-pac_id="{{ c[3] }}" data-rut="{{ c[6] | formatear_rut }}"
-                                data-nombre="{{ c[4] }}" data-apellido="{{ c[5] }}"
-                                data-prof_id="{{ c[7] }}" data-estado="{{ c[11] }}">
+                            <button type="button" class="btn-editar-centro me-1" onclick="editarCita(this)" 
+                                data-id="{{c.id}}" data-paciente="{{c.paciente_id}}" 
+                                data-profesional="{{c.profesional_id}}" data-fecha="{{c.fecha}}"
+                                data-hora="{{c.hora}}" data-estado="{{c.estado_id}}"
+                                data-obs="{{c.observacion}}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-eliminar-integra" onclick="eliminarCita('{{ c[0] }}')">
+                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{c.id}}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -61,59 +68,68 @@
 </div>
 
 <div class="modal fade" id="modalAgenda" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0">
-            <div class="modal-body p-4">
-                <h5 class="modal-integra-title" id="mTitle">AGENDAR CITA</h5>
-                <form id="formAgenda" action="{{ url_for('agenda.save') }}" method="POST">
-                    <input type="hidden" name="ag_id" id="ag_id">
-                    <input type="hidden" name="paciente_id" id="pac_id">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titleAgenda">Nueva Cita</h4></div>
+                <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <form action="{{ url_for('agenda.save') }}" method="POST" id="formAgenda">
+                    <input type="hidden" name="id" id="cita_id">
                     
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="label-integra">RUT Paciente *</label>
-                            <input type="text" name="rut" id="pac_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" onblur="buscarPaciente(this.value)" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="label-integra">Nombre *</label>
-                            <input type="text" name="nombre" id="pac_nombre" class="form-control form-control-integra text-uppercase" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="label-integra">Apellido *</label>
-                            <input type="text" name="apellido" id="pac_apellido" class="form-control form-control-integra text-uppercase" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Profesional *</label>
-                            <select name="profesional_id" id="prof_id" class="form-select form-control-integra" required>
-                                <option value="">Seleccione...</option>
-                                {% for pr in profesionales %}
-                                <option value="{{ pr[0] }}">{{ pr[1] }} {{ pr[2] }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="label-integra">Fecha *</label>
-                            <input type="date" name="fecha" id="ag_fecha" class="form-control form-control-integra" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="label-integra">Hora *</label>
-                            <input type="time" name="hora" id="ag_hora" class="form-control form-control-integra" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="label-integra">Estado de Cita</label>
-                        <select name="estado_id" id="ag_estado" class="form-select form-control-integra">
-                            {% for e in estados %}
-                            <option value="{{ e[0] }}">{{ e[1] }}</option>
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Paciente</label>
+                        <select name="paciente_id" id="cita_paciente" class="form-select form-control-centro rounded-pill sm" required>
+                            <option value="">Seleccione Paciente...</option>
+                            {% for p in pacientes %}
+                            <option value="{{ p.id if p is mapping else p[0] }}">
+                                {{ (p.nombre + ' ' + p.apellido) if p is mapping else (p[1] + ' ' + p[2]) }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <button type="submit" class="btn-integra-confirm">CONFIRMAR CITA</button>
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Profesional</label>
+                        <select name="profesional_id" id="cita_profesional" class="form-select form-control-centro rounded-pill sm" required>
+                            <option value="">Seleccione Profesional...</option>
+                            {% for pr in profesionales %}
+                            <option value="{{ pr.id if pr is mapping else pr[0] }}">
+                                {{ (pr.nombre + ' ' + pr.apellido) if pr is mapping else (pr[1] + ' ' + pr[2]) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha</label>
+                            <input type="date" name="fecha" id="cita_fecha" class="form-control-centro rounded-pill sm" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora</label>
+                            <input type="time" name="hora" id="cita_hora" class="form-control-centro rounded-pill sm" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
+                        <select name="estado_id" id="cita_estado" class="form-select form-control-centro rounded-pill sm" required>
+                            {% for e in estados %}
+                            <option value="{{ e.id if e is mapping else e[0] }}">{{ e.nombre if e is mapping else e[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Observación</label>
+                        <textarea name="observacion" id="cita_obs" class="form-control-centro rounded-4 text-uppercase" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR CITA</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -121,80 +137,54 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        $('#tablaAgenda').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
-        
+    document.addEventListener('DOMContentLoaded', function() {
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}{% for category, message in messages %}
-                Swal.fire({ title: 'Sistema Integra', text: "{{ message }}", icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", customClass: { confirmButton: 'btn-integra-confirm' }, buttonsStyling: false });
-            {% endfor %}{% endif %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({ 
+                        title: 'Centro Médico', 
+                        text: "{{ message }}", 
+                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", 
+                        confirmButtonText: 'Aceptar', 
+                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
+                        buttonsStyling: false 
+                    });
+                {% endfor %}
+            {% endif %}
         {% endwith %}
     });
 
-    function rutificadorUI(input) {
-        let v = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
-        if (v.length > 1) {
-            let cuerpo = v.slice(0, -1).slice(0, 8);
-            let dv = v.slice(-1);
-            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
-        }
-    }
-
-    function buscarPaciente(rut) {
-        if (rut.length < 8) return;
-        fetch(`/agenda/buscar_paciente/${rut}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.existe) {
-                    document.getElementById('pac_id').value = data.id;
-                    document.getElementById('pac_nombre').value = data.nombre;
-                    document.getElementById('pac_apellido').value = data.apellido;
-                    document.getElementById('pac_nombre').readOnly = true;
-                    document.getElementById('pac_apellido').readOnly = true;
-                } else {
-                    document.getElementById('pac_id').value = '';
-                    document.getElementById('pac_nombre').readOnly = false;
-                    document.getElementById('pac_apellido').readOnly = false;
-                }
-            });
-    }
-
-    function nuevaCita() {
+    function nuevaCita(){
         document.getElementById('formAgenda').reset();
-        document.getElementById('ag_id').value = '';
-        document.getElementById('pac_id').value = '';
-        document.getElementById('pac_nombre').readOnly = false;
-        document.getElementById('pac_apellido').readOnly = false;
-        document.getElementById('pac_rut').readOnly = false;
+        document.getElementById('cita_id').value = '';
+        document.getElementById('titleAgenda').innerText = 'Nueva Cita';
     }
 
-    function editarCita(btn) {
-        document.getElementById('ag_id').value = btn.dataset.id;
-        document.getElementById('pac_id').value = btn.dataset.pac_id;
-        document.getElementById('pac_rut').value = btn.dataset.rut;
-        document.getElementById('pac_nombre').value = btn.dataset.nombre;
-        document.getElementById('pac_apellido').value = btn.dataset.apellido;
-        document.getElementById('prof_id').value = btn.dataset.prof_id;
-        document.getElementById('ag_fecha').value = btn.dataset.fecha;
-        document.getElementById('ag_hora').value = btn.dataset.hora;
-        document.getElementById('ag_estado').value = btn.dataset.estado;
-        
-        document.getElementById('pac_rut').readOnly = true;
+    function editarCita(b){
+        nuevaCita();
+        document.getElementById('cita_id').value = b.dataset.id;
+        document.getElementById('cita_paciente').value = b.dataset.paciente;
+        document.getElementById('cita_profesional').value = b.dataset.profesional;
+        document.getElementById('cita_fecha').value = b.dataset.fecha;
+        document.getElementById('cita_hora').value = b.dataset.hora;
+        document.getElementById('cita_estado').value = b.dataset.estado;
+        document.getElementById('cita_obs').value = b.dataset.obs;
+        document.getElementById('titleAgenda').innerText = 'Editar Cita';
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAgenda')).show();
     }
 
-    function eliminarCita(id) {
+    function confirmarEliminar(id) {
         Swal.fire({
-            title: '¿Anular Cita?', text: "Esta acción no se puede deshacer.", icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'SÍ, ANULAR', cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn-integra-confirm', cancelButton: 'btn-eliminar-integra' },
+            title: '¿Eliminar Cita?',
+            text: "Esta acción quitará al paciente de la agenda.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' },
             buttonsStyling: false
         }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/agenda/delete/${id}`, { method: 'POST' })
-                .then(res => res.json())
-                .then(data => { location.reload(); });
-            }
+            if (result.isConfirmed) window.location.href = "{{ url_for('agenda.delete', id=0) }}".replace('0', id);
         });
     }
 </script>

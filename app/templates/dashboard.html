@@ -1,38 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
-    <div class="row align-items-center mb-4">
-        <div class="col-md-6">
-            <h2 class="text-navy-centro fw-bold m-0">Panel de Control</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Resumen Operativo</p>
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8 text-start">
+            <h2 class="fw-bold text-navy-centro mb-0">Panel de Control</h2>
+            <p class="text-muted small mb-0 fw-bold">RESUMEN OPERATIVO</p>
         </div>
-        <div class="col-md-6 text-end">
-            <div class="container-dash-fecha">
-                <i class="fas fa-calendar-alt text-navy-centro me-2"></i>
-                <input type="date" id="dash_fecha" class="input-dash-fecha" value="{{ hoy }}">
+        <div class="col-md-4 text-end">
+            <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden" style="width: 180px; margin-left: auto;">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-calendar-alt"></i></span>
+                <input type="text" class="form-control border-0 text-center fw-bold" value="{{ hoy }}" readonly>
             </div>
         </div>
     </div>
 
     <div class="row g-4 mb-4 text-center">
         <div class="col-md-4">
-            <div class="card h-100 p-3">
-                <i class="fas fa-calendar-check fa-3x icon-citas-totales mb-2"></i>
-                <h4 class="fw-bold text-navy-centro m-0">{{ citas_dia|length }}</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <i class="fas fa-calendar-check text-info fa-3x mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ c_hoy }}</h3>
                 <p class="text-muted small fw-bold mb-0">CITAS HOY</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 p-3">
-                <i class="fas fa-user-injured fa-3x icon-pacientes mb-2"></i>
-                <h4 class="fw-bold text-navy-centro m-0">{{ pacientes }}</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <i class="fas fa-user-injured text-primary fa-3x mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ p_count }}</h3>
                 <p class="text-muted small fw-bold mb-0">PACIENTES</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 p-3">
-                <i class="fas fa-user-md fa-3x icon-profesionales mb-2"></i>
-                <h4 class="fw-bold text-navy-centro m-0">{{ profesionales }}</h4>
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <i class="fas fa-user-md text-success fa-3x mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ m_count }}</h3>
                 <p class="text-muted small fw-bold mb-0">CUERPO MÉDICO</p>
             </div>
         </div>
@@ -40,35 +40,70 @@
 
     <div class="row g-4">
         <div class="col-md-7">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="text-navy-centro fw-bold m-0"><i class="fas fa-clock me-2 icon-availability"></i>Citas del Día</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive-scroll">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead><tr><th>Hora</th><th>Paciente</th><th>Profesional</th><th>Estado</th></tr></thead>
-                            <tbody>
-                                {% for c in citas_dia %}
-                                <tr>
-                                    <td class="fw-bold text-navy-centro">{{ c.hora }}</td>
-                                    <td>{{ c.paciente }}</td>
-                                    <td>{{ c.profesional }}</td>
-                                    <td>{{ c.estado }}</td>
-                                </tr>
-                                {% else %}
-                                <tr><td colspan="4" class="text-center py-4 text-muted small">Sin citas agendadas.</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4" style="min-height: 380px;">
+                <h6 class="fw-bold text-navy-centro mb-3"><i class="fas fa-clock text-danger me-2"></i>Citas del Día</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless align-middle mb-0">
+                        <thead>
+                            <tr class="x-small text-muted text-uppercase border-bottom">
+                                <th>Hora</th>
+                                <th>Paciente</th>
+                                <th>Profesional</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in citas_dia %}
+                            <tr class="border-bottom">
+                                <td class="fw-bold py-2">{{ c.hora }}</td>
+                                <td class="small text-uppercase">{{ c.paciente }}</td>
+                                <td class="small text-uppercase">{{ c.profesional }}</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-light text-dark border px-3">
+                                        {{ c.estado }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted small fst-italic">No hay citas para hoy</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+
         <div class="col-md-5">
-            <div class="card h-100 border-0 shadow-sm text-center py-5">
-                <h5 class="text-navy-centro fw-bold m-0"><i class="fas fa-calendar-week me-2 icon-dashboard"></i>Semana</h5>
-                <p class="text-muted small">Próximos 7 días en desarrollo.</p>
+            <div class="card border-0 shadow-sm rounded-4 p-4 d-flex flex-column h-100" style="min-height: 380px;">
+                <h6 class="fw-bold text-navy-centro mb-3"><i class="fas fa-calendar-alt text-primary me-2"></i>Próximos Días</h6>
+                
+                <div class="flex-grow-1">
+                    {% for p in proximas_citas %}
+                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3 border-start border-primary border-4 bg-light shadow-sm">
+                        <div class="text-start">
+                            <div class="fw-bold small text-navy-centro" style="font-size: 0.75rem;">{{ p.fecha }}</div>
+                            <div class="fw-bold text-uppercase" style="font-size: 0.85rem;">{{ p.apellido }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-white text-primary border rounded-pill">{{ p.hora }}</div>
+                            <div class="x-small text-muted text-uppercase" style="font-size: 0.65rem;">{{ p.prof }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x mb-2 opacity-25"></i>
+                        <p class="small text-muted">Sin citas próximas</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-3 pt-3 border-top text-center">
+                    <a href="{{ url_for('agenda.index') }}" class="btn-nuevo-centro text-decoration-none d-inline-block py-2 px-4 shadow-sm" style="font-size: 0.75rem;">
+                        VER AGENDA COMPLETA
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -2,46 +2,44 @@
 {% block content %}
 <div class="container py-4">
     <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h2 class="modal-integra-title text-start m-0">Gestión de Usuarios</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Control de Accesos y Privilegios</p>
+        <div class="col-md-8 text-start">
+            <h2 class="modal-centro-title m-0">Gestor de Usuarios</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración de Accesos al Sistema</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalUser" onclick="nuevoUser()">
-                <i class="fas fa-user-shield me-2"></i>NUEVO USUARIO
+            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalUser" onclick="nuevoUser()">
+                NUEVO USUARIO
             </button>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm p-3">
+    <div class="card p-3 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table id="tablaUsers" class="table table-hover align-middle mb-0 w-100">
+            <table class="table table-hover align-middle w-100">
                 <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>RUT</th>
-                        <th>Nombre</th>
+                        <th>Nombre de Usuario</th>
                         <th>Email</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
+                        <th>Roles Asignados</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for u in usuarios %}
                     <tr>
-                        <td class="fw-bold text-navy-integra">{{ u['rut'] | formatear_rut }}</td>
+                        <td class="text-navy-centro fw-bold">{{ u['rut'] | formatear_rut }}</td>
                         <td class="text-uppercase">{{ u['nombre'] }}</td>
-                        <td>{{ u['email'] }}</td>
-                        <td><span class="badge bg-info text-dark">{{ u['rol_nombre'] }}</span></td>
-                        <td><span class="badge {{ 'bg-success' if u['activo'] == 1 else 'bg-secondary' }}">{{ u['estado_nombre'] }}</span></td>
+                        <td class="small">{{ u['email'] }}</td>
+                        <td><span class="badge bg-light text-dark rounded-pill px-3">{{ u['roles_texto'] }}</span></td>
                         <td class="text-center">
-                            <button class="btn-editar-integra me-1" onclick="editarUser(this)" 
-                                data-id="{{ u['id'] }}" data-rut="{{ u['rut'] | formatear_rut }}" 
-                                data-nombre="{{ u['nombre'] }}" data-email="{{ u['email'] }}"
-                                data-rol="{{ u['rol_id'] }}" data-estado="{{ u['activo'] }}">
+                            <button type="button" class="btn-editar-centro me-1" onclick="editarUser(this)" 
+                                data-id="{{u['id']}}" data-rut="{{u['rut']|formatear_rut}}" 
+                                data-nombre="{{u['nombre']}}" data-email="{{u['email']}}"
+                                data-roles="{{ u.roles_ids|join(',') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-eliminar-integra" onclick="confirmarEliminar('{{ u['id'] }}', '{{ u['nombre'] }}')">
+                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{u['id']}}', '{{u['nombre']}}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -55,46 +53,58 @@
 
 <div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-body p-4">
-                <h5 class="modal-integra-title" id="titleUser">USUARIO</h5>
-                <form action="{{ url_for('users.save') }}" method="POST" id="formUser">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titleUser">Ficha de Usuario</h4></div>
+                <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-4 pt-2 text-start">
+                <form action="{{ url_for('users.save') }}" method="POST" id="formUser" autocomplete="off">
                     <input type="hidden" name="id" id="user_id">
-                    <div class="mb-3">
-                        <label class="label-integra">RUT *</label>
-                        <input type="text" name="rut" id="user_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="label-integra">Nombre Completo *</label>
-                        <input type="text" name="nombre" id="user_nombre" class="form-control form-control-integra text-uppercase" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="label-integra">Email Corporativo *</label>
-                        <input type="email" name="email" id="user_email" class="form-control form-control-integra" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="label-integra">Contraseña (Dejar en blanco para no cambiar)</label>
-                        <input type="password" name="password" id="user_pass" class="form-control form-control-integra">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Rol *</label>
-                            <select name="rol_id" id="user_rol" class="form-select form-control-integra" required>
-                                {% for r in roles %}
-                                <option value="{{ r['id'] }}">{{ r['nombre'] }}</option>
-                                {% endfor %}
-                            </select>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
+                            <input type="text" name="rut" id="user_rut" class="form-control-centro rounded-pill sm" oninput="rutificadorUI(this)" onblur="validarRutReal(this)" required>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="label-integra">Estado *</label>
-                            <select name="estado_id" id="user_estado" class="form-select form-control-integra" required>
-                                {% for est in estados %}
-                                <option value="{{ est['id'] }}">{{ est['nombre'] }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombre Completo</label>
+                            <input type="text" name="nombre" id="user_nombre" class="form-control-centro rounded-pill text-uppercase sm" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn-integra-confirm w-100">GUARDAR USUARIO</button>
+                    
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Email</label>
+                        <input type="email" name="email" id="user_email" class="form-control-centro rounded-pill sm" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Contraseña</label>
+                        <input type="password" name="password" id="user_password" class="form-control-centro rounded-pill sm">
+                        <small id="passwordHelp" class="text-muted ms-2" style="font-size: 0.7rem;">Al editar, dejar en blanco para mantener la clave actual.</small>
+                    </div>
+
+                    <div class="mb-4 mt-2">
+                        <label class="label-centro fw-bold x-small text-muted ms-2 mb-2 d-block">ROLES ASIGNADOS</label>
+                        <div class="p-3 bg-light rounded-4">
+                            <div class="row g-2">
+                                {% for rol in roles_disponibles %}
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input check-rol" type="checkbox" name="roles[]" value="{{ rol.id }}" id="rol_{{ rol.id }}">
+                                        <label class="form-check-label small fw-bold text-dark" for="rol_{{ rol.id }}">{{ rol.nombre }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR USUARIO</button>
+                        <button type="button" class="btn btn-light rounded-pill btn-sm text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -102,52 +112,134 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        $('#tablaUsers').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
+    document.addEventListener('DOMContentLoaded', function() {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({ 
+                        title: 'Centro Médico', 
+                        text: "{{ message }}", 
+                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", 
+                        confirmButtonText: 'Aceptar', 
+                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
+                        buttonsStyling: false 
+                    });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     });
 
-    function rutificadorUI(input) {
-        let v = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
-        if (v.length > 1) {
-            let cuerpo = v.slice(0, -1).slice(0, 8);
-            let dv = v.slice(-1);
-            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
+    let rutValido = true;
+
+    function rutificadorUI(i){
+        let v = i.value.replace(/\./g,'').replace(/-/g,'').toUpperCase();
+        if(v.length > 1){
+            let c = v.slice(0,-1).slice(0,8);
+            let d = v.slice(-1);
+            i.value = c.replace(/\B(?=(\d{3})+(?!\d))/g,".") + "-" + d;
         }
     }
 
-    function nuevoUser() {
+    async function validarRutReal(input) {
+        let rut = input.value.trim();
+        let id = document.getElementById('user_id').value;
+        if (!rut || id !== '') { rutValido = true; return; }
+        
+        try {
+            const url = "{{ url_for('users.verificar_rut_ajax', rut='PLACEHOLDER') }}".replace('PLACEHOLDER', rut);
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.status !== 'ok') {
+                rutValido = false;
+                let tituloAlerta = (data.status === 'duplicado') ? 'RUT Duplicado' : 'RUT Inválido';
+                
+                Swal.fire({ 
+                    title: tituloAlerta, 
+                    text: data.message, 
+                    icon: 'warning', 
+                    confirmButtonText: 'Corregir', 
+                    customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, 
+                    buttonsStyling: false 
+                });
+                input.value = '';
+            } else { 
+                rutValido = true; 
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    document.getElementById('formUser').addEventListener('submit', function(e) {
+        if (!rutValido) { 
+            e.preventDefault(); 
+            Swal.fire({ title: 'Error', text: 'Debe ingresar un RUT válido y no duplicado.', icon: 'error', customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, buttonsStyling: false });
+            return; 
+        }
+        e.preventDefault();
+        Swal.fire({ 
+            title: '¿Guardar Cambios?', 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonText: 'SÍ, GUARDAR', 
+            cancelButtonText: 'CANCELAR', 
+            customClass: { confirmButton: 'btn-centro-confirm rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
+            buttonsStyling: false 
+        }).then((result) => {
+            if (result.isConfirmed) this.submit();
+        });
+    });
+
+    function nuevoUser(){
         document.getElementById('formUser').reset();
         document.getElementById('user_id').value = '';
         document.getElementById('user_rut').readOnly = false;
-        document.getElementById('titleUser').innerText = 'NUEVO USUARIO';
+        
+        // Exigir clave al crear usuario
+        document.getElementById('user_password').required = true;
+        document.getElementById('passwordHelp').style.display = 'none';
+
+        document.querySelectorAll('.check-rol').forEach(c => c.checked = false);
+        document.getElementById('titleUser').innerText = 'Nuevo Usuario';
+        rutValido = false;
     }
 
-    function editarUser(btn) {
-        document.getElementById('user_id').value = btn.dataset.id;
-        document.getElementById('user_rut').value = btn.dataset.rut;
-        document.getElementById('user_nombre').value = btn.dataset.nombre;
-        document.getElementById('user_email').value = btn.dataset.email;
-        document.getElementById('user_rol').value = btn.dataset.rol;
-        document.getElementById('user_estado').value = btn.dataset.estado;
+    function editarUser(b){
+        nuevoUser(); 
+        document.getElementById('user_id').value = b.dataset.id;
+        document.getElementById('user_rut').value = b.dataset.rut;
+        document.getElementById('user_nombre').value = b.dataset.nombre;
+        document.getElementById('user_email').value = b.dataset.email;
+        
+        // La clave es opcional al editar
+        document.getElementById('user_password').required = false;
+        document.getElementById('passwordHelp').style.display = 'block';
+        
+        if(b.dataset.roles) {
+            let rolesArr = b.dataset.roles.split(',');
+            rolesArr.forEach(id => {
+                let chk = document.getElementById('rol_' + id);
+                if(chk) chk.checked = true;
+            });
+        }
+
         document.getElementById('user_rut').readOnly = true;
-        document.getElementById('titleUser').innerText = 'EDITAR USUARIO';
+        document.getElementById('titleUser').innerText = 'Editar Usuario';
+        rutValido = true;
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUser')).show();
     }
 
     function confirmarEliminar(id, nombre) {
-        Swal.fire({
-            title: '¿Eliminar Usuario?',
-            text: nombre,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'ELIMINAR',
+        Swal.fire({ 
+            title: '¿Eliminar Usuario?', 
+            text: `Se eliminará a ${nombre} y todos sus permisos de acceso.`, 
+            icon: 'warning', 
+            showCancelButton: true, 
+            confirmButtonText: 'ELIMINAR', 
             cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn btn-danger rounded-pill px-4', cancelButton: 'btn btn-secondary rounded-pill px-4' },
-            buttonsStyling: false
+            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
+            buttonsStyling: false 
         }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = "{{ url_for('users.index') }}delete/" + id;
-            }
+            if (result.isConfirmed) window.location.href = "{{ url_for('users.delete', id=0) }}".replace('0', id);
         });
     }
 </script>

@@ -2,50 +2,43 @@
 {% block content %}
 <div class="container py-4">
     <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h2 class="modal-integra-title text-start m-0">Gestor de Profesionales</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Cuerpo Médico Integra</p>
+        <div class="col-md-8 text-start">
+            <h2 class="modal-centro-title m-0">Gestor de Profesionales</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Cuerpo Médico</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalProf" onclick="nuevoProf()">
-                <i class="fas fa-user-md me-2"></i>NUEVO
+            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalProf" onclick="nuevoProf()">
+                NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm p-3">
+    <div class="card p-3 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table id="tablaProf" class="table table-hover align-middle mb-0 w-100">
+            <table class="table table-hover align-middle w-100">
                 <thead>
                     <tr class="small text-muted text-uppercase">
                         <th>RUT</th>
                         <th>Nombre Profesional</th>
                         <th>Especialidades</th>
-                        <th>Estado</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in profesionales %}
                     <tr>
-                        <td class="fw-bold text-navy-integra">{{ p['rut'] | formatear_rut }}</td>
+                        <td class="text-navy-centro fw-bold">{{ p['rut'] | formatear_rut }}</td>
                         <td class="text-uppercase">{{ p['nombre'] }} {{ p['apellido'] }}</td>
-                        <td class="small text-muted">{{ p['especialidades_nombres'] or 'SIN ASIGNAR' }}</td>
-                        <td>
-                            <span class="badge {{ 'bg-success' if p['activo'] == 1 else 'bg-secondary' }}">
-                                {{ p['estado_nombre'] }}
-                            </span>
-                        </td>
+                        <td class="small text-muted">{{ p['especialidades_texto'] }}</td>
                         <td class="text-center">
-                            <button class="btn-editar-integra me-1" onclick="editarProf(this)" 
-                                data-id="{{ p['id'] }}" 
-                                data-rut="{{ p['rut'] | formatear_rut }}" 
-                                data-nombre="{{ p['nombre'] }}" 
-                                data-apellido="{{ p['apellido'] }}"
-                                data-estado="{{ p['activo'] }}">
+                            <button type="button" class="btn-editar-centro me-1" onclick="editarProf(this)" 
+                                data-id="{{p['id']}}" data-rut="{{p['rut']|formatear_rut}}" 
+                                data-nombre="{{p['nombre']}}" data-apellido="{{p['apellido']}}" 
+                                data-email="{{p['email']}}"
+                                data-especialidades="{{ p.especialidades_ids|join(',') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-eliminar-integra" onclick="confirmarEliminar('{{ p['id'] }}', '{{ p['nombre'] }} {{ p['apellido'] }}')">
+                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{p['id']}}', '{{p['nombre']}} {{p['apellido']}}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -58,50 +51,59 @@
 </div>
 
 <div class="modal fade" id="modalProf" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0">
-            <div class="modal-body p-4">
-                <h5 class="modal-integra-title" id="titleProf">FICHA PROFESIONAL</h5>
-                <form action="{{ url_for('professionals.save') }}" method="POST" id="formProf">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titleProf">Ficha Profesional</h4></div>
+                <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-4 pt-2 text-start">
+                <form action="{{ url_for('professionals.save') }}" method="POST" id="formProf" autocomplete="off">
                     <input type="hidden" name="id" id="prof_id">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">RUT *</label>
-                            <input type="text" name="rut" id="prof_rut" class="form-control form-control-integra" oninput="rutificadorUI(this)" onblur="validarRutRealTime(this.value)" required>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
+                            <input type="text" name="rut" id="prof_rut" class="form-control-centro rounded-pill sm" oninput="rutificadorUI(this)" onblur="validarRutReal(this)" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Estado *</label>
-                            <select name="estado_id" id="prof_estado" class="form-select form-control-integra" required>
-                                {% for est in estados %}
-                                <option value="{{ est['id'] }}">{{ est['nombre'] }}</option>
-                                {% endfor %}
-                            </select>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombre</label>
+                            <input type="text" name="nombre" id="prof_nombre" class="form-control-centro rounded-pill text-uppercase sm" required>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Nombre *</label>
-                            <input type="text" name="nombre" id="prof_nombre" class="form-control form-control-integra text-uppercase" required>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Apellido</label>
+                            <input type="text" name="apellido" id="prof_apellido" class="form-control-centro rounded-pill text-uppercase sm" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Apellido *</label>
-                            <input type="text" name="apellido" id="prof_apellido" class="form-control form-control-integra text-uppercase" required>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Email</label>
+                            <input type="email" name="email" id="prof_email" class="form-control-centro rounded-pill sm" required>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label class="label-integra">Especialidades</label>
-                        <div class="row g-2 p-2 border rounded bg-light" style="max-height: 150px; overflow-y: auto;">
-                            {% for esp in especialidades %}
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="especialidades" value="{{ esp['id'] }}" id="esp_{{ esp['id'] }}">
-                                    <label class="form-check-label small" for="esp_{{ esp['id'] }}">{{ esp['nombre'] }}</label>
+
+                    <div class="mb-4 mt-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2 mb-2 d-block">ESPECIALIDADES ASIGNADAS</label>
+                        <div class="p-3 bg-light rounded-4">
+                            <div class="row g-2">
+                                {% for esp in especialidades_disponibles %}
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input check-esp" type="checkbox" name="especialidades[]" value="{{ esp.id }}" id="esp_{{ esp.id }}">
+                                        <label class="form-check-label small fw-bold text-dark" for="esp_{{ esp.id }}">{{ esp.nombre }}</label>
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
-                    <button type="submit" class="btn-integra-confirm w-100">GUARDAR PROFESIONAL</button>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR DATOS</button>
+                        <button type="button" class="btn btn-light rounded-pill btn-sm text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -109,73 +111,127 @@
 </div>
 
 <script>
-    let isValidating = false;
-    let lastChecked = "";
-
-    $(document).ready(function() {
-        $('#tablaProf').DataTable({ "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" } });
+    document.addEventListener('DOMContentLoaded', function() {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({ 
+                        title: 'Centro Médico', 
+                        text: "{{ message }}", 
+                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", 
+                        confirmButtonText: 'Aceptar', 
+                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
+                        buttonsStyling: false 
+                    });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     });
 
-    function validarRutRealTime(rut) {
-        if (!rut || rut === lastChecked || isValidating) return;
-        const prof_id = document.getElementById('prof_id').value;
-        if (rut.length > 7 && !prof_id) {
-            isValidating = true;
-            lastChecked = rut;
-            fetch(`/administracion/profesionales/verificar_rut/${rut}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status !== "ok") {
-                        Swal.fire({ text: data.message, icon: 'warning', confirmButtonText: 'OK' })
-                        .then(() => { document.getElementById('prof_rut').value = ""; lastChecked = ""; document.getElementById('prof_rut').focus(); });
-                    }
-                }).finally(() => { isValidating = false; });
+    let rutValido = true;
+
+    function rutificadorUI(i){
+        let v = i.value.replace(/\./g,'').replace(/-/g,'').toUpperCase();
+        if(v.length > 1){
+            let c = v.slice(0,-1).slice(0,8);
+            let d = v.slice(-1);
+            i.value = c.replace(/\B(?=(\d{3})+(?!\d))/g,".") + "-" + d;
         }
     }
 
-    function rutificadorUI(input) {
-        let v = input.value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
-        if (v.length > 1) {
-            let cuerpo = v.slice(0, -1).slice(0, 8);
-            let dv = v.slice(-1);
-            input.value = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "-" + dv;
-        }
+    async function validarRutReal(input) {
+        let rut = input.value.trim();
+        let id = document.getElementById('prof_id').value;
+        // Solo omitimos la validación si el campo está vacío o si es una edición (id no está vacío)
+        if (!rut || id !== '') { rutValido = true; return; }
+        
+        try {
+            const url = "{{ url_for('professionals.verificar_rut_ajax', rut='PLACEHOLDER') }}".replace('PLACEHOLDER', rut);
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.status !== 'ok') {
+                rutValido = false;
+                let tituloAlerta = (data.status === 'duplicado') ? 'RUT Duplicado' : 'RUT Inválido';
+                
+                Swal.fire({ 
+                    title: tituloAlerta, 
+                    text: data.message, 
+                    icon: 'warning', 
+                    confirmButtonText: 'Corregir', 
+                    customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, 
+                    buttonsStyling: false 
+                });
+                input.value = '';
+            } else { 
+                rutValido = true; 
+            }
+        } catch (e) { console.error(e); }
     }
 
-    function nuevoProf() {
+    document.getElementById('formProf').addEventListener('submit', function(e) {
+        if (!rutValido) { 
+            e.preventDefault(); 
+            Swal.fire({ title: 'Error', text: 'Debe ingresar un RUT válido y no duplicado.', icon: 'error', customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, buttonsStyling: false });
+            return; 
+        }
+        e.preventDefault();
+        Swal.fire({ 
+            title: '¿Guardar Cambios?', 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonText: 'SÍ, GUARDAR', 
+            cancelButtonText: 'CANCELAR', 
+            customClass: { confirmButton: 'btn-centro-confirm rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
+            buttonsStyling: false 
+        }).then((result) => {
+            if (result.isConfirmed) this.submit();
+        });
+    });
+
+    function nuevoProf(){
         document.getElementById('formProf').reset();
         document.getElementById('prof_id').value = '';
-        lastChecked = "";
         document.getElementById('prof_rut').readOnly = false;
-        document.getElementById('titleProf').innerText = 'NUEVO PROFESIONAL';
+        document.querySelectorAll('.check-esp').forEach(c => c.checked = false);
+        document.getElementById('titleProf').innerText = 'Nuevo Profesional';
+        rutValido = false;
     }
 
-    function editarProf(btn) {
-        document.getElementById('formProf').reset();
-        document.getElementById('prof_id').value = btn.dataset.id;
-        document.getElementById('prof_rut').value = btn.dataset.rut;
-        document.getElementById('prof_nombre').value = btn.dataset.nombre;
-        document.getElementById('prof_apellido').value = btn.dataset.apellido;
-        document.getElementById('prof_estado').value = btn.dataset.estado;
+    function editarProf(b){
+        nuevoProf(); 
+        document.getElementById('prof_id').value = b.dataset.id;
+        document.getElementById('prof_rut').value = b.dataset.rut;
+        document.getElementById('prof_nombre').value = b.dataset.nombre;
+        document.getElementById('prof_apellido').value = b.dataset.apellido;
+        document.getElementById('prof_email').value = b.dataset.email;
+        
+        if(b.dataset.especialidades) {
+            let espArr = b.dataset.especialidades.split(',');
+            espArr.forEach(id => {
+                let chk = document.getElementById('esp_' + id);
+                if(chk) chk.checked = true;
+            });
+        }
+
         document.getElementById('prof_rut').readOnly = true;
-        document.getElementById('titleProf').innerText = 'EDITAR PROFESIONAL';
+        document.getElementById('titleProf').innerText = 'Editar Profesional';
+        rutValido = true;
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalProf')).show();
     }
 
     function confirmarEliminar(id, nombre) {
         Swal.fire({ 
-            title: '¿Eliminar Profesional?', 
-            text: `Se verificará el historial de ${nombre} antes de borrar.`, 
+            title: '¿Eliminar Registro?', 
+            text: `Esta acción removerá a ${nombre} del sistema.`, 
             icon: 'warning', 
             showCancelButton: true, 
-            confirmButtonText: 'SÍ, ELIMINAR', 
-            cancelButtonText: 'CANCELAR', 
-            customClass: { confirmButton: 'btn btn-danger px-4 rounded-pill me-2', cancelButton: 'btn btn-secondary px-4 rounded-pill' }, 
+            confirmButtonText: 'ELIMINAR', 
+            cancelButtonText: 'CANCELAR',
+            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
             buttonsStyling: false 
-        }).then((result) => { 
-            if (result.isConfirmed) { 
-                window.location.href = "{{ url_for('professionals.index') }}delete/" + id; 
-            } 
+        }).then((result) => {
+            if (result.isConfirmed) window.location.href = "{{ url_for('professionals.delete', id=0) }}".replace('0', id);
         });
     }
 </script>

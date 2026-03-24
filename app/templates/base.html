@@ -3,48 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro Médico Integra</title>
+    <title>Centro Médico</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
 </head>
 <body>
-
-    <nav class="navbar navbar-expand-lg navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm mb-4">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-hospital me-2"></i>CENTRO MÉDICO
+                <i class="fas fa-hospital me-2 icon-brand"></i>CENTRO MÉDICO
             </a>
             
-            <button class="navbar-toggler border-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="fas fa-bars text-white"></i>
-            </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if not session.get('user_id') %}
                         <li class="nav-item">
-                            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">
-                                <i class="fas fa-sign-in-alt me-2"></i>INGRESAR
-                            </button>
+                            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">INGRESAR</button>
                         </li>
                     {% else %}
                         <li class="nav-item me-3">
                             <a class="nav-link text-white small fw-bold" href="{{ url_for('main.dashboard') }}">
-                                <i class="fas fa-chart-pie me-1 icon-dashboard"></i> DASHBOARD
+                                <i class="fas fa-chart-line me-1 icon-dashboard"></i> DASHBOARD
                             </a>
                         </li>
-
                         <li class="nav-item me-3">
                             <a class="nav-link text-white small fw-bold" href="{{ url_for('agenda.index') }}">
-                                <i class="fas fa-calendar-check me-1 icon-citas-totales"></i> AGENDA
+                                <i class="fas fa-calendar-alt me-1 icon-brand"></i> AGENDA
                             </a>
                         </li>
-
                         <li class="nav-item dropdown me-3">
-                            <a class="nav-link dropdown-toggle text-white small fw-bold" href="#" id="adminMenu" data-bs-toggle="dropdown">
-                                <i class="fas fa-tools me-1 icon-admin"></i> ADMINISTRACIÓN
+                            <a class="nav-link dropdown-toggle text-white small fw-bold" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-cogs me-1 icon-admin"></i> ADMINISTRACIÓN
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                 <li><a class="dropdown-item py-2" href="{{ url_for('patients.index') }}"><i class="fas fa-user-injured me-2 icon-pacientes"></i>Pacientes</a></li>
@@ -57,12 +47,7 @@
                                 <li><a class="dropdown-item py-2" href="{{ url_for('states.index') }}"><i class="fas fa-info-circle me-2 icon-states"></i>Estados</a></li>
                             </ul>
                         </li>
-
-                        <li class="nav-item">
-                            <a href="{{ url_for('main.logout') }}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
-                                <i class="fas fa-power-off me-1"></i> SALIR
-                            </a>
-                        </li>
+                        <li class="nav-item"><a href="{{ url_for('main.logout') }}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">SALIR</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -72,50 +57,37 @@
     {% block content %}{% endblock %}
 
     <div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-body p-4">
-                    <h5 class="modal-integra-title"><i class="fas fa-lock me-2"></i>ACCESO AL PORTAL</h5>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 justify-content-center pt-5 position-relative">
+                    <div class="text-center">
+                        <i class="fas fa-hospital fa-3x text-navy-centro mb-3 icon-brand"></i>
+                        <h4 class="modal-centro-title m-0 fw-bold text-uppercase fs-3">Centro Médico</h4>
+                        <p class="text-muted small mt-1">Acceso Administrativo</p>
+                    </div>
+                    <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 p-md-5 pt-md-3 text-start">
                     <form action="{{ url_for('main.login') }}" method="POST">
                         <div class="mb-3">
-                            <label class="label-integra">Email Corporativo</label>
-                            <input type="email" name="email" class="form-control form-control-integra" required placeholder="ejemplo@integra.cl">
+                            <label class="label-centro fw-bold small text-muted mb-1 ms-3">Correo electrónico</label>
+                            <input type="email" name="email" class="form-control-centro rounded-pill" required autocomplete="email">
                         </div>
                         <div class="mb-4">
-                            <label class="label-integra">Contraseña</label>
-                            <input type="password" name="password" class="form-control form-control-integra" required placeholder="••••••••">
+                            <label class="label-centro fw-bold small text-muted mb-1 ms-3">Contraseña</label>
+                            <input type="password" name="password" class="form-control-centro rounded-pill" required autocomplete="new-password">
                         </div>
-                        <button type="submit" class="btn-integra-confirm w-100">INGRESAR</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-3 shadow-sm">INGRESAR</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        $(document).ready(function() {
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        Swal.fire({
-                            title: 'Sistema Integra',
-                            text: "{{ message }}",
-                            icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
-                            customClass: { confirmButton: 'btn btn-primary px-4 rounded-pill' },
-                            buttonsStyling: false
-                        });
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        });
-    </script>
-    
-    {% block scripts %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

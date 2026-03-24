@@ -1,107 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
-    
-    <div class="card border-0 shadow-sm mb-4" style="border-radius: 25px;">
-        <div class="card-body p-4 text-center">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold text-navy-integra m-0">Panel de Control</h4>
-                <span class="badge bg-light text-navy-integra border px-3 py-2 rounded-3">
-                    <i class="far fa-calendar-alt me-2 text-primary"></i>{{ now.strftime('%d/%m/%Y') }}
-                </span>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
-                        <i class="fas fa-user-injured fa-2x mb-2 icon-pacientes"></i>
-                        <h2 class="fw-bold m-0 text-navy-integra">{{ tp }}</h2>
-                        <p class="small text-muted fw-bold text-uppercase m-0">Pacientes</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
-                        <i class="fas fa-user-md fa-2x mb-2 icon-profesionales"></i>
-                        <h2 class="fw-bold m-0 text-navy-integra">{{ tpro }}</h2>
-                        <p class="small text-muted fw-bold text-uppercase m-0">Profesionales</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
-                        <i class="fas fa-calendar-check fa-2x mb-2 icon-citas-totales"></i>
-                        <h2 class="fw-bold m-0 text-navy-integra">{{ tc }}</h2>
-                        <p class="small text-muted fw-bold text-uppercase m-0">Citas Totales</p>
-                    </div>
-                </div>
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h2 class="text-navy-centro fw-bold m-0">Panel de Control</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Resumen Operativo</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="container-dash-fecha">
+                <i class="fas fa-calendar-alt text-navy-centro me-2"></i>
+                <input type="date" id="dash_fecha" class="input-dash-fecha" value="{{ hoy }}">
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card border-0 shadow-sm p-3 h-100">
-                <h6 class="fw-bold text-navy-integra mb-3 text-uppercase"><i class="fas fa-clock me-2 icon-citas-hoy"></i>Citas de Hoy</h6>
-                <div class="table-responsive-scroll" style="max-height: 350px;">
-                    <table class="table table-hover align-middle small">
-                        <thead>
-                            <tr class="text-muted"><th>Hora</th><th>Paciente</th><th>Médico</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for c in citas_hoy %}
-                            <tr>
-                                <td class="fw-bold text-navy-integra">{{ c.hora }}</td>
-                                <td>{{ c.paciente }}</td>
-                                <td class="text-muted small">{{ c.profesional }}</td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="3" class="text-center py-4 text-muted">No hay citas para hoy</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <div class="row g-4 mb-4 text-center">
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <i class="fas fa-calendar-check fa-3x icon-citas-totales mb-2"></i>
+                <h4 class="fw-bold text-navy-centro m-0">{{ citas_dia|length }}</h4>
+                <p class="text-muted small fw-bold mb-0">CITAS HOY</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <i class="fas fa-user-injured fa-3x icon-pacientes mb-2"></i>
+                <h4 class="fw-bold text-navy-centro m-0">{{ pacientes }}</h4>
+                <p class="text-muted small fw-bold mb-0">PACIENTES</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <i class="fas fa-user-md fa-3x icon-profesionales mb-2"></i>
+                <h4 class="fw-bold text-navy-centro m-0">{{ profesionales }}</h4>
+                <p class="text-muted small fw-bold mb-0">CUERPO MÉDICO</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="text-navy-centro fw-bold m-0"><i class="fas fa-clock me-2 icon-availability"></i>Citas del Día</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive-scroll">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead><tr><th>Hora</th><th>Paciente</th><th>Profesional</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                {% for c in citas_dia %}
+                                <tr>
+                                    <td class="fw-bold text-navy-centro">{{ c.hora }}</td>
+                                    <td>{{ c.paciente }}</td>
+                                    <td>{{ c.profesional }}</td>
+                                    <td>{{ c.estado }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center py-4 text-muted small">Sin citas agendadas.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card border-0 shadow-sm p-3 h-100">
-                <h6 class="fw-bold text-navy-integra mb-3 text-uppercase"><i class="fas fa-calendar-week me-2 icon-vista-semanal"></i>Vista Semanal</h6>
-                <div class="table-responsive-scroll" style="max-height: 350px;">
-                    <table class="table table-hover align-middle small">
-                        <thead>
-                            <tr class="text-muted"><th>Fecha</th><th>Hora</th><th>Paciente</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for s in citas_semana %}
-                            <tr>
-                                <td class="text-navy-integra">{{ s.fecha.strftime('%d/%m') if s.fecha is not string else s.fecha }}</td>
-                                <td class="fw-bold">{{ s.hora }}</td>
-                                <td>{{ s.paciente }}</td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="3" class="text-center py-4 text-muted">Sin citas esta semana</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+        <div class="col-md-5">
+            <div class="card h-100 border-0 shadow-sm text-center py-5">
+                <h5 class="text-navy-centro fw-bold m-0"><i class="fas fa-calendar-week me-2 icon-dashboard"></i>Semana</h5>
+                <p class="text-muted small">Próximos 7 días en desarrollo.</p>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    Swal.fire({
-                        title: 'Sistema Integra',
-                        text: "{{ message }}",
-                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
-                        customClass: { confirmButton: 'btn-integra-confirm' },
-                        buttonsStyling: false
-                    });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    });
-</script>
 {% endblock %}

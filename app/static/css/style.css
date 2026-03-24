@@ -1,15 +1,15 @@
 /* ==========================================================================
-   1. VARIABLES MAESTRAS (ESTÁNDAR CORPORATIVO INTEGRA)
+   1. VARIABLES MAESTRAS (ESTÁNDAR CORPORATIVO CENTRO MÉDICO)
    ========================================================================== */
 :root {
-    --navy-integra: #001f3f;   /* Navbar, Títulos y Botones Principales */
-    --cian-integra: #00daeb;   /* Acentos y Botón Agendar (Home) */
-    --verde-integra: #28a745;  /* Botón NUEVO / Confirmar */
-    --amarillo-integra: #ffc107; /* Botón EDITAR */
-    --rojo-integra: #dc3545;   /* Botón ELIMINAR */
+    --navy-centro: #001f3f;     /* Navbar, Títulos y Botones Principales */
+    --cian-centro: #00daeb;     /* Acentos y Botón Agendar (Home) */
+    --verde-centro: #28a745;    /* Botón NUEVO / Confirmar */
+    --amarillo-centro: #ffc107;  /* Botón EDITAR */
+    --rojo-centro: #dc3545;     /* Botón ELIMINAR */
     --white: #ffffff;
-    --gray-bg: #f4f7f6;        /* Fondo de página */
-    --celeste-input: #eef4ff;  /* Fondo de Inputs */
+    --gray-bg: #f4f7f6;         /* Fondo de página */
+    --celeste-input: #eef4ff;   /* Fondo de Inputs */
 }
 
 /* ==========================================================================
@@ -23,19 +23,14 @@ body {
     overflow-x: hidden;
 }
 
-.text-navy-integra {
-    color: var(--navy-integra) !important;
-}
-
-.bg-light {
-    background-color: #f8f9fa !important;
-}
+.text-navy-centro { color: var(--navy-centro) !important; }
+.bg-light { background-color: #f8f9fa !important; }
 
 /* ==========================================================================
    3. NAVEGACIÓN (NAVY CORPORATIVO)
    ========================================================================== */
 .navbar-custom {
-    background-color: var(--navy-integra) !important;
+    background-color: var(--navy-centro) !important;
     padding: 0.8rem 2rem;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
@@ -44,7 +39,6 @@ body {
     color: var(--white) !important;
     font-weight: 700;
     text-transform: uppercase;
-    text-decoration: none;
     letter-spacing: 1px;
 }
 
@@ -66,26 +60,16 @@ body {
     text-transform: uppercase;
 }
 
-/* --- SOLUCIÓN AL PROBLEMA: Contenedor con Scroll --- */
 .table-responsive-scroll {
-    max-height: 500px; /* Altura máxima antes de activar el scroll vertical */
-    overflow-y: auto;  /* Activa scroll vertical si el contenido supera la altura */
-    overflow-x: auto;  /* Activa scroll horizontal si es necesario */
-}
-
-/* Asegurar que la tabla ocupe todo el ancho del contenedor */
-.table-responsive-scroll table {
-    width: 100% !important;
-    margin-bottom: 0 !important;
+    max-height: 500px;
+    overflow-y: auto;
 }
 
 /* ==========================================================================
-   5. BOTONES ESTÁNDAR (ACCIONES MANTENEDORES)
+   5. BOTONES ESTÁNDAR (OVALADOS)
    ========================================================================== */
-
-/* Botón NUEVO (Verde) */
-.btn-nuevo-integra {
-    background-color: var(--verde-integra) !important;
+.btn-nuevo-centro {
+    background-color: var(--verde-centro) !important;
     color: var(--white) !important;
     border: none !important;
     border-radius: 50px !important;
@@ -93,193 +77,111 @@ body {
     font-weight: 700 !important;
     text-transform: uppercase;
     font-size: 0.85rem;
-    transition: all 0.3s ease;
 }
 
-/* Botón EDITAR (Amarillo) */
-.btn-editar-integra {
-    background-color: var(--amarillo-integra) !important;
-    color: var(--navy-integra) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 6px 12px !important;
+.btn-editar-centro {
+    background-color: var(--amarillo-centro) !important;
+    color: var(--navy-centro) !important;
+    border: 1px solid #333 !important;
+    border-radius: 50px !important;
+    padding: 4px 15px !important;
     font-weight: 700;
-    transition: all 0.3s ease;
 }
 
-/* Botón ELIMINAR (Rojo) */
-.btn-eliminar-integra {
-    background-color: var(--rojo-integra) !important;
+.btn-eliminar-centro {
+    background-color: var(--rojo-centro) !important;
     color: var(--white) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 6px 12px !important;
+    border: 1px solid #333 !important;
+    border-radius: 50px !important;
+    padding: 4px 15px !important;
     font-weight: 700;
-    transition: all 0.3s ease;
-}
-
-.btn-nuevo-integra:hover, 
-.btn-editar-integra:hover, 
-.btn-eliminar-integra:hover {
-    filter: brightness(0.9);
-    transform: translateY(-1px);
 }
 
 /* ==========================================================================
    6. MODALES Y FORMULARIOS
    ========================================================================== */
-.modal-content {
-    border-radius: 15px !important;
-    border: none !important;
-    padding: 20px !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-.modal-integra-title {
-    color: var(--navy-integra);
-    font-weight: 700;
-    text-transform: uppercase;
-    text-align: center;
-    margin-bottom: 25px;
-    letter-spacing: 0.5px;
-}
-
-.label-integra {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--navy-integra);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    display: block;
-}
-
-.form-control-integra {
+.form-control-centro {
     background-color: var(--celeste-input) !important;
     border: 1px solid transparent !important;
     border-radius: 8px !important;
-    padding: 12px !important;
+    padding: 10px !important;
     font-size: 0.9rem;
-    transition: border-color 0.2s;
 }
 
-.form-control-integra:focus {
-    border-color: var(--cian-integra) !important;
-    box-shadow: none !important;
-}
-
-/* Estado de solo lectura para campos bloqueados */
-.form-control-integra[readonly] {
-    background-color: #e9ecef !important;
-    cursor: not-allowed;
-    color: #6c757d;
-}
-
-/* Botón de confirmación dentro de modales */
-.btn-integra-confirm {
-    background-color: var(--navy-integra) !important;
+.btn-centro-confirm {
+    background-color: var(--navy-centro) !important;
     color: var(--white) !important;
-    border: none !important;
     border-radius: 8px !important;
     padding: 14px !important;
     font-weight: 700;
     text-transform: uppercase;
     width: 100%;
-    transition: 0.3s;
-}
-
-.btn-integra-confirm:hover {
-    filter: brightness(1.1);
-}
-
-/* Altura máxima para el contenedor de especialidades en el modal de profesionales */
-#container-especialidades {
-    max-height: 160px;
-}
-
-/* Estilo para los Checkboxes personalizados */
-.form-check-input:checked {
-    background-color: var(--navy-integra) !important;
-    border-color: var(--navy-integra) !important;
+    border: none;
 }
 
 /* ==========================================================================
-   7. PERSONALIZACIÓN DATATABLES (ESTÁNDAR CORPORATIVO)
+   8. ELEMENTOS DEL DASHBOARD Y INDEX
    ========================================================================== */
-
-/* Buscador (Navy) */
-.dataTables_filter input {
-    background-color: var(--celeste-input) !important;
-    border: 1px solid #dee2e6 !important;
-    border-radius: 8px !important;
-    padding: 5px 12px !important;
-    color: var(--navy-integra) !important;
+.hero-home {
+    background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)), 
+                url('../img/home-bg.png');
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 0 50px 50px;
 }
 
-.dataTables_filter input:focus {
-    border-color: var(--cian-integra) !important;
-    outline: none;
-}
-
-/* Selector de cantidad (Paginador) */
-.dataTables_length select {
-    border-radius: 8px !important;
-    border: 1px solid #dee2e6 !important;
-}
-
-/* Botones de Paginación (Activo en Navy) */
-.page-item.active .page-link {
-    background-color: var(--navy-integra) !important;
-    border-color: var(--navy-integra) !important;
-    color: var(--white) !important;
-}
-
-.page-link {
-    color: var(--navy-integra) !important;
-    border-radius: 8px;
-    margin: 0 2px;
-}
-
-/* ==========================================================================
-   8. ELEMENTOS DEL INDEX (ACCESO PÚBLICO)
-   ========================================================================== */
 .btn-agendar-home {
-    background-color: var(--cian-integra) !important;
+    display: inline-block;
+    background-color: var(--cian-centro) !important;
     color: var(--white) !important;
     font-weight: 700 !important;
-    padding: 12px 35px !important;
+    padding: 15px 40px !important;
     border-radius: 50px !important;
-    border: none !important;
+    text-decoration: none;
     text-transform: uppercase;
-    box-shadow: 0 4px 15px rgba(0, 218, 235, 0.4);
-    transition: 0.3s;
 }
 
 .area-contenedor {
     border-radius: 20px;
-    overflow: hidden;
     background: var(--white);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
 }
 
 .area-img {
     width: 100%;
-    height: 380px;
+    height: 250px;
     object-fit: cover;
-    display: block;
 }
+
+.container-dash-fecha {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--white);
+    border: 1px solid #dee2e6;
+    border-radius: 50px;
+    padding: 8px 18px;
+}
+
+.input-dash-fecha {
+    border: none !important;
+    font-weight: 700 !important;
+    color: var(--navy-centro) !important;
+    background: transparent !important;
+    outline: none !important;
+}
+
 /* ==========================================================================
-   9. COLORES DE ICONOS (ESTÁNDAR CORPORATIVO INTEGRA)
+   9. COLORES DE ICONOS (CORPORATIVOS)
    ========================================================================== */
-.icon-dashboard { color: #6610f2 !important; }     /* Indigo - Gráfico de Torta */
-.icon-admin { color: #546e7a !important; }         /* Steel Blue - Herramientas */
-.icon-pacientes { color: #0d6efd !important; }      /* Azul */
-.icon-profesionales { color: var(--verde-integra) !important; }
-.icon-citas-totales { color: var(--cian-integra) !important; }
-.icon-citas-hoy { color: #ffc107 !important; }
-.icon-vista-semanal { color: #0dcaf0 !important; }
+.icon-brand { color: var(--cian-centro) !important; }
+.icon-dashboard { color: #6610f2 !important; }
+.icon-admin { color: #546e7a !important; }
+.icon-pacientes { color: #0d6efd !important; }
+.icon-profesionales { color: var(--verde-centro) !important; }
+.icon-citas-totales { color: var(--cian-centro) !important; }
 .icon-users { color: #e83e8c !important; }
+.icon-availability { color: #f44336 !important; }
 .icon-specialties { color: #6f42c1 !important; }
 .icon-roles { color: #fd7e14 !important; }
 .icon-states { color: #20c997 !important; }
-.icon-availability { color: #f44336 !important; }

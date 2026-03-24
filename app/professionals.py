@@ -1,116 +1,181 @@
-from flask import Blueprint, render_template, g, request, redirect, url_for, flash, jsonify
-from .utils import limpiar_rut, validar_rut
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g
 
 professionals_bp = Blueprint('professionals', __name__)
 
 @professionals_bp.route('/')
 def index():
     cur = g.db.cursor()
-    try:
-        cur.execute("""
-            SELECT p.id, p.rut, p.nombre, p.apellido, e.nombre as estado_nombre, p.activo,
-                   GROUP_CONCAT(esp.nombre SEPARATOR ', ') as especialidades_nombres
-            FROM profesionales p
-            JOIN estados_maestros e ON p.activo = e.id
-            LEFT JOIN profesionales_especialidades pe ON p.id = pe.profesional_id
-            LEFT JOIN especialidades esp ON pe.especialidad_id = esp.id
-            GROUP BY p.id
-            ORDER BY p.nombre ASC
-        """)
-        profesionales = cur.fetchall()
+    
+    # 1. Obtener todas las especialidades disponibles
+    cur.execute("SELECT id, nombre FROM especialidades ORDER BY nombre ASC")
+    esp_rows = cur.fetchall()
+    
+    # Mapeo robusto para especialidades
+    especialidades_disponibles = []
+    for r in esp_rows:
+        if isinstance(r, dict):
+            especialidades_disponibles.append({'id': r.get('id'), 'nombre': r.get('nombre')})
+        else:
+            especialidades_disponibles.append({'id': r[0], 'nombre': r[1]})
+    
+    # 2. Obtener todos los profesionales
+    cur.execute("SELECT id, rut, nombre, apellido, email FROM profesionales ORDER BY nombre ASC")
+    prof_rows = cur.fetchall()
+    
+    # 3. Obtener relaciones desde la tabla intermedia
+    cur.execute("SELECT profesional_id, especialidad_id FROM profesionales_especialidades")
+    relaciones = cur.fetchall()
+    
+    # Mapear relaciones en memoria 
+    esp_por_prof = {}
+    for rel in relaciones:
+        if isinstance(rel, dict):
+            prof_id = rel.get('profesional_id')
+            esp_id = rel.get('especialidad_id')
+        else:
+            prof_id = rel[0]
+            esp_id = rel[1]
+            
+        if prof_id not in esp_por_prof:
+            esp_por_prof[prof_id] = []
+        esp_por_prof[prof_id].append(str(esp_id))
         
-        cur.execute("SELECT id, nombre FROM estados_maestros WHERE categoria = 'GENERAL' ORDER BY nombre ASC")
-        estados = cur.fetchall()
+    # Construir la lista final de profesionales uniendo los datos
+    profesionales = []
+    for row in prof_rows:
+        if isinstance(row, dict):
+            p_id = row.get('id')
+            rut = row.get('rut')
+            nombre = row.get('nombre')
+            apellido = row.get('apellido')
+            email = row.get('email')
+        else:
+            p_id = row[0]
+            rut = row[1]
+            nombre = row[2]
+            apellido = row[3]
+            email = row[4]
         
-        cur.execute("SELECT id, nombre FROM especialidades ORDER BY nombre ASC")
-        especialidades = cur.fetchall()
-    except Exception as e:
-        print(f"Error SQL Index Profesionales: {e}")
-        profesionales, estados, especialidades = [], [], []
-        flash("Error al cargar la lista de profesionales.", "danger")
-    finally:
-        cur.close()
+        ids_esp = esp_por_prof.get(p_id, [])
+        nombres_esp = [e['nombre'] for e in especialidades_disponibles if str(e['id']) in ids_esp]
+        texto_especialidades = ", ".join(nombres_esp) if nombres_esp else "Sin especialidad"
 
-    return render_template('professionals.html', 
-                           profesionales=profesionales, 
-                           estados=estados, 
-                           especialidades=especialidades)
-
-@professionals_bp.route('/verificar_rut/<string:rut>')
-def verificar_rut_ajax(rut):
-    rut_plano = limpiar_rut(rut)
-    if not validar_rut(rut_plano):
-        return jsonify({"status": "error", "message": "RUT no válido"})
-    cur = g.db.cursor()
-    cur.execute("SELECT id FROM profesionales WHERE rut = %s", (rut_plano,))
-    if cur.fetchone():
-        cur.close()
-        return jsonify({"status": "duplicado", "message": "RUT ya registrado"})
+        profesionales.append({
+            'id': p_id,
+            'rut': rut,
+            'nombre': nombre,
+            'apellido': apellido,
+            'email': email,
+            'especialidades_ids': ids_esp,
+            'especialidades_texto': texto_especialidades
+        })
+        
     cur.close()
-    return jsonify({"status": "ok"})
+    return render_template('professionals.html', profesionales=profesionales, especialidades_disponibles=especialidades_disponibles)
 
 @professionals_bp.route('/save', methods=['POST'])
 def save():
     prof_id = request.form.get('id')
-    rut_raw = request.form.get('rut')
-    nombre = (request.form.get('nombre') or "").strip().upper()
-    apellido = (request.form.get('apellido') or "").strip().upper()
-    estado_id = request.form.get('estado_id')
-    esp_ids = request.form.getlist('especialidades')
+    rut_limpio = request.form.get('rut', '').replace(".", "").replace("-", "").strip()
+    nombre = request.form.get('nombre', '').strip().upper()
+    apellido = request.form.get('apellido', '').strip().upper()
+    email = request.form.get('email', '').strip().lower()
+    
+    especialidades_seleccionadas = request.form.getlist('especialidades[]')
 
-    if not rut_raw or not nombre or not estado_id:
-        flash("Complete los campos obligatorios", "warning")
-        return redirect(url_for('professionals.index'))
-
-    rut_plano = limpiar_rut(rut_raw)
     cur = g.db.cursor()
     try:
-        if not prof_id or prof_id == "" or prof_id == "None":
-            cur.execute("INSERT INTO profesionales (rut, nombre, apellido, activo) VALUES (%s, %s, %s, %s)", 
-                        (rut_plano, nombre, apellido, estado_id))
-            nuevo_id = cur.lastrowid
-            for e_id in esp_ids:
-                cur.execute("INSERT INTO profesionales_especialidades (profesional_id, especialidad_id) VALUES (%s, %s)", 
-                            (nuevo_id, e_id))
-            flash("Profesional registrado exitosamente", "success")
-        else:
-            cur.execute("UPDATE profesionales SET nombre=%s, apellido=%s, activo=%s WHERE id=%s", 
-                        (nombre, apellido, estado_id, prof_id))
+        if prof_id:  # MODO EDICIÓN
+            cur.execute("""
+                UPDATE profesionales 
+                SET nombre = %s, apellido = %s, email = %s 
+                WHERE id = %s
+            """, (nombre, apellido, email, prof_id))
             cur.execute("DELETE FROM profesionales_especialidades WHERE profesional_id = %s", (prof_id,))
-            for e_id in esp_ids:
-                cur.execute("INSERT INTO profesionales_especialidades (profesional_id, especialidad_id) VALUES (%s, %s)", 
-                            (prof_id, e_id))
-            flash("Cambios guardados con éxito", "success")
+        
+        else:  # MODO NUEVO
+            cur.execute("SELECT id FROM profesionales WHERE rut = %s", (rut_limpio,))
+            if cur.fetchone():
+                flash('El RUT ingresado ya pertenece a un profesional.', 'warning')
+                return redirect(url_for('professionals.index'))
+                
+            cur.execute("""
+                INSERT INTO profesionales (rut, nombre, apellido, email) 
+                VALUES (%s, %s, %s, %s)
+            """, (rut_limpio, nombre, apellido, email))
+            prof_id = cur.lastrowid
+
+        if especialidades_seleccionadas:
+            for esp_id in especialidades_seleccionadas:
+                cur.execute("""
+                    INSERT INTO profesionales_especialidades (profesional_id, especialidad_id) 
+                    VALUES (%s, %s)
+                """, (prof_id, esp_id))
+            
         g.db.commit()
+        flash('Datos del profesional actualizados correctamente.', 'success')
+    
     except Exception as e:
-        g.db.rollback()
-        flash(f"Error al guardar: {str(e)}", "danger")
+        if hasattr(g, 'db'): g.db.rollback()
+        flash(f'Error al procesar la solicitud: {str(e)}', 'danger')
     finally:
         cur.close()
+
     return redirect(url_for('professionals.index'))
 
 @professionals_bp.route('/delete/<int:id>')
 def delete(id):
     cur = g.db.cursor()
-    print(f"--- INICIO PROCESO ELIMINAR ID: {id} ---")
     try:
-        cur.execute("SELECT COUNT(*) as total FROM agenda WHERE profesional_id = %s", (id,))
-        count = cur.fetchone()['total']
-        print(f"Registros encontrados en agenda: {count}")
-        
-        if count > 0:
-            print("Resultado: BLOQUEADO (Tiene agenda)")
-            flash("No se puede eliminar: El profesional tiene registros asociados en agenda. Solo se puede inactivar.", "warning")
-            return redirect(url_for('professionals.index'))
-        
+        # PRIMERO: Eliminar las relaciones de especialidades del profesional
         cur.execute("DELETE FROM profesionales_especialidades WHERE profesional_id = %s", (id,))
+        
+        # SEGUNDO: Eliminar al profesional principal
         cur.execute("DELETE FROM profesionales WHERE id = %s", (id,))
+        
         g.db.commit()
-        flash("Profesional eliminado del sistema.", "success")
+        flash('Profesional y sus especialidades eliminados correctamente.', 'success')
     except Exception as e:
-        g.db.rollback()
-        print(f"Error crítico al eliminar: {e}")
-        flash("Error de integridad al intentar eliminar.", "danger")
+        if hasattr(g, 'db'): g.db.rollback()
+        # Si falla aquí, es probablemente por otra tabla (ej. citas vinculadas al profesional)
+        flash('No se puede eliminar: el profesional tiene registros críticos asociados (ej: agenda activa).', 'danger')
     finally:
         cur.close()
     return redirect(url_for('professionals.index'))
+
+@professionals_bp.route('/verificar_rut/<rut>')
+def verificar_rut_ajax(rut):
+    rut_busqueda = rut.replace(".", "").replace("-", "").strip().upper()
+    
+    if len(rut_busqueda) < 8:
+        return jsonify({'status': 'invalido', 'message': 'El RUT ingresado es demasiado corto.'})
+        
+    cuerpo = rut_busqueda[:-1]
+    dv_ingresado = rut_busqueda[-1]
+    
+    if not cuerpo.isdigit():
+        return jsonify({'status': 'invalido', 'message': 'Formato de RUT incorrecto.'})
+        
+    suma = 0
+    multiplo = 2
+    for r in reversed(cuerpo):
+        suma += int(r) * multiplo
+        multiplo += 1
+        if multiplo == 8:
+            multiplo = 2
+    
+    dv_esperado = 11 - (suma % 11)
+    dv_esperado = '0' if dv_esperado == 11 else 'K' if dv_esperado == 10 else str(dv_esperado)
+    
+    if dv_esperado != dv_ingresado:
+        return jsonify({'status': 'invalido', 'message': 'El RUT ingresado no es válido (Dígito verificador incorrecto).'})
+
+    cur = g.db.cursor()
+    cur.execute("SELECT id FROM profesionales WHERE rut = %s", (rut_busqueda[:-1] + dv_ingresado,))
+    existe = cur.fetchone()
+    cur.close()
+    
+    if existe:
+        return jsonify({'status': 'duplicado', 'message': 'Este RUT ya se encuentra registrado en el sistema.'})
+        
+    return jsonify({'status': 'ok'})

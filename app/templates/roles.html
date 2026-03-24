@@ -3,68 +3,72 @@
 <div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8 text-start">
-            <h2 class="modal-centro-title m-0">Gestor de Roles</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Niveles de Acceso al Sistema</p>
+            <h2 class="text-navy-centro fw-bold m-0">Roles de Sistema</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Perfiles de Acceso</p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalRol" onclick="nuevoRol()">
+            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRol" onclick="nuevoRol()">
                 NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card p-3 border-0 shadow-sm rounded-4">
+    <div class="card p-4 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table class="table table-hover align-middle w-100">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
-                    <tr class="small text-muted text-uppercase">
-                        <th width="15%">ID</th>
+                    <tr>
                         <th>Nombre del Rol</th>
-                        <th class="text-center" width="20%">Acciones</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for r in roles %}
-                    <tr>
-                        <td class="text-navy-centro fw-bold">#{{ r['id'] }}</td>
-                        <td class="text-uppercase fw-bold">{{ r['nombre'] }}</td>
+                    <tr class="border-bottom">
+                        <td class="fw-bold text-navy-centro text-uppercase small">{{ r.get('nombre', '') }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-centro me-1" onclick="editarRol(this)" 
-                                data-id="{{r['id']}}" data-nombre="{{r['nombre']}}">
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarRol(this)" 
+                                data-id="{{ r.get('id', '') }}" data-nom="{{ r.get('nombre', '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{r['id']}}', '{{r['nombre']}}')">
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ r.get('id', '') }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center py-5 text-muted small fst-italic">No hay roles registrados.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <nav class="mt-4">
+            <ul class="pagination pagination-sm justify-content-end mb-0">
+                <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
+                <li class="page-item"><a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a></li>
+            </ul>
+        </nav>
     </div>
 </div>
 
 <div class="modal fade" id="modalRol" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titleRol">Ficha Rol</h4></div>
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleRol">Rol</h4></div>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
             </div>
-            
-            <div class="modal-body p-4 pt-3 text-start">
-                <form action="{{ url_for('roles.save') }}" method="POST" id="formRol" autocomplete="off">
+            <div class="modal-body p-4 pt-3">
+                <form action="{{ url_for('roles.save') }}" method="POST" id="formRol">
                     <input type="hidden" name="id" id="rol_id">
-                    
                     <div class="mb-4">
                         <label class="label-centro fw-bold x-small text-muted ms-2">Nombre del Rol</label>
-                        <input type="text" name="nombre" id="rol_nombre" class="form-control-centro rounded-pill text-uppercase sm" onblur="validarNombreReal(this)" required>
+                        <input type="text" name="nombre" id="rol_nom" class="form-control-centro w-100 text-uppercase" required>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR</button>
-                        <button type="button" class="btn btn-light rounded-pill btn-sm text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR ROL</button>
                     </div>
                 </form>
             </div>
@@ -73,101 +77,25 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    Swal.fire({ 
-                        title: 'Centro Médico', 
-                        text: "{{ message }}", 
-                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", 
-                        confirmButtonText: 'Aceptar', 
-                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
-                        buttonsStyling: false 
-                    });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    });
-
-    let nombreValido = true;
-
-    async function validarNombreReal(input) {
-        let nombre = input.value.trim();
-        let id = document.getElementById('rol_id').value;
-        if (!nombre || id !== '') { nombreValido = true; return; }
-        
-        try {
-            const url = "{{ url_for('roles.verificar_nombre_ajax', nombre='PLACEHOLDER') }}".replace('PLACEHOLDER', encodeURIComponent(nombre));
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.status !== 'ok') {
-                nombreValido = false;
-                Swal.fire({ 
-                    title: 'Nombre Duplicado', 
-                    text: data.message, 
-                    icon: 'warning', 
-                    confirmButtonText: 'Corregir', 
-                    customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, 
-                    buttonsStyling: false 
-                });
-                input.value = '';
-            } else { 
-                nombreValido = true; 
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    document.getElementById('formRol').addEventListener('submit', function(e) {
-        if (!nombreValido) { 
-            e.preventDefault(); 
-            Swal.fire({ title: 'Error', text: 'Debe ingresar un nombre de rol válido y no duplicado.', icon: 'error', customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, buttonsStyling: false });
-            return; 
-        }
-        e.preventDefault();
-        Swal.fire({ 
-            title: '¿Guardar Cambios?', 
-            icon: 'question', 
-            showCancelButton: true, 
-            confirmButtonText: 'SÍ, GUARDAR', 
-            cancelButtonText: 'CANCELAR', 
-            customClass: { confirmButton: 'btn-centro-confirm rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
-            buttonsStyling: false 
-        }).then((result) => {
-            if (result.isConfirmed) this.submit();
-        });
-    });
-
     function nuevoRol(){
         document.getElementById('formRol').reset();
         document.getElementById('rol_id').value = '';
         document.getElementById('titleRol').innerText = 'Nuevo Rol';
-        nombreValido = false;
     }
-
-    function editarRol(b){
-        nuevoRol(); 
-        document.getElementById('rol_id').value = b.dataset.id;
-        document.getElementById('rol_nombre').value = b.dataset.nombre;
-        
+    function editarRol(btn){
+        nuevoRol();
+        document.getElementById('rol_id').value = btn.dataset.id;
+        document.getElementById('rol_nom').value = btn.dataset.nom;
         document.getElementById('titleRol').innerText = 'Editar Rol';
-        nombreValido = true;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalRol')).show();
+        var myModal = new bootstrap.Modal(document.getElementById('modalRol'));
+        myModal.show();
     }
-
-    function confirmarEliminar(id, nombre) {
-        Swal.fire({ 
-            title: '¿Eliminar Rol?', 
-            text: `Está a punto de eliminar el rol "${nombre}". Esta acción no se puede deshacer.`, 
-            icon: 'warning', 
-            showCancelButton: true, 
-            confirmButtonText: 'ELIMINAR', 
-            cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
-            buttonsStyling: false 
+    function confirmarEliminar(id) {
+        Swal.fire({
+            title: '¿Eliminar Rol?', icon: 'warning', showCancelButton: true,
+            confirmButtonText: 'ELIMINAR', customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
-            if (result.isConfirmed) window.location.href = "{{ url_for('roles.delete', id=0) }}".replace('0', id);
+            if (result.isConfirmed) { window.location.href = "{{ url_for('roles.delete', id=0) }}".replace('0', id); }
         });
     }
 </script>

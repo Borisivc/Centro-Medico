@@ -3,88 +3,102 @@
 <div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8 text-start">
-            <h2 class="modal-centro-title m-0">Gestor de Pacientes</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Administración Médica</p>
+            <h2 class="text-navy-centro fw-bold m-0">Pacientes</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Registro de Pacientes</p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalPac" onclick="nuevoPac()">
+            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPaciente" onclick="nuevoPaciente()">
                 NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card p-3 border-0 shadow-sm rounded-4">
+    <div class="card p-4 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table id="tablaPacientes" class="table table-hover align-middle w-100">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
-                    <tr class="small text-muted text-uppercase">
+                    <tr>
                         <th>RUT</th>
                         <th>Nombre Completo</th>
-                        <th>F. Nacimiento</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in pacientes %}
-                    <tr>
-                        <td class="text-navy-centro fw-bold">{{ p['rut'] | formatear_rut }}</td>
-                        <td class="text-uppercase">{{ p['nombre'] }} {{ p['apellido'] }}</td>
-                        <td>{{ p['fecha_nacimiento'] | formatear_fecha }}</td>
+                    <tr class="border-bottom">
+                        <td class="fw-bold small">{{ p.get('rut', '') }}</td>
+                        <td class="text-uppercase text-navy-centro fw-bold small">{{ p.get('nombre', '') }} {{ p.get('apellido', '') }}</td>
+                        <td class="small">{{ p.get('email', '') }}</td>
+                        <td class="small">{{ p.get('telefono', '') }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-centro me-1" onclick="editarPac(this)" 
-                                data-id="{{p['id']}}" data-rut="{{p['rut']|formatear_rut}}" 
-                                data-nombre="{{p['nombre']}}" data-apellido="{{p['apellido']}}" data-fecha="{{p['fecha_nacimiento']}}">
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarPaciente(this)" 
+                                data-id="{{ p.get('id', '') }}" data-rut="{{ p.get('rut', '') }}" 
+                                data-nom="{{ p.get('nombre', '') }}" data-ape="{{ p.get('apellido', '') }}" 
+                                data-mail="{{ p.get('email', '') }}" data-tel="{{ p.get('telefono', '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{p['id']}}', '{{p['nombre']}} {{p['apellido']}}')">
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ p.get('id', '') }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted small fst-italic">No hay pacientes registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <nav class="mt-4">
+            <ul class="pagination pagination-sm justify-content-end mb-0">
+                <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
+                <li class="page-item"><a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a></li>
+            </ul>
+        </nav>
     </div>
 </div>
 
-<div class="modal fade" id="modalPac" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titlePac">Ficha Paciente</h4></div>
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titlePaciente">Paciente</h4></div>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
             </div>
-            
-            <div class="modal-body p-4 pt-2 text-start">
-                <form action="{{ url_for('patients.save') }}" method="POST" id="formPac" autocomplete="off">
+            <div class="modal-body p-4 pt-3">
+                <form action="{{ url_for('patients.save') }}" method="POST" id="formPaciente">
                     <input type="hidden" name="id" id="pac_id">
-                    
-                    <div class="row g-2 mb-2">
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
+                        <input type="text" name="rut" id="pac_rut" class="form-control-centro w-100" required>
+                    </div>
+                    <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
-                            <input type="text" name="rut" id="pac_rut" class="form-control-centro rounded-pill sm" oninput="rutificadorUI(this)" onblur="validarRutReal(this)" placeholder="12.345.678-9" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombres</label>
+                            <input type="text" name="nombre" id="pac_nom" class="form-control-centro w-100 text-uppercase" required>
                         </div>
                         <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombre</label>
-                            <input type="text" name="nombre" id="pac_nombre" class="form-control-centro rounded-pill text-uppercase sm" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Apellidos</label>
+                            <input type="text" name="apellido" id="pac_ape" class="form-control-centro w-100 text-uppercase" required>
                         </div>
                     </div>
-                    
-                    <div class="row g-2 mb-4">
+                    <div class="row g-3 mb-4">
                         <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Apellido</label>
-                            <input type="text" name="apellido" id="pac_apellido" class="form-control-centro rounded-pill text-uppercase sm" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Email</label>
+                            <input type="email" name="email" id="pac_mail" class="form-control-centro w-100" required>
                         </div>
                         <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">F. Nacimiento</label>
-                            <input type="date" name="fecha_nacimiento" id="pac_fecha" class="form-control-centro rounded-pill sm" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Teléfono</label>
+                            <input type="text" name="telefono" id="pac_tel" class="form-control-centro w-100">
                         </div>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR PACIENTE</button>
-                        <button type="button" class="btn btn-light rounded-pill btn-sm text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR PACIENTE</button>
                     </div>
                 </form>
             </div>
@@ -93,118 +107,29 @@
 </div>
 
 <script>
-    // Capturar mensajes Flash de Flask y mostrarlos con SweetAlert2
-    document.addEventListener('DOMContentLoaded', function() {
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    Swal.fire({
-                        title: 'Centro Médico',
-                        text: "{{ message }}",
-                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}",
-                        confirmButtonText: 'Aceptar',
-                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' },
-                        buttonsStyling: false
-                    });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    });
-
-    let rutValido = true;
-
-    function rutificadorUI(i){
-        let v = i.value.replace(/\./g,'').replace(/-/g,'').toUpperCase();
-        if(v.length > 1){
-            let c = v.slice(0,-1).slice(0,8);
-            let d = v.slice(-1);
-            i.value = c.replace(/\B(?=(\d{3})+(?!\d))/g,".") + "-" + d;
-        }
-    }
-
-    async function validarRutReal(input) {
-        let rut = input.value.trim();
-        let id = document.getElementById('pac_id').value;
-        if (!rut || id !== '') { rutValido = true; return; }
-
-        try {
-            const url = "{{ url_for('patients.verificar_rut_ajax', rut='PLACEHOLDER') }}".replace('PLACEHOLDER', rut);
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.status !== 'ok') {
-                rutValido = false;
-                Swal.fire({ 
-                    title: (data.status === 'duplicado') ? 'Paciente ya existe' : 'RUT no válido', 
-                    text: data.message, 
-                    icon: 'warning', 
-                    confirmButtonText: 'Corregir', 
-                    customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
-                    buttonsStyling: false 
-                });
-                input.value = '';
-            } else {
-                rutValido = true;
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    document.getElementById('formPac').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!rutValido) {
-            Swal.fire({ title: 'Error', text: 'RUT inválido.', icon: 'error', customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, buttonsStyling: false });
-            return;
-        }
-
-        Swal.fire({
-            title: '¿Confirmar Guardado?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'SÍ, GUARDAR',
-            cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn-centro-confirm rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) this.submit();
-        });
-    });
-
-    function nuevoPac(){
-        document.getElementById('formPac').reset();
+    function nuevoPaciente(){
+        document.getElementById('formPaciente').reset();
         document.getElementById('pac_id').value = '';
-        document.getElementById('pac_rut').readOnly = false;
-        document.getElementById('titlePac').innerText = 'Nuevo Paciente';
-        rutValido = false;
+        document.getElementById('titlePaciente').innerText = 'Nuevo Paciente';
     }
-
-    function editarPac(b){
-        nuevoPac();
-        document.getElementById('pac_id').value = b.dataset.id;
-        document.getElementById('pac_rut').value = b.dataset.rut;
-        document.getElementById('pac_nombre').value = b.dataset.nombre;
-        document.getElementById('pac_apellido').value = b.dataset.apellido;
-        document.getElementById('pac_fecha').value = b.dataset.fecha;
-        document.getElementById('pac_rut').readOnly = true;
-        document.getElementById('titlePac').innerText = 'Editar Paciente';
-        rutValido = true;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPac')).show();
+    function editarPaciente(btn){
+        nuevoPaciente();
+        document.getElementById('pac_id').value = btn.dataset.id;
+        document.getElementById('pac_rut').value = btn.dataset.rut;
+        document.getElementById('pac_nom').value = btn.dataset.nom;
+        document.getElementById('pac_ape').value = btn.dataset.ape;
+        document.getElementById('pac_mail').value = btn.dataset.mail;
+        document.getElementById('pac_tel').value = btn.dataset.tel;
+        document.getElementById('titlePaciente').innerText = 'Editar Paciente';
+        var myModal = new bootstrap.Modal(document.getElementById('modalPaciente'));
+        myModal.show();
     }
-
-    function confirmarEliminar(id, nombre) {
+    function confirmarEliminar(id) {
         Swal.fire({
-            title: '¿Eliminar Registro?',
-            text: `¿Seguro que desea eliminar a ${nombre}?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'ELIMINAR',
-            cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' },
-            buttonsStyling: false
+            title: '¿Eliminar Paciente?', icon: 'warning', showCancelButton: true,
+            confirmButtonText: 'ELIMINAR', customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
-            if (result.isConfirmed) {
-                // Redirección a la ruta de Flask
-                window.location.href = "{{ url_for('patients.delete', id=0) }}".replace('0', id);
-            }
+            if (result.isConfirmed) { window.location.href = "{{ url_for('patients.delete', id=0) }}".replace('0', id); }
         });
     }
 </script>

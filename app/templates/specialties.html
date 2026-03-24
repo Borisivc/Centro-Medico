@@ -3,68 +3,78 @@
 <div class="container py-4">
     <div class="row align-items-center mb-4">
         <div class="col-md-8 text-start">
-            <h2 class="modal-centro-title m-0">Gestor de Especialidades</h2>
-            <p class="text-muted small mb-0 fw-bold text-uppercase">Áreas Médicas del Centro</p>
+            <h2 class="text-navy-centro fw-bold m-0">Especialidades</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Áreas Médicas</p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn-nuevo-centro" data-bs-toggle="modal" data-bs-target="#modalEsp" onclick="nuevoEsp()">
+            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSpecialty" onclick="nuevaSpecialty()">
                 NUEVO
             </button>
         </div>
     </div>
 
-    <div class="card p-3 border-0 shadow-sm rounded-4">
+    <div class="card p-4 border-0 shadow-sm rounded-4">
         <div class="table-responsive-scroll">
-            <table class="table table-hover align-middle w-100">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
-                    <tr class="small text-muted text-uppercase">
-                        <th width="15%">ID</th>
-                        <th>Nombre de la Especialidad</th>
-                        <th class="text-center" width="20%">Acciones</th>
+                    <tr>
+                        <th>Nombre Especialidad</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for e in especialidades %}
-                    <tr>
-                        <td class="text-navy-centro fw-bold">#{{ e['id'] }}</td>
-                        <td class="text-uppercase fw-bold">{{ e['nombre'] }}</td>
+                    <tr class="border-bottom">
+                        <td class="fw-bold text-navy-centro text-uppercase small">{{ e.get('nombre', '') }}</td>
+                        <td class="small text-muted">{{ e.get('descripcion', '') }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-centro me-1" onclick="editarEsp(this)" 
-                                data-id="{{e['id']}}" data-nombre="{{e['nombre']}}">
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarSpecialty(this)" 
+                                data-id="{{ e.get('id', '') }}" data-nom="{{ e.get('nombre', '') }}" data-desc="{{ e.get('descripcion', '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-centro" onclick="confirmarEliminar('{{e['id']}}', '{{e['nombre']}}')">
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ e.get('id', '') }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center py-5 text-muted small fst-italic">No hay especialidades registradas.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <nav class="mt-4">
+            <ul class="pagination pagination-sm justify-content-end mb-0">
+                <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
+                <li class="page-item"><a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a></li>
+            </ul>
+        </nav>
     </div>
 </div>
 
-<div class="modal fade" id="modalEsp" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+<div class="modal fade" id="modalSpecialty" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5" id="titleEsp">Ficha Especialidad</h4></div>
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleSpecialty">Especialidad</h4></div>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
             </div>
-            
-            <div class="modal-body p-4 pt-3 text-start">
-                <form action="{{ url_for('specialties.save') }}" method="POST" id="formEsp" autocomplete="off">
+            <div class="modal-body p-4 pt-3">
+                <form action="{{ url_for('specialties.save') }}" method="POST" id="formSpecialty">
                     <input type="hidden" name="id" id="esp_id">
-                    
-                    <div class="mb-4">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Nombre de Especialidad</label>
-                        <input type="text" name="nombre" id="esp_nombre" class="form-control-centro rounded-pill text-uppercase sm" onblur="validarNombreReal(this)" required>
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Nombre</label>
+                        <input type="text" name="nombre" id="esp_nom" class="form-control-centro w-100 text-uppercase" required>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-2 shadow-sm">GUARDAR</button>
-                        <button type="button" class="btn btn-light rounded-pill btn-sm text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    <div class="mb-4">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Descripción (Opcional)</label>
+                        <textarea name="descripcion" id="esp_desc" class="form-control-centro w-100 text-uppercase" rows="3"></textarea>
+                    </div>
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR ESPECIALIDAD</button>
                     </div>
                 </form>
             </div>
@@ -73,102 +83,26 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    Swal.fire({ 
-                        title: 'Centro Médico', 
-                        text: "{{ message }}", 
-                        icon: "{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' }}", 
-                        confirmButtonText: 'Aceptar', 
-                        customClass: { confirmButton: 'btn-centro-confirm rounded-pill px-4' }, 
-                        buttonsStyling: false 
-                    });
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    });
-
-    let nombreValido = true;
-
-    async function validarNombreReal(input) {
-        let nombre = input.value.trim();
-        let id = document.getElementById('esp_id').value;
-        // Solo omitimos la validación si el campo está vacío o si es una edición y el nombre no ha cambiado
-        if (!nombre || id !== '') { nombreValido = true; return; }
-        
-        try {
-            const url = "{{ url_for('specialties.verificar_nombre_ajax', nombre='PLACEHOLDER') }}".replace('PLACEHOLDER', encodeURIComponent(nombre));
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.status !== 'ok') {
-                nombreValido = false;
-                Swal.fire({ 
-                    title: 'Nombre Duplicado', 
-                    text: data.message, 
-                    icon: 'warning', 
-                    confirmButtonText: 'Corregir', 
-                    customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, 
-                    buttonsStyling: false 
-                });
-                input.value = '';
-            } else { 
-                nombreValido = true; 
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    document.getElementById('formEsp').addEventListener('submit', function(e) {
-        if (!nombreValido) { 
-            e.preventDefault(); 
-            Swal.fire({ title: 'Error', text: 'Debe ingresar un nombre de especialidad válido y no duplicado.', icon: 'error', customClass: { confirmButton: 'btn-centro-confirm rounded-pill' }, buttonsStyling: false });
-            return; 
-        }
-        e.preventDefault();
-        Swal.fire({ 
-            title: '¿Guardar Cambios?', 
-            icon: 'question', 
-            showCancelButton: true, 
-            confirmButtonText: 'SÍ, GUARDAR', 
-            cancelButtonText: 'CANCELAR', 
-            customClass: { confirmButton: 'btn-centro-confirm rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
-            buttonsStyling: false 
-        }).then((result) => {
-            if (result.isConfirmed) this.submit();
-        });
-    });
-
-    function nuevoEsp(){
-        document.getElementById('formEsp').reset();
+    function nuevaSpecialty(){
+        document.getElementById('formSpecialty').reset();
         document.getElementById('esp_id').value = '';
-        document.getElementById('titleEsp').innerText = 'Nueva Especialidad';
-        nombreValido = false;
+        document.getElementById('titleSpecialty').innerText = 'Nueva Especialidad';
     }
-
-    function editarEsp(b){
-        nuevoEsp(); 
-        document.getElementById('esp_id').value = b.dataset.id;
-        document.getElementById('esp_nombre').value = b.dataset.nombre;
-        
-        document.getElementById('titleEsp').innerText = 'Editar Especialidad';
-        nombreValido = true;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEsp')).show();
+    function editarSpecialty(btn){
+        nuevaSpecialty();
+        document.getElementById('esp_id').value = btn.dataset.id;
+        document.getElementById('esp_nom').value = btn.dataset.nom;
+        document.getElementById('esp_desc').value = btn.dataset.desc;
+        document.getElementById('titleSpecialty').innerText = 'Editar Especialidad';
+        var myModal = new bootstrap.Modal(document.getElementById('modalSpecialty'));
+        myModal.show();
     }
-
-    function confirmarEliminar(id, nombre) {
-        Swal.fire({ 
-            title: '¿Eliminar Especialidad?', 
-            text: `Está a punto de eliminar "${nombre}". Esta acción no se puede deshacer.`, 
-            icon: 'warning', 
-            showCancelButton: true, 
-            confirmButtonText: 'ELIMINAR', 
-            cancelButtonText: 'CANCELAR',
-            customClass: { confirmButton: 'btn btn-danger rounded-pill me-2', cancelButton: 'btn btn-light rounded-pill' }, 
-            buttonsStyling: false 
+    function confirmarEliminar(id) {
+        Swal.fire({
+            title: '¿Eliminar Especialidad?', icon: 'warning', showCancelButton: true,
+            confirmButtonText: 'ELIMINAR', customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
-            if (result.isConfirmed) window.location.href = "{{ url_for('specialties.delete', id=0) }}".replace('0', id);
+            if (result.isConfirmed) { window.location.href = "{{ url_for('specialties.delete', id=0) }}".replace('0', id); }
         });
     }
 </script>

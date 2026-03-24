@@ -1,93 +1,163 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-5">
-    
+<div class="container py-4">
     <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h2 class="modal-integra-title text-start m-0">Disponibilidad Horaria</h2>
-            <p class="text-muted small mb-0 fw-bold">Configuración de jornadas por profesional</p>
+        <div class="col-md-8 text-start">
+            <h2 class="text-navy-centro fw-bold m-0">Disponibilidad Médica</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Configuración de Horarios y Turnos</p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn-nuevo-integra" data-bs-toggle="modal" data-bs-target="#modalHorario" onclick="limpiarFormDisp()">NUEVO HORARIO</button>
+            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalDisp" onclick="nuevaDisp()">
+                NUEVO
+            </button>
         </div>
     </div>
 
-    <div class="card shadow-sm bg-white p-3">
-        <div class="table-responsive table-responsive-scroll">
-            <table id="tablaDisponibilidad" class="table table-hover align-middle mb-0 w-100">
-                <thead class="bg-light">
-                    <tr class="small text-muted text-uppercase">
+    <div class="card p-4 border-0 shadow-sm rounded-4">
+        <div class="table-responsive-scroll">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
                         <th>Profesional</th>
-                        <th>Día de Atención</th>
-                        <th>Hora Inicio</th>
-                        <th>Hora Término</th>
+                        <th>Día</th>
+                        <th>Horario</th>
+                        <th>Vigencia</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for h in horarios %}
-                    <tr>
-                        <td class="fw-bold text-navy-integra">{{ h.profesional }}</td>
-                        <td><span class="badge bg-light text-navy-integra border px-3">{{ h.dia_semana }}</span></td>
-                        <td>{{ h.hora_inicio }}</td>
-                        <td>{{ h.hora_fin }}</td>
+                    {% set dias_nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] %}
+                    {% for d in disponibilidades %}
+                    <tr class="border-bottom">
+                        <td>
+                            {% set es_bloqueo = d.get('tipo', 0)|int == 1 %}
+                            <span class="badge {% if es_bloqueo %}bg-danger{% else %}bg-success{% endif %} rounded-pill px-3 py-2 small shadow-sm">
+                                {{ 'BLOQUEO' if es_bloqueo else 'ATENCIÓN' }}
+                            </span>
+                        </td>
+                        <td class="fw-bold text-navy-centro text-uppercase small">{{ d.get('profesional', '') }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border rounded-pill px-3">
+                                {{ dias_nombres[d.get('dia_semana', 0)|int] }}
+                            </span>
+                        </td>
+                        <td class="small fw-bold">
+                            {{ d.get('hi', '') }} - {{ d.get('hf', '') }}
+                        </td>
+                        <td class="x-small text-muted">
+                            {{ d.get('fi_es', '') }} al {{ d.get('ff_es', '') }}
+                        </td>
                         <td class="text-center">
-                            <button type="button" class="btn-editar-integra me-1" onclick="llenarModalDisp(this)" data-id="{{ h.id }}">
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarDisp(this)" 
+                                data-id="{{ d.get('id', '') }}" 
+                                data-prof="{{ d.get('profesional_id', '') }}" 
+                                data-hi="{{ d.get('hi', '') }}" 
+                                data-hf="{{ d.get('hf', '') }}" 
+                                data-fi="{{ d.get('fi_iso', '') }}" 
+                                data-ff="{{ d.get('ff_iso', '') }}" 
+                                data-dia="{{ d.get('dia_semana', 0) }}" 
+                                data-dur="{{ d.get('duracion_cita', 15) }}" 
+                                data-tipo="{{ d.get('tipo', 0) }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn-eliminar-integra">
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ d.get('id', '') }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted small fst-italic">No hay horarios configurados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <nav class="mt-4">
+            <ul class="pagination pagination-sm justify-content-end mb-0">
+                <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
+                <li class="page-item"><a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a></li>
+            </ul>
+        </nav>
     </div>
 </div>
 
-<div class="modal fade" id="modalHorario" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalDisp" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <h6 class="modal-integra-title" id="tituloModalDisp">Gestión de Horario</h6>
-                <form id="formDisponibilidad" action="{{ url_for('availability.save') }}" method="POST">
-                    <input type="hidden" name="disp_id" id="d_id">
+        <div class="modal-content border-0 shadow-lg rounded-4 p-2">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleDisp">Configurar Horario</h4></div>
+                <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-3">
+                <form action="{{ url_for('availability.save') }}" method="POST" id="formDisp">
+                    <input type="hidden" name="id" id="disp_id">
                     
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Profesional</label>
+                            <select name="profesional_id" id="disp_prof" class="form-select form-control-centro w-100" required>
+                                <option value="">Seleccione...</option>
+                                {% for pr in profesionales %}
+                                <option value="{{ pr.get('id', '') }}">{{ pr.get('nombre', '') }} {{ pr.get('apellido', '') }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Tipo</label>
+                            <select name="tipo" id="disp_tipo" class="form-select form-control-centro w-100">
+                                <option value="0">Atención</option>
+                                <option value="1">Bloqueo (Colación)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label class="label-integra">Profesional</label>
-                        <select name="profesional_id" class="form-select form-control-integra" required>
-                            <option value="">Seleccione al profesional...</option>
-                            {% for p in profesionales %}
-                            <option value="{{ p.id }}">{{ p.nombre }}</option>
-                            {% endfor %}
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Día de la Semana</label>
+                        <select name="dias_semana" id="disp_dia" class="form-select form-control-centro w-100" required>
+                            <option value="0">Lunes</option>
+                            <option value="1">Martes</option>
+                            <option value="2">Miércoles</option>
+                            <option value="3">Jueves</option>
+                            <option value="4">Viernes</option>
+                            <option value="5">Sábado</option>
+                            <option value="6">Domingo</option>
                         </select>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="label-integra">Día</label>
-                            <select name="dia" class="form-select form-control-integra" required>
-                                <option value="Lunes">Lunes</option>
-                                <option value="Martes">Martes</option>
-                                <option value="Miércoles">Miércoles</option>
-                                <option value="Jueves">Jueves</option>
-                                <option value="Viernes">Viernes</option>
-                                <option value="Sábado">Sábado</option>
-                            </select>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora Inicio</label>
+                            <input type="time" name="hora_inicio" id="disp_hi" class="form-control-centro w-100" required>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="label-integra">Inicio</label>
-                            <input type="time" name="inicio" class="form-control form-control-integra" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="label-integra">Término</label>
-                            <input type="time" name="fin" class="form-control form-control-integra" required>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora Fin</label>
+                            <input type="time" name="hora_fin" id="disp_hf" class="form-control-centro w-100" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-integra-confirm">GUARDAR DISPONIBILIDAD</button>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha Inicio Vigencia</label>
+                            <input type="date" name="fecha_inicio" id="disp_fi" class="form-control-centro w-100" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha Fin Vigencia</label>
+                            <input type="date" name="fecha_fin" id="disp_ff" class="form-control-centro w-100" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Duración (min)</label>
+                        <input type="number" name="duracion_cita" id="disp_dur" class="form-control-centro w-100" value="15" required>
+                    </div>
+
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR HORARIO</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -95,9 +165,46 @@
 </div>
 
 <script>
-    function limpiarFormDisp() {
-        document.getElementById('formDisponibilidad').reset();
-        document.getElementById('d_id').value = '';
+    function nuevaDisp(){
+        document.getElementById('formDisp').reset();
+        document.getElementById('disp_id').value = '';
+        document.getElementById('titleDisp').innerText = 'Nuevo Horario';
+    }
+
+    function editarDisp(btn){
+        nuevaDisp();
+        document.getElementById('disp_id').value = btn.dataset.id;
+        document.getElementById('disp_prof').value = btn.dataset.prof;
+        document.getElementById('disp_dia').value = btn.dataset.dia;
+        document.getElementById('disp_hi').value = btn.dataset.hi;
+        document.getElementById('disp_hf').value = btn.dataset.hf;
+        document.getElementById('disp_fi').value = btn.dataset.fi;
+        document.getElementById('disp_ff').value = btn.dataset.ff;
+        document.getElementById('disp_dur').value = btn.dataset.dur;
+        document.getElementById('disp_tipo').value = btn.dataset.tipo;
+        
+        document.getElementById('titleDisp').innerText = 'Editar Horario';
+        var myModal = new bootstrap.Modal(document.getElementById('modalDisp'));
+        myModal.show();
+    }
+
+    function confirmarEliminar(id) {
+        Swal.fire({
+            title: '¿Eliminar Horario?',
+            text: "Se borrará esta configuración de la agenda.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ELIMINAR',
+            customClass: { 
+                confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', 
+                cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' 
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{{ url_for('availability.delete', id=0) }}".replace('0', id);
+            }
+        });
     }
 </script>
 {% endblock %}

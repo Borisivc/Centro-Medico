@@ -18,8 +18,8 @@ def index():
         else:
             especialidades_disponibles.append({'id': r[0], 'nombre': r[1]})
     
-    # 2. Obtener todos los profesionales
-    cur.execute("SELECT id, rut, nombre, apellido, email FROM profesionales ORDER BY nombre ASC")
+    # 2. Obtener todos los profesionales (CORRECCIÓN: Se agregó 'activo' al SELECT)
+    cur.execute("SELECT id, rut, nombre, apellido, email, activo FROM profesionales ORDER BY nombre ASC")
     prof_rows = cur.fetchall()
     
     # 3. Obtener relaciones desde la tabla intermedia
@@ -49,12 +49,14 @@ def index():
             nombre = row.get('nombre')
             apellido = row.get('apellido')
             email = row.get('email')
+            activo = row.get('activo') # <-- CAPTURAMOS EL ESTADO
         else:
             p_id = row[0]
             rut = row[1]
             nombre = row[2]
             apellido = row[3]
             email = row[4]
+            activo = row[5] # <-- CAPTURAMOS EL ESTADO
         
         ids_esp = esp_por_prof.get(p_id, [])
         nombres_esp = [e['nombre'] for e in especialidades_disponibles if str(e['id']) in ids_esp]
@@ -66,6 +68,7 @@ def index():
             'nombre': nombre,
             'apellido': apellido,
             'email': email,
+            'activo': activo, # <-- LO ENVIAMOS AL HTML
             'especialidades_ids': ids_esp,
             'especialidades_texto': texto_especialidades
         })

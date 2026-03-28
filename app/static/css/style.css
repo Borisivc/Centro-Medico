@@ -226,3 +226,24 @@ body {
 .icon-specialties { color: #6f42c1 !important; }
 .icon-roles { color: #fd7e14 !important; }
 .icon-states { color: #20c997 !important; }
+/* ==========================================================================
+   10. UTILIDADES DE MANTENEDORES (ALTURAS Y SCROLLS)
+   ========================================================================== */
+.card-mantenedor {
+    min-height: 550px;
+}
+
+.scroll-checkboxes {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    background-color: var(--white);
+}
+/* ==========================================================================
+   11. COLUMNA DE ACCIONES (ESTÁNDAR)
+   ========================================================================== */
+.col-acciones {
+    width: 1%; /* Obliga a la columna a encogerse al tamaño de los botones */
+    white-space: nowrap; /* Evita que los botones se apilen */
+    text-align: center !important; /* Centra el título perfectamente sobre los botones */
+}

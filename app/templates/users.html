@@ -13,16 +13,16 @@
         </div>
     </div>
 
-    <div class="card p-4 border-0 shadow-sm rounded-4">
-        <div class="table-responsive-scroll">
+    <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Nombre</th>
                         <th>Email</th>
-                        <th>Rol</th>
+                        <th>Roles Asignados</th>
                         <th>Estado</th>
-                        <th class="text-center">Acciones</th>
+                        <th class="col-acciones">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -31,23 +31,22 @@
                         <td class="fw-bold text-navy-centro small">{{ u.get('nombre', '') }}</td>
                         <td class="small">{{ u.get('email', '') }}</td>
                         <td>
-                            <span class="badge bg-light text-dark border rounded-pill px-3">{{ u.get('rol_nombre', u.get('rol', '')) }}</span>
+                            <span class="badge bg-light text-dark border rounded-pill px-3">{{ u.get('roles_texto', 'Sin rol') }}</span>
                         </td>
                         <td>
-                            {% set estado_usuario = u.get('activo', u.get('estado', 1)) %}
-                            {% if estado_usuario|int == 1 %}
+                            {% if u.get('activo')|int == 1 %}
                             <span class="badge bg-success rounded-pill px-3 py-2 small shadow-sm">Activo</span>
                             {% else %}
                             <span class="badge bg-danger rounded-pill px-3 py-2 small shadow-sm">Inactivo</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="col-acciones">
                             <button class="btn-editar-centro me-1 shadow-sm" onclick="editarUser(this)" 
                                 data-id="{{ u.get('id', '') }}" 
                                 data-nom="{{ u.get('nombre', '') }}" 
                                 data-mail="{{ u.get('email', '') }}" 
-                                data-rol="{{ u.get('rol_id', '') }}" 
-                                data-act="{{ estado_usuario }}">
+                                data-act="{{ u.get('activo', 1) }}"
+                                data-roles='{{ u.get("roles_ids", []) | tojson | safe }}'>
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ u.get('id', '') }}')">
@@ -66,7 +65,7 @@
             </table>
         </div>
         
-        <nav class="mt-4">
+        <nav class="mt-4 mt-auto">
             <ul class="pagination pagination-sm justify-content-end mb-0">
                 <li class="page-item disabled">
                     <a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a>
@@ -82,7 +81,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalUser" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
@@ -95,7 +94,7 @@
                     
                     <div class="mb-3">
                         <label class="label-centro fw-bold x-small text-muted ms-2">Nombre Completo</label>
-                        <input type="text" name="nombre" id="user_nom" class="form-control-centro w-100" required>
+                        <input type="text" name="nombre" id="user_nom" class="form-control-centro w-100 text-uppercase" required>
                     </div>
                     
                     <div class="mb-3">
@@ -105,13 +104,17 @@
                     
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Rol del Sistema</label>
-                            <select name="rol_id" id="user_rol" class="form-select form-control-centro w-100" required>
-                                <option value="">Seleccione...</option>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Roles del Sistema</label>
+                            <div class="scroll-checkboxes rounded-3 p-2">
                                 {% for r in roles_disponibles %}
-                                <option value="{{ r.id }}">{{ r.nombre }}</option>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input check-rol" type="checkbox" name="roles[]" value="{{ r.id }}" id="rol_{{ r.id }}">
+                                    <label class="form-check-label small fw-bold text-navy-centro" for="rol_{{ r.id }}">
+                                        {{ r.nombre }}
+                                    </label>
+                                </div>
                                 {% endfor %}
-                            </select>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
@@ -125,7 +128,7 @@
                     <div class="mb-4">
                         <label class="label-centro fw-bold x-small text-muted ms-2">Contraseña</label>
                         <input type="password" name="password" id="user_pass" class="form-control-centro w-100" placeholder="Dejar en blanco para mantener actual">
-                        <small class="text-muted" style="font-size: 0.65rem; margin-left: 10px;">Requerida solo para usuarios nuevos.</small>
+                        <div class="small text-muted ms-2 mt-1">Requerida solo para usuarios nuevos.</div>
                     </div>
                     
                     <div class="d-grid mt-2">
@@ -143,6 +146,9 @@
         document.getElementById('user_id').value = '';
         document.getElementById('user_pass').required = true;
         document.getElementById('titleUser').innerText = 'Nuevo Usuario';
+        
+        // Limpiar todos los checkboxes
+        document.querySelectorAll('.check-rol').forEach(cb => cb.checked = false);
     }
 
     function editarUser(btn){
@@ -150,10 +156,20 @@
         document.getElementById('user_id').value = btn.dataset.id;
         document.getElementById('user_nom').value = btn.dataset.nom;
         document.getElementById('user_mail').value = btn.dataset.mail;
-        document.getElementById('user_rol').value = btn.dataset.rol;
         document.getElementById('user_act').value = btn.dataset.act;
         document.getElementById('user_pass').required = false;
         document.getElementById('titleUser').innerText = 'Editar Usuario';
+        
+        // Marcar checkboxes correspondientes
+        try {
+            let roles = JSON.parse(btn.dataset.roles || "[]");
+            roles.forEach(rolId => {
+                let cb = document.getElementById('rol_' + rolId);
+                if(cb) cb.checked = true;
+            });
+        } catch(e) {
+            console.error("Error parseando roles:", e);
+        }
         
         var myModal = new bootstrap.Modal(document.getElementById('modalUser'));
         myModal.show();

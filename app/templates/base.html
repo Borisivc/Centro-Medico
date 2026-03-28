@@ -4,39 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro Médico</title>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-custom shadow-sm mb-4">
+
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-hospital me-2 icon-brand"></i>CENTRO MÉDICO
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
+                <i class="fas fa-hospital-alt me-2 icon-brand"></i>
+                CENTRO MÉDICO
             </a>
-            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    {% if not session.get('user_id') %}
-                        <li class="nav-item">
-                            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">INGRESAR</button>
-                        </li>
-                    {% else %}
+                <ul class="navbar-nav ms-auto align-items-center fw-bold small text-uppercase">
+                    {% if session.get('user_id') %}
                         <li class="nav-item me-3">
-                            <a class="nav-link text-white small fw-bold" href="{{ url_for('main.dashboard') }}">
-                                <i class="fas fa-chart-line me-1 icon-dashboard"></i> DASHBOARD
+                            <a class="nav-link d-flex align-items-center text-white" href="{{ url_for('main.dashboard') }}">
+                                <i class="fas fa-chart-line me-2 icon-dashboard"></i> DASHBOARD
                             </a>
                         </li>
+                        
                         <li class="nav-item me-3">
-                            <a class="nav-link text-white small fw-bold" href="{{ url_for('agenda.index') }}">
-                                <i class="fas fa-calendar-alt me-1 icon-brand"></i> AGENDA
+                            <a class="nav-link d-flex align-items-center text-white" href="{{ url_for('agenda.index') }}">
+                                <i class="far fa-calendar-alt me-2 icon-brand"></i> AGENDA
                             </a>
                         </li>
-                        <li class="nav-item dropdown me-3">
-                            <a class="nav-link dropdown-toggle text-white small fw-bold" href="#" data-bs-toggle="dropdown">
-                                <i class="fas fa-cogs me-1 icon-admin"></i> ADMINISTRACIÓN
+                        
+                        <li class="nav-item dropdown me-4">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-cogs me-2 icon-admin"></i> ADMINISTRACIÓN
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="adminDropdown">
                                 <li><a class="dropdown-item py-2" href="{{ url_for('patients.index') }}"><i class="fas fa-user-injured me-2 icon-pacientes"></i>Pacientes</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ url_for('professionals.index') }}"><i class="fas fa-user-md me-2 icon-profesionales"></i>Profesionales</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ url_for('users.index') }}"><i class="fas fa-users-cog me-2 icon-users"></i>Usuarios</a></li>
@@ -47,47 +51,91 @@
                                 <li><a class="dropdown-item py-2" href="{{ url_for('states.index') }}"><i class="fas fa-info-circle me-2 icon-states"></i>Estados</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a href="{{ url_for('main.logout') }}" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">SALIR</a></li>
+                        
+                        <li class="nav-item">
+                            <a href="{{ url_for('main.logout') }}" class="btn btn-eliminar-centro shadow-sm">SALIR</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="#" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">INGRESAR</a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    {% block content %}{% endblock %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for category, message in messages %}
+                        {% set icon = 'success' %}
+                        {% if category == 'danger' or category == 'error' %}{% set icon = 'error' %}{% endif %}
+                        {% if category == 'warning' %}{% set icon = 'warning' %}{% endif %}
+                        {% if category == 'info' %}{% set icon = 'info' %}{% endif %}
+                        
+                        Swal.fire({
+                            icon: '{{ icon }}',
+                            title: 'Mensaje del Sistema',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#001f3f'
+                        });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
 
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer class="navbar-custom text-white text-center py-3 mt-5 shadow-lg">
+        <div class="container"><p class="mb-0 small fw-bold">&copy; 2026 Centro Médico.</p></div>
+    </footer>
+
+    {% if not session.get('user_id') %}
     <div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 pb-0 justify-content-center pt-5 position-relative">
-                    <div class="text-center">
-                        <i class="fas fa-hospital fa-3x text-navy-centro mb-3 icon-brand"></i>
-                        <h4 class="modal-centro-title m-0 fw-bold text-uppercase fs-3">Centro Médico</h4>
-                        <p class="text-muted small mt-1">Acceso Administrativo</p>
-                    </div>
-                    <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 p-2">
+                <div class="modal-header border-0 pb-0 text-center position-relative">
+                    <div class="w-100"><h5 class="modal-title fw-bold text-navy-centro">Acceso Seguro</h5></div>
+                    <button type="button" class="btn-close position-absolute end-0 top-0 m-2" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 p-md-5 pt-md-3 text-start">
-                    <form action="{{ url_for('main.login') }}" method="POST">
+                <div class="modal-body px-4 pb-4 pt-3">
+                    <form action="{{ url_for('main.login') }}" method="POST" id="formLoginWeb">
                         <div class="mb-3">
-                            <label class="label-centro fw-bold small text-muted mb-1 ms-3">Correo electrónico</label>
-                            <input type="email" name="email" class="form-control-centro rounded-pill" required autocomplete="email">
+                            <label class="form-label x-small fw-bold text-muted ms-1">Email</label>
+                            <input type="email" name="email" id="login_email" class="form-control form-control-centro" autocomplete="email" required>
                         </div>
                         <div class="mb-4">
-                            <label class="label-centro fw-bold small text-muted mb-1 ms-3">Contraseña</label>
-                            <input type="password" name="password" class="form-control-centro rounded-pill" required autocomplete="new-password">
+                            <label class="form-label x-small fw-bold text-muted ms-1">Contraseña</label>
+                            <input type="password" name="password" id="login_password" class="form-control form-control-centro" autocomplete="current-password" required>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn-centro-confirm rounded-pill fw-bold py-3 shadow-sm">INGRESAR</button>
+                            <button type="submit" class="btn btn-centro-confirm btn-sm shadow-sm">INGRESAR</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/validations.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalLogin = document.getElementById('modalLogin');
+            if (modalLogin) {
+                modalLogin.addEventListener('show.bs.modal', function () {
+                    document.getElementById('login_email').value = '';
+                    document.getElementById('login_password').value = '';
+                });
+            }
+        });
+    </script>
+
 </body>
 </html>

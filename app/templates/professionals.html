@@ -7,59 +7,31 @@
             <p class="text-muted small mb-0 fw-bold text-uppercase">Gestión de Profesionales</p>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProfesional" onclick="nuevoProfesional()">
-                NUEVO
-            </button>
+            <button class="btn-nuevo-centro shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProfesional" onclick="nuevoProfesional()">NUEVO</button>
         </div>
     </div>
-
-    <div class="card p-4 border-0 shadow-sm rounded-4">
-        <div class="table-responsive-scroll">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>RUT</th>
-                        <th>Nombre Completo</th>
-                        <th>Especialidad</th>
-                        <th>Estado</th>
-                        <th class="text-center">Acciones</th>
-                    </tr>
-                </thead>
+    
+    <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        <div class="table-responsive-scroll flex-grow-1">
+            <table class="table table-hover align-middle">
+                <thead><tr><th>RUT</th><th>Nombre Completo</th><th>Estado</th><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     {% for p in profesionales %}
                     <tr class="border-bottom">
-                        <td class="fw-bold small">{{ p.get('rut', '') }}</td>
+                        <td class="fw-bold small formato-rut-cl">{{ p.get('rut', '') }}</td>
                         <td class="text-uppercase text-navy-centro fw-bold small">{{ p.get('nombre', '') }} {{ p.get('apellido', '') }}</td>
-                        <td class="small"><span class="badge bg-light text-dark border rounded-pill px-3">{{ p.get('especialidad_nombre', p.get('especialidad', '')) }}</span></td>
-                        <td>
-                            {% set activo = p.get('activo', 1)|int %}
-                            <span class="badge {% if activo == 1 %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2 small shadow-sm">
-                                {{ 'Activo' if activo == 1 else 'Inactivo' }}
-                            </span>
+                        <td><span class="badge {{ 'bg-success' if p.activo == 1 else 'bg-danger' }} rounded-pill">{{ 'Activo' if p.activo == 1 else 'Inactivo' }}</span></td>
+                        <td class="col-acciones">
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarProfesional(this)" data-id="{{p.id}}" data-rut="{{p.rut}}" data-nom="{{p.nombre}}" data-ape="{{p.apellido}}" data-act="{{p.activo}}"><i class="fas fa-edit"></i></button>
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{p.id}}')"><i class="fas fa-trash"></i></button>
                         </td>
-                        <td class="text-center">
-                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarProfesional(this)" 
-                                data-id="{{ p.get('id', '') }}" data-rut="{{ p.get('rut', '') }}" 
-                                data-nom="{{ p.get('nombre', '') }}" data-ape="{{ p.get('apellido', '') }}" 
-                                data-esp="{{ p.get('especialidad_id', '') }}" data-act="{{ p.get('activo', 1) }}"
-                                data-mail="{{ p.get('email', '') }}" data-tel="{{ p.get('telefono', '') }}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ p.get('id', '') }}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted small fst-italic">No hay profesionales registrados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <nav class="mt-4">
+        <nav class="mt-4 mt-auto">
             <ul class="pagination pagination-sm justify-content-end mb-0">
                 <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
                 <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
@@ -69,61 +41,22 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalProfesional" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 p-2">
-            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleProfesional">Profesional</h4></div>
-                <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="modalProfesional" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pt-4 px-4 text-center">
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold text-navy-centro" id="titleProfesional">Profesional</h4></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4 pt-3">
+            <div class="modal-body p-4">
                 <form action="{{ url_for('professionals.save') }}" method="POST" id="formProfesional">
                     <input type="hidden" name="id" id="prof_id">
-                    <div class="mb-3">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
-                        <input type="text" name="rut" id="prof_rut" class="form-control-centro w-100" required>
-                    </div>
+                    <div class="mb-3"><label class="label-centro fw-bold x-small text-muted ms-2">RUT</label><input type="text" id="prof_rut_visual" class="form-control-centro w-100 fw-bold" required><input type="hidden" name="rut" id="prof_rut"></div>
                     <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombres</label>
-                            <input type="text" name="nombre" id="prof_nom" class="form-control-centro w-100 text-uppercase" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Apellidos</label>
-                            <input type="text" name="apellido" id="prof_ape" class="form-control-centro w-100 text-uppercase" required>
-                        </div>
+                        <div class="col-6"><input type="text" name="nombre" id="prof_nom" class="form-control-centro w-100 text-uppercase" placeholder="Nombres" required></div>
+                        <div class="col-6"><input type="text" name="apellido" id="prof_ape" class="form-control-centro w-100 text-uppercase" placeholder="Apellidos" required></div>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Email</label>
-                            <input type="email" name="email" id="prof_mail" class="form-control-centro w-100">
-                        </div>
-                        <div class="col-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Teléfono</label>
-                            <input type="text" name="telefono" id="prof_tel" class="form-control-centro w-100">
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-8">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Especialidad</label>
-                            <select name="especialidad_id" id="prof_esp" class="form-select form-control-centro w-100" required>
-                                <option value="">Seleccione...</option>
-                                {% for e in especialidades %}
-                                <option value="{{ e.get('id', e[0] if e is sequence else '') }}">{{ e.get('nombre', e[1] if e is sequence else '') }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-4">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
-                            <select name="activo" id="prof_act" class="form-select form-control-centro w-100">
-                                <option value="1">Activo</option>
-                                <option value="0">Inactivo</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="d-grid mt-2">
-                        <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR PROFESIONAL</button>
-                    </div>
+                    <div class="d-grid mt-2"><button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR PROFESIONAL</button></div>
                 </form>
             </div>
         </div>
@@ -131,32 +64,92 @@
 </div>
 
 <script>
-    function nuevoProfesional(){
-        document.getElementById('formProfesional').reset();
-        document.getElementById('prof_id').value = '';
-        document.getElementById('titleProfesional').innerText = 'Nuevo Profesional';
-    }
-    function editarProfesional(btn){
-        nuevoProfesional();
-        document.getElementById('prof_id').value = btn.dataset.id;
-        document.getElementById('prof_rut').value = btn.dataset.rut;
-        document.getElementById('prof_nom').value = btn.dataset.nom;
-        document.getElementById('prof_ape').value = btn.dataset.ape;
-        document.getElementById('prof_mail').value = btn.dataset.mail;
-        document.getElementById('prof_tel').value = btn.dataset.tel;
-        document.getElementById('prof_esp').value = btn.dataset.esp;
-        document.getElementById('prof_act').value = btn.dataset.act;
-        document.getElementById('titleProfesional').innerText = 'Editar Profesional';
-        var myModal = new bootstrap.Modal(document.getElementById('modalProfesional'));
-        myModal.show();
-    }
-    function confirmarEliminar(id) {
-        Swal.fire({
-            title: '¿Eliminar Profesional?', icon: 'warning', showCancelButton: true,
-            confirmButtonText: 'ELIMINAR', customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) { window.location.href = "{{ url_for('professionals.delete', id=0) }}".replace('0', id); }
-        });
-    }
+let rutOriginalEditProf = "";
+document.addEventListener('DOMContentLoaded', function() {
+    const rutInput = document.getElementById('prof_rut_visual');
+    const rutOculto = document.getElementById('prof_rut');
+    const form = document.getElementById('formProfesional');
+    
+    if (typeof formatearGrillaRuts === "function") formatearGrillaRuts();
+
+    rutInput.addEventListener('input', function(e) {
+        let v = e.target.value.replace(/[^0-9kK]/g, '').toUpperCase();
+        rutOculto.value = v; 
+        try { e.target.value = formatoRutVisual(v); } catch(err) { e.target.value = v; }
+        rutInput.classList.remove('is-invalid', 'is-valid');
+    });
+
+    rutInput.addEventListener('blur', function() {
+        let r = rutOculto.value;
+        if (r.length < 2 || (rutOriginalEditProf !== "" && r === rutOriginalEditProf)) return;
+        
+        let esValido = false;
+        try { esValido = validarRutMatematico(r); } catch(err) {}
+
+        if (!esValido) {
+            rutInput.classList.add('is-invalid');
+            Swal.fire({ icon: 'error', title: 'RUT Inválido', text: 'El RUT ingresado no es válido.', confirmButtonColor: '#001f3f' })
+            .then(() => { 
+                let m = bootstrap.Modal.getInstance(document.getElementById('modalProfesional')); 
+                if(m) m.hide(); 
+                nuevoProfesional(); 
+            });
+        } else {
+            fetch(`/api/validar_rut_profesional/${r}`).then(res => res.json()).then(data => {
+                if (data.existe) {
+                    rutInput.classList.add('is-invalid');
+                    Swal.fire({ icon: 'warning', title: 'Existente', text: 'Este médico ya está registrado.', confirmButtonColor: '#001f3f' })
+                    .then(() => { 
+                        let m = bootstrap.Modal.getInstance(document.getElementById('modalProfesional')); 
+                        if(m) m.hide(); 
+                        nuevoProfesional(); 
+                    });
+                } else { rutInput.classList.add('is-valid'); }
+            }).catch(err => console.error(err));
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        let r = rutOculto.value;
+        if (rutOriginalEditProf !== "" && r === rutOriginalEditProf) return;
+
+        let esValido = false;
+        try { esValido = validarRutMatematico(r); } catch(err) {}
+
+        if (!esValido || rutInput.classList.contains('is-invalid')) {
+            e.preventDefault();
+            Swal.fire({ icon: 'error', title: 'Acción Bloqueada', text: 'El RUT no es válido o ya existe.', confirmButtonColor: '#001f3f' });
+        }
+    });
+});
+
+function nuevoProfesional() {
+    rutOriginalEditProf = ""; document.getElementById('formProfesional').reset();
+    let rV = document.getElementById('prof_rut_visual'); rV.readOnly = false; rV.classList.remove('bg-light', 'is-invalid', 'is-valid');
+}
+
+function editarProfesional(btn) {
+    nuevoProfesional();
+    document.getElementById('prof_id').value = btn.dataset.id;
+    document.getElementById('prof_nom').value = btn.dataset.nom;
+    document.getElementById('prof_ape').value = btn.dataset.ape;
+    rutOriginalEditProf = btn.dataset.rut;
+    document.getElementById('prof_rut').value = rutOriginalEditProf;
+    
+    let rV = document.getElementById('prof_rut_visual'); 
+    try { rV.value = formatoRutVisual(rutOriginalEditProf); } catch(err) { rV.value = rutOriginalEditProf; }
+    
+    rV.readOnly = true; rV.classList.add('bg-light');
+    (new bootstrap.Modal(document.getElementById('modalProfesional'))).show();
+}
+
+function confirmarEliminar(id) {
+    Swal.fire({
+        title: '¿Eliminar Profesional?', icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'ELIMINAR', customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) { window.location.href = "{{ url_for('professionals.delete', id=0) }}".replace('0', id); }
+    });
+}
 </script>
 {% endblock %}

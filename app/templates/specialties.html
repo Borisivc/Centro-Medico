@@ -13,14 +13,14 @@
         </div>
     </div>
 
-    <div class="card p-4 border-0 shadow-sm rounded-4">
-        <div class="table-responsive-scroll">
+    <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Nombre Especialidad</th>
                         <th>Descripción</th>
-                        <th class="text-center">Acciones</th>
+                        <th class="col-acciones">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -28,7 +28,7 @@
                     <tr class="border-bottom">
                         <td class="fw-bold text-navy-centro text-uppercase small">{{ e.get('nombre', '') }}</td>
                         <td class="small text-muted">{{ e.get('descripcion', '') }}</td>
-                        <td class="text-center">
+                        <td class="col-acciones">
                             <button class="btn-editar-centro me-1 shadow-sm" onclick="editarSpecialty(this)" 
                                 data-id="{{ e.get('id', '') }}" data-nom="{{ e.get('nombre', '') }}" data-desc="{{ e.get('descripcion', '') }}">
                                 <i class="fas fa-edit"></i>
@@ -45,7 +45,7 @@
             </table>
         </div>
         
-        <nav class="mt-4">
+        <nav class="mt-4 mt-auto">
             <ul class="pagination pagination-sm justify-content-end mb-0">
                 <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
                 <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>

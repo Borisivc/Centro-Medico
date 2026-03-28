@@ -13,8 +13,8 @@
         </div>
     </div>
 
-    <div class="card p-4 border-0 shadow-sm rounded-4">
-        <div class="table-responsive-scroll">
+    <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
@@ -22,7 +22,7 @@
                         <th>Paciente</th>
                         <th>Profesional</th>
                         <th>Estado</th>
-                        <th class="text-center">Acciones</th>
+                        <th class="col-acciones">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,19 +43,20 @@
                                 {% if 'CONFIRM' in estado_actual %}bg-success
                                 {% elif 'ANULAD' in estado_actual or 'CANCEL' in estado_actual %}bg-danger
                                 {% elif 'ATENDID' in estado_actual %}bg-secondary
-                                {% elif 'AGENDAD' in estado_actual %}bg-info text-white
+                                {% elif 'AGENDAD' in estado_actual %}bg-info text-dark
+                                {% elif 'ESPERA' in estado_actual %}bg-warning text-dark
                                 {% else %}bg-primary{% endif %}">
                                 {{ c.get('estado_nom', 'SIN ESTADO') }}
                             </span>
                         </td>
-                        <td class="text-center">
+                        <td class="col-acciones">
                             <button class="btn-editar-centro me-1 shadow-sm" onclick="editarCita(this)" 
                                 data-id="{{ c.get('id', '') }}" 
                                 data-paciente="{{ c.get('paciente_id', '') }}" 
                                 data-profesional="{{ c.get('profesional_id', '') }}" 
-                                data-fecha="{{ c.get('fecha_iso', c.get('fecha', '')) }}"
-                                data-hora="{{ c.get('hora_iso', c.get('hora', '')) }}" 
-                                data-estado="{{ c.get('estado_id', '') }}"
+                                data-fecha="{{ c.get('fecha_iso', c.get('fecha', '')) }}" 
+                                data-hora="{{ c.get('hora', '') }}" 
+                                data-estado="{{ c.get('estado_id', '') }}" 
                                 data-obs="{{ c.get('observacion', '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -65,86 +66,80 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted small fst-italic">No hay citas registradas en el sistema.</td>
-                    </tr>
+                    <tr><td colspan="5" class="text-center py-5 text-muted small fst-italic">No hay citas en la agenda.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <nav class="mt-4">
+        <nav class="mt-4 mt-auto">
             <ul class="pagination pagination-sm justify-content-end mb-0">
-                <li class="page-item disabled">
-                    <a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a>
-                </li>
-                <li class="page-item active">
-                    <a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a>
-                </li>
+                <li class="page-item disabled"><a class="page-link text-muted border-0 fw-bold" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link bg-navy-centro border-0 text-white rounded-circle mx-1" href="#">1</a></li>
+                <li class="page-item"><a class="page-link text-navy-centro border-0 fw-bold" href="#">Siguiente</a></li>
             </ul>
         </nav>
     </div>
 </div>
 
-<div class="modal fade" id="modalAgenda" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modalAgenda" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleAgenda">Agendar Cita</h4></div>
+                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-5 text-navy-centro" id="titleAgenda">Nueva Cita</h4></div>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 pt-3">
                 <form action="{{ url_for('agenda.save') }}" method="POST" id="formAgenda">
                     <input type="hidden" name="id" id="cita_id">
                     
-                    <div class="mb-3">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Paciente</label>
-                        <select name="paciente_id" id="cita_paciente" class="form-select form-control-centro w-100" required>
-                            <option value="">Seleccione Paciente...</option>
-                            {% for p in pacientes %}
-                            <option value="{{ p.id if p.id is defined else p[0] }}">{{ p.nombre if p.nombre is defined else p[1] }} {{ p.apellido if p.apellido is defined else p[2] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Profesional</label>
-                        <select name="profesional_id" id="cita_profesional" class="form-select form-control-centro w-100" required>
-                            <option value="">Seleccione Profesional...</option>
-                            {% for pr in profesionales %}
-                            <option value="{{ pr.id if pr.id is defined else pr[0] }}">{{ pr.nombre if pr.nombre is defined else pr[1] }} {{ pr.apellido if pr.apellido is defined else pr[2] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Paciente</label>
+                            <select name="paciente_id" id="cita_paciente" class="form-select form-control-centro w-100" required>
+                                <option value="">Seleccione...</option>
+                                {% for p in pacientes %}
+                                    <option value="{{ p.get('id', p[0]) }}">{{ p.get('rut', p[1]) }} - {{ p.get('nombre', p[2]) }} {{ p.get('apellido', p[3]) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Profesional</label>
+                            <select name="profesional_id" id="cita_profesional" class="form-select form-control-centro w-100" required>
+                                <option value="">Seleccione...</option>
+                                {% for pr in profesionales %}
+                                    <option value="{{ pr.get('id', pr[0]) }}">Dr/a. {{ pr.get('nombre', pr[1]) }} {{ pr.get('apellido', pr[2]) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Fecha</label>
                             <input type="date" name="fecha" id="cita_fecha" class="form-control-centro w-100" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Hora</label>
                             <input type="time" name="hora" id="cita_hora" class="form-control-centro w-100" required>
                         </div>
+                        <div class="col-md-4">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
+                            <select name="estado_id" id="cita_estado" class="form-select form-control-centro w-100" required>
+                                {% for e in estados %}
+                                    <option value="{{ e.get('id', e[0]) }}">{{ e.get('nombre', e[1]) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
-                        <select name="estado_id" id="cita_estado" class="form-select form-control-centro w-100" required>
-                            {% for e in estados %}
-                            <option value="{{ e.id if e.id is defined else e[0] }}">{{ e.nombre if e.nombre is defined else e[1] }}</option>
-                            {% endfor %}
-                        </select>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Observación (Opcional)</label>
+                            <textarea name="observacion" id="cita_obs" class="form-control form-control-centro w-100" rows="2" placeholder="Motivo de consulta, comentarios..."></textarea>
+                        </div>
                     </div>
-
-                    <div class="mb-4">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Observación</label>
-                        <textarea name="observacion" id="cita_obs" class="form-control-centro w-100 text-uppercase" rows="2"></textarea>
-                    </div>
-
+                    
                     <div class="d-grid mt-2">
                         <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR CITA</button>
                     </div>
@@ -155,13 +150,21 @@
 </div>
 
 <script>
-    function nuevaCita(){
+    document.addEventListener('DOMContentLoaded', function() {
+        try { formatearGrillaRuts(); } catch (e) {}
+    });
+
+    function nuevaCita() {
         document.getElementById('formAgenda').reset();
         document.getElementById('cita_id').value = '';
-        document.getElementById('titleAgenda').innerText = 'Agendar Cita';
+        
+        // Poner estado "Agendada" (id 1 por defecto)
+        document.getElementById('cita_estado').value = '1'; 
+        
+        document.getElementById('titleAgenda').innerText = 'Nueva Cita';
     }
 
-    function editarCita(btn){
+    function editarCita(btn) {
         nuevaCita();
         document.getElementById('cita_id').value = btn.dataset.id;
         document.getElementById('cita_paciente').value = btn.dataset.paciente;

@@ -11,7 +11,6 @@ def index():
     cur.execute("SELECT id, nombre FROM roles ORDER BY nombre ASC")
     roles_rows = cur.fetchall()
     
-    # Mapeo robusto para roles
     roles_disponibles = []
     for r in roles_rows:
         if isinstance(r, dict):
@@ -19,15 +18,14 @@ def index():
         else:
             roles_disponibles.append({'id': r[0], 'nombre': r[1]})
     
-    # 2. Obtener todos los usuarios (sin enviar password_hash al frontend)
-    cur.execute("SELECT id, rut, nombre, email FROM usuarios ORDER BY nombre ASC")
+    # 2. Obtener todos los usuarios (CORRECCIÓN: Se agregó la columna 'activo')
+    cur.execute("SELECT id, rut, nombre, email, activo FROM usuarios ORDER BY nombre ASC")
     user_rows = cur.fetchall()
     
     # 3. Obtener relaciones desde la tabla intermedia
     cur.execute("SELECT usuario_id, rol_id FROM usuarios_roles")
     relaciones = cur.fetchall()
     
-    # Mapear relaciones en memoria 
     roles_por_usuario = {}
     for rel in relaciones:
         if isinstance(rel, dict):
@@ -41,7 +39,6 @@ def index():
             roles_por_usuario[u_id] = []
         roles_por_usuario[u_id].append(str(r_id))
         
-    # Construir la lista final de usuarios uniendo los datos
     usuarios = []
     for row in user_rows:
         if isinstance(row, dict):
@@ -49,11 +46,13 @@ def index():
             rut = row.get('rut')
             nombre = row.get('nombre')
             email = row.get('email')
+            activo = row.get('activo')
         else:
             u_id = row[0]
             rut = row[1]
             nombre = row[2]
             email = row[3]
+            activo = row[4]
         
         ids_roles = roles_por_usuario.get(u_id, [])
         nombres_roles = [r['nombre'] for r in roles_disponibles if str(r['id']) in ids_roles]
@@ -64,6 +63,7 @@ def index():
             'rut': rut,
             'nombre': nombre,
             'email': email,
+            'activo': activo,
             'roles_ids': ids_roles,
             'roles_texto': texto_roles
         })
@@ -78,28 +78,27 @@ def save():
     nombre = request.form.get('nombre', '').strip().upper()
     email = request.form.get('email', '').strip().lower()
     password_raw = request.form.get('password', '').strip()
+    activo = request.form.get('activo', 1) # Capturamos el estado
     
-    # Lista de IDs de roles seleccionados desde los checkboxes
+    # Lista de IDs de roles seleccionados desde los checkboxes multi-rol
     roles_seleccionados = request.form.getlist('roles[]')
 
     cur = g.db.cursor()
     try:
         if user_id:  # MODO EDICIÓN
             if password_raw:  
-                # Si ingresa clave, actualizamos el password_hash
                 hashed_pw = generate_password_hash(password_raw)
                 cur.execute("""
                     UPDATE usuarios 
-                    SET nombre = %s, email = %s, password_hash = %s 
+                    SET nombre = %s, email = %s, password_hash = %s, activo = %s 
                     WHERE id = %s
-                """, (nombre, email, hashed_pw, user_id))
+                """, (nombre, email, hashed_pw, activo, user_id))
             else:  
-                # Si no ingresa clave, conserva la que ya tenía
                 cur.execute("""
                     UPDATE usuarios 
-                    SET nombre = %s, email = %s 
+                    SET nombre = %s, email = %s, activo = %s 
                     WHERE id = %s
-                """, (nombre, email, user_id))
+                """, (nombre, email, activo, user_id))
                 
             # Limpiar roles anteriores en la tabla intermedia
             cur.execute("DELETE FROM usuarios_roles WHERE usuario_id = %s", (user_id,))
@@ -110,13 +109,12 @@ def save():
                 flash('El RUT ingresado ya pertenece a un usuario.', 'warning')
                 return redirect(url_for('users.index'))
             
-            # Si no envía clave (aunque es obligatoria en front), se usa el RUT limpio como clave
             hashed_pw = generate_password_hash(password_raw) if password_raw else generate_password_hash(rut_limpio)
                 
             cur.execute("""
-                INSERT INTO usuarios (rut, nombre, email, password_hash) 
-                VALUES (%s, %s, %s, %s)
-            """, (rut_limpio, nombre, email, hashed_pw))
+                INSERT INTO usuarios (rut, nombre, email, password_hash, activo) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (rut_limpio, nombre, email, hashed_pw, activo))
             user_id = cur.lastrowid
 
         # Insertar los roles asignados
@@ -142,11 +140,8 @@ def save():
 def delete(id):
     cur = g.db.cursor()
     try:
-        # PRIMERO: Eliminar dependencias en la tabla relacional
         cur.execute("DELETE FROM usuarios_roles WHERE usuario_id = %s", (id,))
-        # SEGUNDO: Eliminar de la tabla principal
         cur.execute("DELETE FROM usuarios WHERE id = %s", (id,))
-        
         g.db.commit()
         flash('Usuario eliminado correctamente.', 'success')
     except Exception:
@@ -160,7 +155,6 @@ def delete(id):
 def verificar_rut_ajax(rut):
     rut_busqueda = rut.replace(".", "").replace("-", "").strip().upper()
     
-    # 1. Validación Matemática (Módulo 11)
     if len(rut_busqueda) < 8:
         return jsonify({'status': 'invalido', 'message': 'El RUT ingresado es demasiado corto.'})
         
@@ -184,7 +178,6 @@ def verificar_rut_ajax(rut):
     if dv_esperado != dv_ingresado:
         return jsonify({'status': 'invalido', 'message': 'El RUT ingresado no es válido (Dígito verificador incorrecto).'})
 
-    # 2. Validación en BD
     cur = g.db.cursor()
     cur.execute("SELECT id FROM usuarios WHERE rut = %s", (rut_busqueda[:-1] + dv_ingresado,))
     existe = cur.fetchone()

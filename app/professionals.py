@@ -1,16 +1,21 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g, session
 
 professionals_bp = Blueprint('professionals', __name__)
+
+# FIREWALL DE SEGURIDAD GLOBAL
+@professionals_bp.before_request
+def check_auth():
+    if 'user_id' not in session:
+        flash('Acceso denegado: Por favor, inicie sesión.', 'danger')
+        return redirect(url_for('main.index'))
 
 @professionals_bp.route('/')
 def index():
     cur = g.db.cursor()
     
-    # 1. Obtener todas las especialidades disponibles
     cur.execute("SELECT id, nombre FROM especialidades ORDER BY nombre ASC")
     esp_rows = cur.fetchall()
     
-    # Mapeo robusto para especialidades
     especialidades_disponibles = []
     for r in esp_rows:
         if isinstance(r, dict):
@@ -18,15 +23,12 @@ def index():
         else:
             especialidades_disponibles.append({'id': r[0], 'nombre': r[1]})
     
-    # 2. Obtener todos los profesionales (CORRECCIÓN: Se agregó 'activo' al SELECT)
     cur.execute("SELECT id, rut, nombre, apellido, email, activo FROM profesionales ORDER BY nombre ASC")
     prof_rows = cur.fetchall()
     
-    # 3. Obtener relaciones desde la tabla intermedia
     cur.execute("SELECT profesional_id, especialidad_id FROM profesionales_especialidades")
     relaciones = cur.fetchall()
     
-    # Mapear relaciones en memoria 
     esp_por_prof = {}
     for rel in relaciones:
         if isinstance(rel, dict):
@@ -40,7 +42,6 @@ def index():
             esp_por_prof[prof_id] = []
         esp_por_prof[prof_id].append(str(esp_id))
         
-    # Construir la lista final de profesionales uniendo los datos
     profesionales = []
     for row in prof_rows:
         if isinstance(row, dict):
@@ -49,14 +50,14 @@ def index():
             nombre = row.get('nombre')
             apellido = row.get('apellido')
             email = row.get('email')
-            activo = row.get('activo') # <-- CAPTURAMOS EL ESTADO
+            activo = row.get('activo')
         else:
             p_id = row[0]
             rut = row[1]
             nombre = row[2]
             apellido = row[3]
             email = row[4]
-            activo = row[5] # <-- CAPTURAMOS EL ESTADO
+            activo = row[5]
         
         ids_esp = esp_por_prof.get(p_id, [])
         nombres_esp = [e['nombre'] for e in especialidades_disponibles if str(e['id']) in ids_esp]
@@ -68,7 +69,7 @@ def index():
             'nombre': nombre,
             'apellido': apellido,
             'email': email,
-            'activo': activo, # <-- LO ENVIAMOS AL HTML
+            'activo': activo,
             'especialidades_ids': ids_esp,
             'especialidades_texto': texto_especialidades
         })
@@ -83,29 +84,30 @@ def save():
     nombre = request.form.get('nombre', '').strip().upper()
     apellido = request.form.get('apellido', '').strip().upper()
     email = request.form.get('email', '').strip().lower()
+    activo = request.form.get('activo', 1)
     
     especialidades_seleccionadas = request.form.getlist('especialidades[]')
 
     cur = g.db.cursor()
     try:
-        if prof_id:  # MODO EDICIÓN
+        if prof_id:
             cur.execute("""
                 UPDATE profesionales 
-                SET nombre = %s, apellido = %s, email = %s 
+                SET nombre = %s, apellido = %s, email = %s, activo = %s 
                 WHERE id = %s
-            """, (nombre, apellido, email, prof_id))
+            """, (nombre, apellido, email, activo, prof_id))
             cur.execute("DELETE FROM profesionales_especialidades WHERE profesional_id = %s", (prof_id,))
         
-        else:  # MODO NUEVO
+        else:
             cur.execute("SELECT id FROM profesionales WHERE rut = %s", (rut_limpio,))
             if cur.fetchone():
                 flash('El RUT ingresado ya pertenece a un profesional.', 'warning')
                 return redirect(url_for('professionals.index'))
                 
             cur.execute("""
-                INSERT INTO profesionales (rut, nombre, apellido, email) 
-                VALUES (%s, %s, %s, %s)
-            """, (rut_limpio, nombre, apellido, email))
+                INSERT INTO profesionales (rut, nombre, apellido, email, activo) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (rut_limpio, nombre, apellido, email, activo))
             prof_id = cur.lastrowid
 
         if especialidades_seleccionadas:
@@ -130,17 +132,12 @@ def save():
 def delete(id):
     cur = g.db.cursor()
     try:
-        # PRIMERO: Eliminar las relaciones de especialidades del profesional
         cur.execute("DELETE FROM profesionales_especialidades WHERE profesional_id = %s", (id,))
-        
-        # SEGUNDO: Eliminar al profesional principal
         cur.execute("DELETE FROM profesionales WHERE id = %s", (id,))
-        
         g.db.commit()
         flash('Profesional y sus especialidades eliminados correctamente.', 'success')
     except Exception as e:
         if hasattr(g, 'db'): g.db.rollback()
-        # Si falla aquí, es probablemente por otra tabla (ej. citas vinculadas al profesional)
         flash('No se puede eliminar: el profesional tiene registros críticos asociados (ej: agenda activa).', 'danger')
     finally:
         cur.close()

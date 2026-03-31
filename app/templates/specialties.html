@@ -19,7 +19,6 @@
                 <thead>
                     <tr>
                         <th>Nombre Especialidad</th>
-                        <th>Descripción</th>
                         <th class="col-acciones">Acciones</th>
                     </tr>
                 </thead>
@@ -27,10 +26,9 @@
                     {% for e in especialidades %}
                     <tr class="border-bottom">
                         <td class="fw-bold text-navy-centro text-uppercase small">{{ e.get('nombre', '') }}</td>
-                        <td class="small text-muted">{{ e.get('descripcion', '') }}</td>
                         <td class="col-acciones">
                             <button class="btn-editar-centro me-1 shadow-sm" onclick="editarSpecialty(this)" 
-                                data-id="{{ e.get('id', '') }}" data-nom="{{ e.get('nombre', '') }}" data-desc="{{ e.get('descripcion', '') }}">
+                                data-id="{{ e.get('id', '') }}" data-nom="{{ e.get('nombre', '') }}">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{ e.get('id', '') }}')">
@@ -39,7 +37,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="3" class="text-center py-5 text-muted small fst-italic">No hay especialidades registradas.</td></tr>
+                    <tr><td colspan="2" class="text-center py-5 text-muted small fst-italic">No hay especialidades registradas.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -65,13 +63,9 @@
             <div class="modal-body p-4 pt-3">
                 <form action="{{ url_for('specialties.save') }}" method="POST" id="formSpecialty">
                     <input type="hidden" name="id" id="esp_id">
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="label-centro fw-bold x-small text-muted ms-2">Nombre</label>
                         <input type="text" name="nombre" id="esp_nom" class="form-control-centro w-100 text-uppercase" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Descripción (Opcional)</label>
-                        <textarea name="descripcion" id="esp_desc" class="form-control-centro w-100 text-uppercase" rows="3"></textarea>
                     </div>
                     <div class="d-grid mt-2">
                         <button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR ESPECIALIDAD</button>
@@ -92,7 +86,6 @@
         nuevaSpecialty();
         document.getElementById('esp_id').value = btn.dataset.id;
         document.getElementById('esp_nom').value = btn.dataset.nom;
-        document.getElementById('esp_desc').value = btn.dataset.desc;
         document.getElementById('titleSpecialty').innerText = 'Editar Especialidad';
         var myModal = new bootstrap.Modal(document.getElementById('modalSpecialty'));
         myModal.show();

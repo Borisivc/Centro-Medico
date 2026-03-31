@@ -74,8 +74,16 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6"><label class="label-centro fw-bold x-small text-muted ms-2">Fecha Solicitada</label><input type="date" name="fecha" id="reserva_fecha" class="form-control-centro w-100" required></div>
-                        <div class="col-md-6"><label class="label-centro fw-bold x-small text-muted ms-2">Hora (Aproximada)</label><input type="time" name="hora" id="reserva_hora" class="form-control-centro w-100" required></div>
+                        <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha Solicitada</label>
+                            <input type="date" name="fecha" id="reserva_fecha" class="form-control-centro w-100" min="{{ now }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora Disponible</label>
+                            <select name="hora" id="reserva_hora" class="form-select form-control-centro w-100" required disabled>
+                                <option value="">Seleccione Profesional y Fecha...</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="d-grid mt-4"><button type="submit" id="btnSubmitReserva" class="btn-centro-confirm shadow-sm fs-5 py-3">CONFIRMAR AGENDAMIENTO</button></div>
                 </form>
@@ -90,6 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const nomInput = document.getElementById('reserva_nom');
     const apeInput = document.getElementById('reserva_ape');
     const formReserva = document.getElementById('formReservaWeb');
+    const profSelect = document.getElementById('reserva_prof');
+    const fechaInput = document.getElementById('reserva_fecha');
+    const horaSelect = document.getElementById('reserva_hora');
 
     rutInput.addEventListener('input', function(e) {
         try {
@@ -112,10 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         title: 'RUT Inválido',
                         text: 'El RUT ingresado no es válido.',
                         confirmButtonColor: '#001f3f'
-                    }).then(() => {
-                        rutInput.value = '';
-                        rutInput.focus();
-                    });
+                    }).then(() => { rutInput.value = ''; rutInput.focus(); });
                 }
             } else {
                 rutInput.classList.add('is-valid');
@@ -123,12 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(res => res.json())
                     .then(data => {
                         if (data.existe) {
-                            nomInput.value = data.nombre;
-                            apeInput.value = data.apellido;
-                            nomInput.readOnly = true;
-                            apeInput.readOnly = true;
-                            nomInput.classList.add('bg-light');
-                            apeInput.classList.add('bg-light');
+                            nomInput.value = data.nombre; apeInput.value = data.apellido;
+                            nomInput.readOnly = true; apeInput.readOnly = true;
+                            nomInput.classList.add('bg-light'); apeInput.classList.add('bg-light');
                         }
                     });
             }
@@ -136,7 +141,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const espSelect = document.getElementById('reserva_esp');
-    const profSelect = document.getElementById('reserva_prof');
     const profOptions = Array.from(profSelect.options);
 
     espSelect.addEventListener('change', function() {
@@ -149,9 +153,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 profSelect.appendChild(opt);
             }
         });
+        actualizarHoras();
     });
 
+    function actualizarHoras() {
+        const profId = profSelect.value;
+        const fecha = fechaInput.value;
+
+        horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+        horaSelect.disabled = true;
+
+        if (!profId || !fecha) {
+            horaSelect.innerHTML = '<option value="">Seleccione Profesional y Fecha...</option>';
+            return;
+        }
+
+        fetch(`/api/horarios_disponibles?profesional_id=${profId}&fecha=${fecha}&publico=true`)
+            .then(response => response.json())
+            .then(data => {
+                horaSelect.innerHTML = '<option value="">Seleccione una hora...</option>';
+                if (data.length === 0) {
+                    horaSelect.innerHTML = '<option value="">No hay horas disponibles este día</option>';
+                } else {
+                    data.forEach(hora => {
+                        let opt = document.createElement('option');
+                        opt.value = hora; opt.textContent = hora;
+                        horaSelect.appendChild(opt);
+                    });
+                    horaSelect.disabled = false;
+                }
+            })
+            .catch(error => {
+                horaSelect.innerHTML = '<option value="">Error al cargar horas</option>';
+            });
+    }
+
+    profSelect.addEventListener('change', actualizarHoras);
+    fechaInput.addEventListener('change', actualizarHoras);
+
     formReserva.addEventListener('submit', function(e) {
+        // CANDADO FRONTEND: Evita que se envíe el formulario si la hora está vacía
+        if (!horaSelect.value) {
+            e.preventDefault();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning', title: 'Falta Horario',
+                    text: 'Por favor, seleccione una hora disponible antes de agendar.',
+                    confirmButtonColor: '#001f3f'
+                });
+            }
+            return;
+        }
+
         try {
             let r = rutInput.value.replace(/[\.\-]/g, '').toUpperCase();
             if (!validarRutMatematico(r) || rutInput.classList.contains('is-invalid')) {
@@ -164,10 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             }
-        } catch (err) {
-            e.preventDefault();
-            alert("Error del sistema: Motor de validaciones no detectado. Limpie la caché con Ctrl+F5.");
-        }
+        } catch (err) {}
     });
 });
 </script>

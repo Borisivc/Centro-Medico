@@ -12,21 +12,49 @@
     </div>
     
     <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        
+        <div class="row g-2 mb-3 pb-3 border-bottom">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" id="filtro_busqueda" class="form-control border-start-0" placeholder="Buscar por Nombre o RUT...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="filtro_estado" class="form-select form-select-sm shadow-sm text-muted fw-bold">
+                    <option value="">TODOS LOS ESTADOS</option>
+                    <option value="activo">ACTIVO</option>
+                    <option value="inactivo">INACTIVO</option>
+                </select>
+            </div>
+            <div class="col-md-5 text-end">
+                <button class="btn btn-sm btn-light border fw-bold text-muted shadow-sm px-4" onclick="limpiarFiltros()">
+                    <i class="fas fa-eraser me-1"></i> LIMPIAR
+                </button>
+            </div>
+        </div>
         <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle">
                 <thead><tr><th>RUT</th><th>Nombre Completo</th><th>Estado</th><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     {% for p in profesionales %}
-                    <tr class="border-bottom">
+                    <tr class="border-bottom fila-dato">
                         <td class="fw-bold small formato-rut-cl">{{ p.get('rut', '') }}</td>
                         <td class="text-uppercase text-navy-centro fw-bold small">{{ p.get('nombre', '') }} {{ p.get('apellido', '') }}</td>
-                        <td><span class="badge {{ 'bg-success' if p.activo == 1 else 'bg-danger' }} rounded-pill">{{ 'Activo' if p.activo == 1 else 'Inactivo' }}</span></td>
+                        <td><span class="badge {{ 'bg-success' if p.get('activo', 1)|int == 1 else 'bg-danger' }} rounded-pill">{{ 'Activo' if p.get('activo', 1)|int == 1 else 'Inactivo' }}</span></td>
                         <td class="col-acciones">
-                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarProfesional(this)" data-id="{{p.id}}" data-rut="{{p.rut}}" data-nom="{{p.nombre}}" data-ape="{{p.apellido}}" data-act="{{p.activo}}"><i class="fas fa-edit"></i></button>
-                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{p.id}}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn-editar-centro me-1 shadow-sm" onclick="editarProfesional(this)" data-id="{{p.get('id','')}}" data-rut="{{p.get('rut','')}}" data-nom="{{p.get('nombre','')}}" data-ape="{{p.get('apellido','')}}" data-act="{{p.get('activo', 1)}}"><i class="fas fa-edit"></i></button>
+                            <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{p.get('id','')}}')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr id="filaSinDatos">
+                        <td colspan="4" class="text-center py-5 text-muted small fst-italic">No hay profesionales registrados.</td>
+                    </tr>
                     {% endfor %}
+                    <tr id="filaSinResultados" style="display: none;">
+                        <td colspan="4" class="text-center py-5 text-muted small fst-italic"><i class="fas fa-search-minus mb-2 fa-2x opacity-50 d-block"></i>No se encontraron resultados para su búsqueda.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -56,6 +84,13 @@
                         <div class="col-6"><input type="text" name="nombre" id="prof_nom" class="form-control-centro w-100 text-uppercase" placeholder="Nombres" required></div>
                         <div class="col-6"><input type="text" name="apellido" id="prof_ape" class="form-control-centro w-100 text-uppercase" placeholder="Apellidos" required></div>
                     </div>
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
+                        <select name="activo" id="prof_act" class="form-select form-control-centro w-100">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
                     <div class="d-grid mt-2"><button type="submit" class="btn-centro-confirm shadow-sm">GUARDAR PROFESIONAL</button></div>
                 </form>
             </div>
@@ -66,6 +101,50 @@
 <script>
 let rutOriginalEditProf = "";
 document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA DE FILTROS ---
+    const inputBusqueda = document.getElementById('filtro_busqueda');
+    const selectEstado = document.getElementById('filtro_estado');
+    const filas = document.querySelectorAll('.fila-dato');
+    const filaSinResultados = document.getElementById('filaSinResultados');
+
+    function aplicarFiltros() {
+        const valBusqueda = inputBusqueda.value.toLowerCase().trim();
+        const valEstado = selectEstado.value.toLowerCase();
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const txtRut = fila.cells[0].textContent.toLowerCase();
+            const txtNombre = fila.cells[1].textContent.toLowerCase();
+            const txtEstado = fila.cells[2].textContent.toLowerCase();
+            
+            const cumpleBusqueda = txtRut.includes(valBusqueda) || txtNombre.includes(valBusqueda);
+            const cumpleEstado = valEstado === "" || txtEstado.includes(valEstado);
+
+            if (cumpleBusqueda && cumpleEstado) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        if (visibles === 0 && filas.length > 0) {
+            filaSinResultados.style.display = '';
+        } else {
+            filaSinResultados.style.display = 'none';
+        }
+    }
+
+    inputBusqueda.addEventListener('input', aplicarFiltros);
+    selectEstado.addEventListener('change', aplicarFiltros);
+
+    window.limpiarFiltros = function() {
+        inputBusqueda.value = '';
+        selectEstado.value = '';
+        aplicarFiltros();
+    };
+    // --- FIN LÓGICA DE FILTROS ---
+
     const rutInput = document.getElementById('prof_rut_visual');
     const rutOculto = document.getElementById('prof_rut');
     const form = document.getElementById('formProfesional');
@@ -126,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function nuevoProfesional() {
     rutOriginalEditProf = ""; document.getElementById('formProfesional').reset();
     let rV = document.getElementById('prof_rut_visual'); rV.readOnly = false; rV.classList.remove('bg-light', 'is-invalid', 'is-valid');
+    document.getElementById('prof_act').value = "1";
 }
 
 function editarProfesional(btn) {
@@ -133,6 +213,7 @@ function editarProfesional(btn) {
     document.getElementById('prof_id').value = btn.dataset.id;
     document.getElementById('prof_nom').value = btn.dataset.nom;
     document.getElementById('prof_ape').value = btn.dataset.ape;
+    document.getElementById('prof_act').value = btn.dataset.act;
     rutOriginalEditProf = btn.dataset.rut;
     document.getElementById('prof_rut').value = rutOriginalEditProf;
     

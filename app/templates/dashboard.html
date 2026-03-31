@@ -55,11 +55,25 @@
                         <tbody>
                             {% for c in citas_dia %}
                             <tr class="border-bottom">
-                                <td class="fw-bold py-2">{{ c.hora }}</td>
-                                <td class="small text-uppercase">{{ c.paciente }}</td>
+                                <td class="py-2">
+                                    <div class="fw-bold text-navy-centro">{{ c.hora }}</div>
+                                    {% if (c.hora|string).endswith(':00') %}
+                                        <span class="badge bg-light text-muted border mt-1" style="font-size: 0.6rem;">PROCEDIMIENTO</span>
+                                    {% else %}
+                                        <span class="badge text-dark mt-1 shadow-sm" style="background-color: var(--cian-centro); font-size: 0.6rem;">EVALUACIÓN</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-uppercase fw-bold">{{ c.paciente }}</td>
                                 <td class="small text-uppercase">{{ c.profesional }}</td>
                                 <td>
-                                    <span class="badge rounded-pill bg-light text-dark border px-3">
+                                    {% set estado_actual = c.estado | upper %}
+                                    <span class="badge rounded-pill px-3 shadow-sm
+                                        {% if 'CONFIRM' in estado_actual %}bg-success
+                                        {% elif 'ANULAD' in estado_actual or 'CANCEL' in estado_actual %}bg-danger
+                                        {% elif 'ATENDID' in estado_actual %}bg-secondary
+                                        {% elif 'AGENDAD' in estado_actual %}bg-info text-dark
+                                        {% elif 'ESPERA' in estado_actual %}bg-warning text-dark
+                                        {% else %}bg-primary{% endif %}" style="font-size: 0.7rem;">
                                         {{ c.estado }}
                                     </span>
                                 </td>
@@ -81,14 +95,24 @@
                 
                 <div class="flex-grow-1">
                     {% for p in proximas_citas %}
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3 border-start border-primary border-4 bg-light shadow-sm">
+                    
+                    {% set is_eval = not (p.hora|string).endswith(':00') %}
+                    
+                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded-3 border-start border-4 bg-light shadow-sm" 
+                         style="border-color: {% if is_eval %}var(--cian-centro){% else %}var(--navy-centro){% endif %} !important;">
+                        
                         <div class="text-start">
                             <div class="fw-bold small text-navy-centro" style="font-size: 0.75rem;">{{ p.fecha }}</div>
-                            <div class="fw-bold text-uppercase" style="font-size: 0.85rem;">{{ p.apellido }}</div>
+                            <div class="fw-bold text-uppercase d-flex align-items-center" style="font-size: 0.85rem;">
+                                {{ p.apellido }}
+                                {% if is_eval %}
+                                    <span class="badge text-dark ms-2 py-1 px-2" style="background-color: var(--cian-centro); font-size: 0.55rem; letter-spacing: 0.5px;">EVAL</span>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="text-end">
-                            <div class="badge bg-white text-primary border rounded-pill">{{ p.hora }}</div>
-                            <div class="x-small text-muted text-uppercase" style="font-size: 0.65rem;">{{ p.prof }}</div>
+                            <div class="badge bg-white text-navy-centro border rounded-pill shadow-sm">{{ p.hora }}</div>
+                            <div class="x-small text-muted text-uppercase mt-1" style="font-size: 0.65rem;">{{ p.prof }}</div>
                         </div>
                     </div>
                     {% else %}

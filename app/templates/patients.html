@@ -12,12 +12,26 @@
     </div>
     
     <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        
+        <div class="row g-2 mb-3 pb-3 border-bottom">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" id="filtro_busqueda" class="form-control border-start-0" placeholder="Buscar por Nombre, Apellido o RUT...">
+                </div>
+            </div>
+            <div class="col-md-7 text-end">
+                <button class="btn btn-sm btn-light border fw-bold text-muted shadow-sm px-4" onclick="limpiarFiltros()">
+                    <i class="fas fa-eraser me-1"></i> LIMPIAR
+                </button>
+            </div>
+        </div>
         <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle">
                 <thead><tr><th>RUT</th><th>Nombre Completo</th><th>F. Nacimiento</th><th class="col-acciones">Acciones</th></tr></thead>
                 <tbody>
                     {% for p in pacientes %}
-                    <tr class="border-bottom">
+                    <tr class="border-bottom fila-dato">
                         <td class="fw-bold small formato-rut-cl">{{ p.get('rut', '') }}</td>
                         <td class="text-uppercase text-navy-centro fw-bold small">{{ p.get('nombre', '') }} {{ p.get('apellido', '') }}</td>
                         <td class="small">{{ p.get('fecha_nacimiento').strftime('%d-%m-%Y') if p.get('fecha_nacimiento') else 'S/R' }}</td>
@@ -26,7 +40,14 @@
                             <button class="btn-eliminar-centro shadow-sm" onclick="confirmarEliminar('{{p.id}}')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr id="filaSinDatos">
+                        <td colspan="4" class="text-center py-5 text-muted small fst-italic">No hay pacientes registrados.</td>
+                    </tr>
                     {% endfor %}
+                    <tr id="filaSinResultados" style="display: none;">
+                        <td colspan="4" class="text-center py-5 text-muted small fst-italic"><i class="fas fa-search-minus mb-2 fa-2x opacity-50 d-block"></i>No se encontraron resultados para su búsqueda.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -69,6 +90,44 @@
 <script>
 let rutOriginalEdit = ""; 
 document.addEventListener('DOMContentLoaded', function() {
+    // --- LÓGICA DE FILTROS ---
+    const inputBusqueda = document.getElementById('filtro_busqueda');
+    const filas = document.querySelectorAll('.fila-dato');
+    const filaSinResultados = document.getElementById('filaSinResultados');
+
+    function aplicarFiltros() {
+        const valBusqueda = inputBusqueda.value.toLowerCase().trim();
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const txtRut = fila.cells[0].textContent.toLowerCase();
+            const txtNombre = fila.cells[1].textContent.toLowerCase();
+            
+            const cumpleBusqueda = txtRut.includes(valBusqueda) || txtNombre.includes(valBusqueda);
+
+            if (cumpleBusqueda) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        if (visibles === 0 && filas.length > 0) {
+            filaSinResultados.style.display = '';
+        } else {
+            filaSinResultados.style.display = 'none';
+        }
+    }
+
+    inputBusqueda.addEventListener('input', aplicarFiltros);
+
+    window.limpiarFiltros = function() {
+        inputBusqueda.value = '';
+        aplicarFiltros();
+    };
+    // --- FIN LÓGICA DE FILTROS ---
+
     const rutInput = document.getElementById('pac_rut_visual');
     const rutOculto = document.getElementById('pac_rut');
     const form = document.getElementById('formPaciente');

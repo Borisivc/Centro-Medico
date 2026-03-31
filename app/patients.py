@@ -1,18 +1,23 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g, session
 
 # Definición del Blueprint
 patients_bp = Blueprint('patients', __name__)
 
+# FIREWALL DE SEGURIDAD GLOBAL
+@patients_bp.before_request
+def check_auth():
+    if 'user_id' not in session:
+        flash('Acceso denegado: Por favor, inicie sesión.', 'danger')
+        return redirect(url_for('main.index'))
+
 @patients_bp.route('/')
 def index():
     cur = g.db.cursor()
-    # Ejecutamos la consulta
     cur.execute("SELECT id, rut, nombre, apellido, fecha_nacimiento FROM pacientes ORDER BY nombre ASC")
     rows = cur.fetchall()
     
     pacientes = []
     for row in rows:
-        # Usamos un mapeo que acepta tanto diccionarios como tuplas para evitar el KeyError
         if isinstance(row, dict):
             pacientes.append({
                 'id': row.get('id'),
@@ -36,7 +41,6 @@ def index():
 @patients_bp.route('/save', methods=['POST'])
 def save():
     paciente_id = request.form.get('id')
-    # Limpieza de RUT para la BD
     rut_raw = request.form.get('rut', '')
     rut_limpio = rut_raw.replace(".", "").replace("-", "").strip()
     
@@ -46,13 +50,12 @@ def save():
 
     cur = g.db.cursor()
     try:
-        if paciente_id:  # MODO EDICIÓN
+        if paciente_id: 
             query = "UPDATE pacientes SET nombre = %s, apellido = %s, fecha_nacimiento = %s WHERE id = %s"
             cur.execute(query, (nombre, apellido, fecha_nacimiento, paciente_id))
             g.db.commit()
             flash('Paciente actualizado exitosamente', 'success')
-        
-        else:  # MODO NUEVO
+        else: 
             cur.execute("SELECT id FROM pacientes WHERE rut = %s", (rut_limpio,))
             if cur.fetchone():
                 flash('El RUT ya se encuentra registrado', 'warning')

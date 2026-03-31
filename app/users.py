@@ -1,13 +1,19 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g, session
 from werkzeug.security import generate_password_hash
 
 users_bp = Blueprint('users', __name__)
+
+# FIREWALL DE SEGURIDAD GLOBAL
+@users_bp.before_request
+def check_auth():
+    if 'user_id' not in session:
+        flash('Acceso denegado: Por favor, inicie sesión.', 'danger')
+        return redirect(url_for('main.index'))
 
 @users_bp.route('/')
 def index():
     cur = g.db.cursor()
     
-    # 1. Obtener todos los roles disponibles
     cur.execute("SELECT id, nombre FROM roles ORDER BY nombre ASC")
     roles_rows = cur.fetchall()
     
@@ -18,11 +24,9 @@ def index():
         else:
             roles_disponibles.append({'id': r[0], 'nombre': r[1]})
     
-    # 2. Obtener todos los usuarios (CORRECCIÓN: Se agregó la columna 'activo')
     cur.execute("SELECT id, rut, nombre, email, activo FROM usuarios ORDER BY nombre ASC")
     user_rows = cur.fetchall()
     
-    # 3. Obtener relaciones desde la tabla intermedia
     cur.execute("SELECT usuario_id, rol_id FROM usuarios_roles")
     relaciones = cur.fetchall()
     
@@ -78,14 +82,13 @@ def save():
     nombre = request.form.get('nombre', '').strip().upper()
     email = request.form.get('email', '').strip().lower()
     password_raw = request.form.get('password', '').strip()
-    activo = request.form.get('activo', 1) # Capturamos el estado
+    activo = request.form.get('activo', 1)
     
-    # Lista de IDs de roles seleccionados desde los checkboxes multi-rol
     roles_seleccionados = request.form.getlist('roles[]')
 
     cur = g.db.cursor()
     try:
-        if user_id:  # MODO EDICIÓN
+        if user_id: 
             if password_raw:  
                 hashed_pw = generate_password_hash(password_raw)
                 cur.execute("""
@@ -100,10 +103,9 @@ def save():
                     WHERE id = %s
                 """, (nombre, email, activo, user_id))
                 
-            # Limpiar roles anteriores en la tabla intermedia
             cur.execute("DELETE FROM usuarios_roles WHERE usuario_id = %s", (user_id,))
         
-        else:  # MODO NUEVO
+        else: 
             cur.execute("SELECT id FROM usuarios WHERE rut = %s", (rut_limpio,))
             if cur.fetchone():
                 flash('El RUT ingresado ya pertenece a un usuario.', 'warning')
@@ -117,7 +119,6 @@ def save():
             """, (rut_limpio, nombre, email, hashed_pw, activo))
             user_id = cur.lastrowid
 
-        # Insertar los roles asignados
         if roles_seleccionados:
             for rol_id in roles_seleccionados:
                 cur.execute("""

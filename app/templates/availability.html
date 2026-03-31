@@ -14,8 +14,55 @@
     </div>
 
     <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" id="filtro_profesional" class="form-control border-start-0" placeholder="Buscar por profesional...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="filtro_dia" class="form-select form-select-sm shadow-sm text-muted fw-bold">
+                    <option value="">TODOS LOS DÍAS</option>
+                    <option value="Lunes">LUNES</option>
+                    <option value="Martes">MARTES</option>
+                    <option value="Miércoles">MIÉRCOLES</option>
+                    <option value="Jueves">JUEVES</option>
+                    <option value="Viernes">VIERNES</option>
+                    <option value="Sábado">SÁBADO</option>
+                    <option value="Domingo">DOMINGO</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select id="filtro_tipo" class="form-select form-select-sm shadow-sm text-muted fw-bold">
+                    <option value="">TODOS LOS TIPOS</option>
+                    <option value="ATENCIÓN">ATENCIÓN</option>
+                    <option value="BLOQUEO">BLOQUEO</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mb-3 pb-3 border-bottom">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted fw-bold border-end-0" style="font-size: 0.7rem;">DESDE</span>
+                    <input type="date" id="filtro_desde" class="form-control border-start-0 text-muted">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted fw-bold border-end-0" style="font-size: 0.7rem;">HASTA</span>
+                    <input type="date" id="filtro_hasta" class="form-control border-start-0 text-muted">
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-sm btn-light border w-100 fw-bold text-muted shadow-sm" onclick="limpiarFiltros()">
+                    <i class="fas fa-eraser me-1"></i> LIMPIAR FILTROS
+                </button>
+            </div>
+        </div>
         <div class="table-responsive-scroll flex-grow-1">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="tablaDisponibilidad">
                 <thead>
                     <tr>
                         <th>Tipo</th>
@@ -29,7 +76,7 @@
                 <tbody>
                     {% set dias_nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] %}
                     {% for d in disponibilidades %}
-                    <tr class="border-bottom">
+                    <tr class="border-bottom fila-dato">
                         <td>
                             {% set es_bloqueo = d.get('tipo', 0)|int == 1 %}
                             <span class="badge {% if es_bloqueo %}bg-danger{% else %}bg-success{% endif %} rounded-pill px-3 py-2 small shadow-sm">
@@ -67,10 +114,13 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
+                    <tr id="filaSinDatos">
                         <td colspan="6" class="text-center py-5 text-muted small fst-italic">No hay horarios configurados.</td>
                     </tr>
                     {% endfor %}
+                    <tr id="filaSinResultados" style="display: none;">
+                        <td colspan="6" class="text-center py-5 text-muted small fst-italic"><i class="fas fa-search-minus mb-2 fa-2x opacity-50 d-block"></i>No se encontraron resultados para los filtros aplicados.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -85,7 +135,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalDisp" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalDisp" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
@@ -110,22 +160,24 @@
                             <label class="label-centro fw-bold x-small text-muted ms-2">Tipo</label>
                             <select name="tipo" id="disp_tipo" class="form-select form-control-centro w-100">
                                 <option value="0">Atención</option>
-                                <option value="1">Bloqueo (Colación)</option>
+                                <option value="1">Bloqueo</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="label-centro fw-bold x-small text-muted ms-2">Día de la Semana</label>
-                        <select name="dias_semana" id="disp_dia" class="form-select form-control-centro w-100" required>
-                            <option value="0">Lunes</option>
-                            <option value="1">Martes</option>
-                            <option value="2">Miércoles</option>
-                            <option value="3">Jueves</option>
-                            <option value="4">Viernes</option>
-                            <option value="5">Sábado</option>
-                            <option value="6">Domingo</option>
-                        </select>
+                        <label class="label-centro fw-bold x-small text-muted ms-2">Día(s) de la Semana</label>
+                        <div class="scroll-checkboxes rounded-3 p-3 form-control-centro border" style="max-height: 120px; overflow-y: auto;">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="0" id="dia_0"><label class="form-check-label small fw-bold text-navy-centro" for="dia_0">Lunes</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="1" id="dia_1"><label class="form-check-label small fw-bold text-navy-centro" for="dia_1">Martes</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="2" id="dia_2"><label class="form-check-label small fw-bold text-navy-centro" for="dia_2">Miércoles</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="3" id="dia_3"><label class="form-check-label small fw-bold text-navy-centro" for="dia_3">Jueves</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="4" id="dia_4"><label class="form-check-label small fw-bold text-navy-centro" for="dia_4">Viernes</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="5" id="dia_5"><label class="form-check-label small fw-bold text-navy-centro" for="dia_5">Sábado</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input check-dia" type="checkbox" name="dias_semana" value="6" id="dia_6"><label class="form-check-label small fw-bold text-navy-centro" for="dia_6">Domingo</label></div></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row g-3 mb-3">
@@ -165,9 +217,78 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputProf = document.getElementById('filtro_profesional');
+        const selectDia = document.getElementById('filtro_dia');
+        const selectTipo = document.getElementById('filtro_tipo');
+        const inputDesde = document.getElementById('filtro_desde');
+        const inputHasta = document.getElementById('filtro_hasta');
+        const filas = document.querySelectorAll('.fila-dato');
+        const filaSinResultados = document.getElementById('filaSinResultados');
+
+        function aplicarFiltros() {
+            const valProf = inputProf.value.toLowerCase().trim();
+            const valDia = selectDia.value.toLowerCase();
+            const valTipo = selectTipo.value.toLowerCase();
+            const valDesde = inputDesde.value;
+            const valHasta = inputHasta.value;
+            
+            let visibles = 0;
+
+            filas.forEach(fila => {
+                const txtTipo = fila.cells[0].textContent.toLowerCase();
+                const txtProf = fila.cells[1].textContent.toLowerCase();
+                const txtDia = fila.cells[2].textContent.toLowerCase();
+                
+                // Extraemos las fechas ISO ocultas en el botón de editar
+                const btnEdit = fila.querySelector('.btn-editar-centro');
+                const fechaIni = btnEdit.dataset.fi;
+                const fechaFin = btnEdit.dataset.ff;
+
+                const cumpleProf = txtProf.includes(valProf);
+                const cumpleDia = valDia === "" || txtDia.includes(valDia);
+                const cumpleTipo = valTipo === "" || txtTipo.includes(valTipo);
+                
+                // Lógica de fechas cruzadas (Intersect)
+                let cumpleFecha = true;
+                if (valDesde && fechaFin < valDesde) cumpleFecha = false; // Termina antes de lo que busco
+                if (valHasta && fechaIni > valHasta) cumpleFecha = false; // Empieza después de lo que busco
+
+                if (cumpleProf && cumpleDia && cumpleTipo && cumpleFecha) {
+                    fila.style.display = '';
+                    visibles++;
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+
+            if (visibles === 0 && filas.length > 0) {
+                filaSinResultados.style.display = '';
+            } else {
+                filaSinResultados.style.display = 'none';
+            }
+        }
+
+        inputProf.addEventListener('input', aplicarFiltros);
+        selectDia.addEventListener('change', aplicarFiltros);
+        selectTipo.addEventListener('change', aplicarFiltros);
+        inputDesde.addEventListener('change', aplicarFiltros);
+        inputHasta.addEventListener('change', aplicarFiltros);
+
+        window.limpiarFiltros = function() {
+            inputProf.value = '';
+            selectDia.value = '';
+            selectTipo.value = '';
+            inputDesde.value = '';
+            inputHasta.value = '';
+            aplicarFiltros();
+        };
+    });
+
     function nuevaDisp(){
         document.getElementById('formDisp').reset();
         document.getElementById('disp_id').value = '';
+        document.querySelectorAll('.check-dia').forEach(cb => cb.checked = false);
         document.getElementById('titleDisp').innerText = 'Nuevo Horario';
     }
 
@@ -175,13 +296,18 @@
         nuevaDisp();
         document.getElementById('disp_id').value = btn.dataset.id;
         document.getElementById('disp_prof').value = btn.dataset.prof;
-        document.getElementById('disp_dia').value = btn.dataset.dia;
         document.getElementById('disp_hi').value = btn.dataset.hi;
         document.getElementById('disp_hf').value = btn.dataset.hf;
         document.getElementById('disp_fi').value = btn.dataset.fi;
         document.getElementById('disp_ff').value = btn.dataset.ff;
         document.getElementById('disp_dur').value = btn.dataset.dur;
         document.getElementById('disp_tipo').value = btn.dataset.tipo;
+        
+        let diaEdit = btn.dataset.dia;
+        if(diaEdit !== undefined && diaEdit !== null) {
+            let cb = document.getElementById('dia_' + diaEdit);
+            if(cb) cb.checked = true;
+        }
         
         document.getElementById('titleDisp').innerText = 'Editar Horario';
         var myModal = new bootstrap.Modal(document.getElementById('modalDisp'));
@@ -195,11 +321,7 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ELIMINAR',
-            customClass: { 
-                confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', 
-                cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' 
-            },
-            buttonsStyling: false
+            customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = "{{ url_for('availability.delete', id=0) }}".replace('0', id);

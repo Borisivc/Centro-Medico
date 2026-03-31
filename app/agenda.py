@@ -1,12 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, g, session
 
 agenda_bp = Blueprint('agenda', __name__)
+
+# FIREWALL DE SEGURIDAD GLOBAL
+@agenda_bp.before_request
+def check_auth():
+    if 'user_id' not in session:
+        flash('Acceso denegado: Por favor, inicie sesión.', 'danger')
+        return redirect(url_for('main.index'))
 
 @agenda_bp.route('/')
 def index():
     cur = g.db.cursor()
     
-    # 1. Obtener Citas con JOINs (Usando nombres exactos de tu tabla: observacion)
     query = """
         SELECT a.id, a.fecha, a.hora, a.observacion,
                p.nombre as pac_nom, p.apellido as pac_ape, p.rut as pac_rut,
@@ -23,7 +29,6 @@ def index():
     
     citas = []
     for r in rows:
-        # Mapeo robusto para evitar errores de índice o diccionario
         d = r if isinstance(r, dict) else {
             'id': r[0], 'fecha': r[1], 'hora': r[2], 'observacion': r[3],
             'pac_nom': r[4], 'pac_ape': r[5], 'pac_rut': r[6],
@@ -32,7 +37,6 @@ def index():
         }
         citas.append(d)
 
-    # 2. Datos para los selectores del Modal
     cur.execute("SELECT id, nombre, apellido, rut FROM pacientes ORDER BY nombre ASC")
     pacientes = cur.fetchall()
     
@@ -57,14 +61,14 @@ def save():
 
     cur = g.db.cursor()
     try:
-        if cita_id:  # UPDATE
+        if cita_id:  
             cur.execute("""
                 UPDATE agenda 
                 SET paciente_id=%s, profesional_id=%s, fecha=%s, hora=%s, estado_id=%s, observacion=%s
                 WHERE id=%s
             """, (paciente_id, profesional_id, fecha, hora, estado_id, observacion, cita_id))
             flash('Cita actualizada correctamente.', 'success')
-        else:  # INSERT
+        else:  
             cur.execute("""
                 INSERT INTO agenda (paciente_id, profesional_id, fecha, hora, estado_id, observacion)
                 VALUES (%s, %s, %s, %s, %s, %s)

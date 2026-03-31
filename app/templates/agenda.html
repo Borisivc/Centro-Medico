@@ -120,8 +120,10 @@
                             <input type="date" name="fecha" id="cita_fecha" class="form-control-centro w-100" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora</label>
-                            <input type="time" name="hora" id="cita_hora" class="form-control-centro w-100" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora (Sobrecupos 15 min)</label>
+                            <select name="hora" id="cita_hora" class="form-select form-control-centro w-100" required disabled>
+                                <option value="">Seleccione Profesional y Fecha...</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Estado</label>
@@ -152,15 +154,77 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         try { formatearGrillaRuts(); } catch (e) {}
+
+        const profSelect = document.getElementById('cita_profesional');
+        const fechaInput = document.getElementById('cita_fecha');
+
+        profSelect.addEventListener('change', () => cargarHorasDisponibles());
+        fechaInput.addEventListener('change', () => cargarHorasDisponibles());
+
+        // CANDADO FRONTEND: Validación al enviar
+        document.getElementById('formAgenda').addEventListener('submit', function(e) {
+            const horaSelect = document.getElementById('cita_hora');
+            if (!horaSelect.value) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning', title: 'Falta Horario',
+                    text: 'Por favor, seleccione una hora disponible antes de guardar.',
+                    confirmButtonColor: '#001f3f'
+                });
+            }
+        });
     });
+
+    function cargarHorasDisponibles(horaPreSeleccionada = null) {
+        const profId = document.getElementById('cita_profesional').value;
+        const fecha = document.getElementById('cita_fecha').value;
+        const horaSelect = document.getElementById('cita_hora');
+
+        horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+        horaSelect.disabled = true;
+
+        if (!profId || !fecha) {
+            horaSelect.innerHTML = '<option value="">Seleccione Profesional y Fecha...</option>';
+            return;
+        }
+
+        fetch(`/api/horarios_disponibles?profesional_id=${profId}&fecha=${fecha}&publico=false`)
+            .then(res => res.json())
+            .then(data => {
+                horaSelect.innerHTML = '<option value="">Seleccione Hora...</option>';
+                
+                if (horaPreSeleccionada && !data.includes(horaPreSeleccionada)) {
+                    data.push(horaPreSeleccionada);
+                    data.sort(); 
+                }
+
+                if (data.length === 0) {
+                    horaSelect.innerHTML = '<option value="">Sin disponibilidad configurada</option>';
+                } else {
+                    data.forEach(hora => {
+                        let opt = document.createElement('option');
+                        opt.value = hora; opt.textContent = hora;
+                        horaSelect.appendChild(opt);
+                    });
+                    horaSelect.disabled = false;
+                    
+                    if (horaPreSeleccionada) horaSelect.value = horaPreSeleccionada;
+                }
+            })
+            .catch(err => {
+                horaSelect.innerHTML = '<option value="">Error de conexión</option>';
+            });
+    }
 
     function nuevaCita() {
         document.getElementById('formAgenda').reset();
         document.getElementById('cita_id').value = '';
-        
-        // Poner estado "Agendada" (id 1 por defecto)
         document.getElementById('cita_estado').value = '1'; 
         
+        let select = document.getElementById('cita_hora');
+        select.innerHTML = '<option value="">Seleccione Profesional y Fecha...</option>';
+        select.disabled = true;
+
         document.getElementById('titleAgenda').innerText = 'Nueva Cita';
     }
 
@@ -170,15 +234,14 @@
         document.getElementById('cita_paciente').value = btn.dataset.paciente;
         document.getElementById('cita_profesional').value = btn.dataset.profesional;
         document.getElementById('cita_estado').value = btn.dataset.estado;
-        
-        // Manejo seguro de fecha y hora para el input
         document.getElementById('cita_fecha').value = btn.dataset.fecha;
-        if(btn.dataset.hora) {
-            document.getElementById('cita_hora').value = btn.dataset.hora.substring(0, 5);
-        }
-        
         document.getElementById('cita_obs').value = btn.dataset.obs || '';
         document.getElementById('titleAgenda').innerText = 'Editar Cita';
+        
+        let horaAntigua = btn.dataset.hora;
+        if (horaAntigua) horaAntigua = horaAntigua.substring(0, 5); 
+        
+        cargarHorasDisponibles(horaAntigua);
         
         var myModal = new bootstrap.Modal(document.getElementById('modalAgenda'));
         myModal.show();
@@ -191,15 +254,9 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ELIMINAR',
-            customClass: { 
-                confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', 
-                cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' 
-            },
-            buttonsStyling: false
+            customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = "{{ url_for('agenda.delete', id=0) }}".replace('0', id);
-            }
+            if (result.isConfirmed) { window.location.href = "{{ url_for('agenda.delete', id=0) }}".replace('0', id); }
         });
     }
 </script>

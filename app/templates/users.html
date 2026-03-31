@@ -14,6 +14,35 @@
     </div>
 
     <div class="card p-4 border-0 shadow-sm rounded-4 d-flex flex-column card-mantenedor">
+        
+        <div class="row g-2 mb-3 pb-3 border-bottom">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" id="filtro_busqueda" class="form-control border-start-0" placeholder="Buscar por Nombre o Email...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="filtro_rol" class="form-select form-select-sm shadow-sm text-muted fw-bold text-uppercase">
+                    <option value="">TODOS LOS ROLES</option>
+                    {% for r in roles_disponibles %}
+                        <option value="{{ r.nombre|lower }}">{{ r.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="filtro_estado" class="form-select form-select-sm shadow-sm text-muted fw-bold">
+                    <option value="">TODOS LOS ESTADOS</option>
+                    <option value="activo">ACTIVO</option>
+                    <option value="inactivo">INACTIVO</option>
+                </select>
+            </div>
+            <div class="col-md-2 text-end">
+                <button class="btn btn-sm btn-light border w-100 fw-bold text-muted shadow-sm" onclick="limpiarFiltros()">
+                    <i class="fas fa-eraser me-1"></i> LIMPIAR
+                </button>
+            </div>
+        </div>
         <div class="table-responsive-scroll flex-grow-1">
             <table class="table table-hover align-middle mb-0">
                 <thead>
@@ -27,8 +56,8 @@
                 </thead>
                 <tbody>
                     {% for u in usuarios %}
-                    <tr class="border-bottom">
-                        <td class="fw-bold text-navy-centro small">{{ u.get('nombre', '') }}</td>
+                    <tr class="border-bottom fila-dato">
+                        <td class="fw-bold text-navy-centro small text-uppercase">{{ u.get('nombre', '') }}</td>
                         <td class="small">{{ u.get('email', '') }}</td>
                         <td>
                             <span class="badge bg-light text-dark border rounded-pill px-3">{{ u.get('roles_texto', 'Sin rol') }}</span>
@@ -55,12 +84,15 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
+                    <tr id="filaSinDatos">
                         <td colspan="5" class="text-center py-5 text-muted small fst-italic">
                             No hay usuarios registrados en el sistema.
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="filaSinResultados" style="display: none;">
+                        <td colspan="5" class="text-center py-5 text-muted small fst-italic"><i class="fas fa-search-minus mb-2 fa-2x opacity-50 d-block"></i>No se encontraron resultados para los filtros aplicados.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -105,7 +137,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Roles del Sistema</label>
-                            <div class="scroll-checkboxes rounded-3 p-2">
+                            <div class="scroll-checkboxes rounded-3 p-2 border bg-white">
                                 {% for r in roles_disponibles %}
                                 <div class="form-check mb-1">
                                     <input class="form-check-input check-rol" type="checkbox" name="roles[]" value="{{ r.id }}" id="rol_{{ r.id }}">
@@ -141,13 +173,65 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- LÓGICA DE FILTROS ---
+        const inputBusqueda = document.getElementById('filtro_busqueda');
+        const selectRol = document.getElementById('filtro_rol');
+        const selectEstado = document.getElementById('filtro_estado');
+        const filas = document.querySelectorAll('.fila-dato');
+        const filaSinResultados = document.getElementById('filaSinResultados');
+
+        function aplicarFiltros() {
+            const valBusqueda = inputBusqueda.value.toLowerCase().trim();
+            const valRol = selectRol.value.toLowerCase();
+            const valEstado = selectEstado.value.toLowerCase();
+            let visibles = 0;
+
+            filas.forEach(fila => {
+                const txtNombre = fila.cells[0].textContent.toLowerCase();
+                const txtEmail = fila.cells[1].textContent.toLowerCase();
+                const txtRoles = fila.cells[2].textContent.toLowerCase();
+                const txtEstado = fila.cells[3].textContent.toLowerCase();
+                
+                const cumpleBusqueda = txtNombre.includes(valBusqueda) || txtEmail.includes(valBusqueda);
+                const cumpleRol = valRol === "" || txtRoles.includes(valRol);
+                const cumpleEstado = valEstado === "" || txtEstado.includes(valEstado);
+
+                if (cumpleBusqueda && cumpleRol && cumpleEstado) {
+                    fila.style.display = '';
+                    visibles++;
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+
+            if (visibles === 0 && filas.length > 0) {
+                filaSinResultados.style.display = '';
+            } else {
+                filaSinResultados.style.display = 'none';
+            }
+        }
+
+        inputBusqueda.addEventListener('input', aplicarFiltros);
+        selectRol.addEventListener('change', aplicarFiltros);
+        selectEstado.addEventListener('change', aplicarFiltros);
+
+        window.limpiarFiltros = function() {
+            inputBusqueda.value = '';
+            selectRol.value = '';
+            selectEstado.value = '';
+            aplicarFiltros();
+        };
+        // --- FIN LÓGICA DE FILTROS ---
+    });
+
     function nuevoUser(){
         document.getElementById('formUser').reset();
         document.getElementById('user_id').value = '';
         document.getElementById('user_pass').required = true;
         document.getElementById('titleUser').innerText = 'Nuevo Usuario';
+        document.getElementById('user_act').value = "1";
         
-        // Limpiar todos los checkboxes
         document.querySelectorAll('.check-rol').forEach(cb => cb.checked = false);
     }
 
@@ -160,7 +244,6 @@
         document.getElementById('user_pass').required = false;
         document.getElementById('titleUser').innerText = 'Editar Usuario';
         
-        // Marcar checkboxes correspondientes
         try {
             let roles = JSON.parse(btn.dataset.roles || "[]");
             roles.forEach(rolId => {
@@ -182,11 +265,7 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'ELIMINAR',
-            customClass: { 
-                confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', 
-                cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' 
-            },
-            buttonsStyling: false
+            customClass: { confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold me-2', cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border' }, buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = "{{ url_for('users.delete', id=0) }}".replace('0', id);

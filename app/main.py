@@ -39,7 +39,7 @@ def login():
     password = request.form.get('password')
     cur = g.db.cursor()
     try:
-        cur.execute("SELECT id, nombre, password_hash FROM usuarios WHERE email = %s", (email,))
+        cur.execute("SELECT id, nombre, password_hash FROM usuarios WHERE email = %s AND activo = 1", (email,))
         user = cur.fetchone()
         
         u_id = user.get('id') if isinstance(user, dict) else user[0] if user else None
@@ -47,6 +47,7 @@ def login():
         u_hash = user.get('password_hash') if isinstance(user, dict) else user[2] if user else None
 
         if user and check_password_hash(u_hash, password):
+            session.clear()
             session['user_id'] = u_id
             session['user_nombre'] = u_nom
             return redirect(url_for('main.dashboard'))
@@ -55,7 +56,7 @@ def login():
     finally:
         cur.close()
     
-    flash("Credenciales incorrectas.", "danger")
+    flash("Credenciales incorrectas o usuario inactivo.", "danger")
     return redirect(url_for('main.index'))
 
 @main_bp.route('/logout')
@@ -64,7 +65,7 @@ def logout():
     return redirect(url_for('main.index'))
 
 # ==========================================
-# 3. APIS DE VALIDACIÓN EN TIEMPO REAL
+# 3. APIS DE VALIDACIÓN Y DISPONIBILIDAD (Públicas para el agendamiento)
 # ==========================================
 @main_bp.route('/api/validar_rut/<rut>', methods=['GET'])
 def api_validar_rut(rut):
@@ -100,9 +101,107 @@ def api_validar_rut_prof(rut):
     finally:
         cur.close()
 
-# ==========================================
-# 4. AGENDAMIENTO PÚBLICO Y DASHBOARD
-# ==========================================
+def parse_time_to_mins(t_obj):
+    if isinstance(t_obj, str):
+        parts = t_obj.split(':')
+        return int(parts[0]) * 60 + int(parts[1])
+    elif hasattr(t_obj, 'total_seconds'):
+        return int(t_obj.total_seconds() // 60)
+    elif hasattr(t_obj, 'seconds'):
+        return int(t_obj.seconds // 60)
+    return 0
+
+@main_bp.route('/api/horarios_disponibles', methods=['GET'])
+def api_horarios_disponibles():
+    prof_id = request.args.get('profesional_id')
+    fecha_str = request.args.get('fecha')
+    is_public = request.args.get('publico', 'false') == 'true'
+
+    if not prof_id or not fecha_str:
+        return jsonify([])
+
+    try:
+        fecha_dt = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except Exception:
+        return jsonify([])
+
+    dia_semana = fecha_dt.weekday()
+    cur = g.db.cursor()
+
+    try:
+        cur.execute("""
+            SELECT hora_inicio, hora_fin, tipo 
+            FROM disponibilidad_profesional 
+            WHERE profesional_id = %s 
+              AND dia_semana = %s 
+              AND fecha_inicio <= %s 
+              AND fecha_fin >= %s
+        """, (prof_id, dia_semana, fecha_str, fecha_str))
+        disponibilidades = cur.fetchall()
+
+        if not disponibilidades:
+            return jsonify([])
+
+        cur.execute("""
+            SELECT TIME_FORMAT(hora, '%%H:%%i') as hora, observacion 
+            FROM agenda 
+            WHERE profesional_id = %s AND fecha = %s
+        """, (prof_id, fecha_str))
+        citas_db = cur.fetchall()
+        
+        citas_tomadas = set()
+        for c in citas_db:
+            h_str = c['hora'] if isinstance(c, dict) else c[0]
+            if not h_str:
+                continue
+            obs = (c['observacion'] if isinstance(c, dict) else c[1]) or ""
+            citas_tomadas.add(h_str)
+            if 'SOLICITUD WEB' in obs.upper() and h_str.endswith(':00'):
+                h_base = int(h_str.split(':')[0])
+                citas_tomadas.add(f"{h_base:02d}:15")
+                citas_tomadas.add(f"{h_base:02d}:30")
+
+        slots_validos = set()
+
+        for d in disponibilidades:
+            tipo = int(d['tipo'] if isinstance(d, dict) else d[2])
+            if tipo == 0:
+                hi = parse_time_to_mins(d['hora_inicio'] if isinstance(d, dict) else d[0])
+                hf = parse_time_to_mins(d['hora_fin'] if isinstance(d, dict) else d[1])
+                for m in range(hi, hf, 15):
+                    slots_validos.add(f"{m//60:02d}:{m%60:02d}")
+                    
+        for d in disponibilidades:
+            tipo = int(d['tipo'] if isinstance(d, dict) else d[2])
+            if tipo == 1:
+                hi = parse_time_to_mins(d['hora_inicio'] if isinstance(d, dict) else d[0])
+                hf = parse_time_to_mins(d['hora_fin'] if isinstance(d, dict) else d[1])
+                for m in range(hi, hf, 15):
+                    bloq_str = f"{m//60:02d}:{m%60:02d}"
+                    if bloq_str in slots_validos:
+                        slots_validos.remove(bloq_str)
+
+        slots_finales = []
+        for slot in sorted(list(slots_validos)):
+            if slot in citas_tomadas:
+                continue
+            if is_public:
+                if slot.endswith(':00'):
+                    h = int(slot.split(':')[0])
+                    s1, s2, s3 = f"{h:02d}:15", f"{h:02d}:30", f"{h:02d}:45"
+                    if s1 in slots_validos and s2 in slots_validos and s3 in slots_validos:
+                        if s1 not in citas_tomadas and s2 not in citas_tomadas and s3 not in citas_tomadas:
+                            slots_finales.append(slot)
+            else:
+                slots_finales.append(slot)
+
+        return jsonify(slots_finales)
+    except Exception as e:
+        print(f"Error API Horarios: {e}")
+        return jsonify([])
+    finally:
+        cur.close()
+
 @main_bp.route('/agendar_publico', methods=['POST'])
 def agendar_publico():
     rut = request.form.get('rut').replace('.', '').replace('-', '').upper()
@@ -111,6 +210,10 @@ def agendar_publico():
     prof_id = request.form.get('profesional_id')
     fec = request.form.get('fecha')
     hor = request.form.get('hora')
+    
+    if not hor:
+        flash('Error: No se seleccionó una hora válida. Por favor, intente nuevamente.', 'danger')
+        return redirect(url_for('main.index'))
     
     cur = g.db.cursor()
     try:
@@ -137,9 +240,16 @@ def agendar_publico():
         cur.close()
     return redirect(url_for('main.index'))
 
+# ==========================================
+# 4. DASHBOARD (CANDADO DE SEGURIDAD PRIVADO)
+# ==========================================
 @main_bp.route('/dashboard')
 def dashboard():
-    if not session.get('user_id'): return redirect(url_for('main.index'))
+    # CANDADO: Solo usuarios logueados pueden ver el Dashboard
+    if 'user_id' not in session: 
+        flash('Acceso denegado: Por favor, inicie sesión para ver el panel.', 'danger')
+        return redirect(url_for('main.index'))
+        
     hoy_dt = datetime.now()
     cur = g.db.cursor()
     try:
@@ -155,7 +265,6 @@ def dashboard():
         res_m = cur.fetchone()
         m_count = list(res_m.values())[0] if isinstance(res_m, dict) else res_m[0]
 
-        # 1. Citas de HOY
         cur.execute("""
             SELECT TIME_FORMAT(a.hora, '%H:%i') as hora, CONCAT(p.nombre, ' ', p.apellido) as paciente, 
                    pr.nombre as profesional, e.nombre as estado
@@ -167,7 +276,6 @@ def dashboard():
         """)
         citas_dia = cur.fetchall()
 
-        # 2. INYECCIÓN DE PRECISIÓN: Citas de los PRÓXIMOS 7 DÍAS
         cur.execute("""
             SELECT DATE_FORMAT(a.fecha, '%d-%m-%Y') as fecha, 
                    TIME_FORMAT(a.hora, '%H:%i') as hora,
@@ -182,7 +290,6 @@ def dashboard():
         """)
         rows_proximas = cur.fetchall()
         
-        # Mapeo robusto anti-diccionarios/tuplas
         proximas_citas = []
         for r in rows_proximas:
             if isinstance(r, dict):
@@ -198,7 +305,7 @@ def dashboard():
                                p_count=p_count, 
                                m_count=m_count, 
                                citas_dia=citas_dia,
-                               proximas_citas=proximas_citas) # Variable enviada al HTML
+                               proximas_citas=proximas_citas)
     except Exception as e:
         print(f"Error Dashboard: {e}")
         return render_template('dashboard.html', hoy=hoy_dt.strftime('%d-%m-%Y'), c_hoy=0, p_count=0, m_count=0, citas_dia=[], proximas_citas=[])

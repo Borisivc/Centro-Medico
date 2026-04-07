@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3 px-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-3 bg-navy-centro text-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="fw-bold m-0 text-uppercase">
+                    <i class="fas fa-user-injured me-2 text-info"></i>{{ cita.nombre }} {{ cita.apellido }}
+                </h4>
+                <p class="m-0 small opacity-75 mt-1">RUT: {{ cita.rut | formatear_rut }} | Cita: {{ cita.hora }} hrs.</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{{ url_for('clinical.index') }}" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Espera
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 historial-scroll">
+                <h6 class="fw-bold text-navy-centro border-bottom pb-2 mb-3">
+                    <i class="fas fa-history me-2"></i>Historial Clínico
+                </h6>
+                
+                <div class="accordion" id="accordionHistorial">
+                    {% for h in historial %}
+                    <div class="accordion-item border-0 mb-2 shadow-sm rounded-3 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed py-2 bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                <div class="w-100">
+                                    <div class="fw-bold text-navy-centro small">{{ h.fecha_hora.strftime('%d-%m-%Y %H:%M') }}</div>
+                                    <div class="x-small text-muted">Dr/a. {{ h.prof_nom }} {{ h.prof_ape }}</div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#accordionHistorial">
+                            <div class="accordion-body p-3 small">
+                                <p class="mb-1"><strong>Motivo:</strong> {{ h.motivo_consulta }}</p>
+                                <p class="mb-1"><strong>Diagnóstico:</strong> <span class="text-danger fw-bold">{{ h.diagnostico }}</span></p>
+                                <p class="mb-2"><strong>Tratamiento:</strong> {{ h.tratamiento }}</p>
+                                
+                                {% if adjuntos.get(h.ficha_id) %}
+                                <div class="mt-3 pt-2 border-top">
+                                    <strong class="x-small text-muted d-block mb-2 text-uppercase">Exámenes/PDF:</strong>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for adj in adjuntos[h.ficha_id] %}
+                                            <button type="button" class="btn btn-sm btn-light border rounded-pill x-small shadow-sm" 
+                                                    onclick="verArchivo('{{ url_for('static', filename=adj.ruta_archivo) }}', '{{ adj.tipo }}')">
+                                                <i class="fas {{ 'fa-file-pdf text-danger' if adj.tipo == 'pdf' else 'fa-image text-primary' }} me-1"></i> 
+                                                {{ adj.nombre_original[:12] }}...
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted small fst-italic">Sin registros previos.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <form action="{{ url_for('clinical.save') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="agenda_id" value="{{ cita.id }}">
+                    <input type="hidden" name="paciente_id" value="{{ cita.pac_id }}">
+                    <input type="hidden" name="profesional_id" value="{{ cita.prof_id }}">
+                    
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-navy-centro m-0"><i class="fas fa-file-medical me-2"></i>Nueva Atención</h6>
+                        <div class="file-upload-wrapper btn btn-sm btn-outline-secondary rounded-pill fw-bold">
+                            <i class="fas fa-paperclip me-1"></i> Adjuntar Documentos
+                            <input type="file" name="adjuntos[]" multiple accept=".pdf, .png, .jpg, .jpeg" onchange="mostrarArchivos(this)">
+                        </div>
+                    </div>
+                    
+                    <div id="lista-archivos" class="small mb-3 d-flex flex-wrap gap-2"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Motivo Consulta</label>
+                            <textarea name="motivo_consulta" class="form-control-centro w-100" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Examen Físico</label>
+                            <textarea name="examen_fisico" class="form-control-centro w-100" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="label-centro fw-bold text-danger x-small ms-2">Diagnóstico</label>
+                        <input type="text" name="diagnostico" id="diag_input" class="form-control-centro w-100 fw-bold text-uppercase border-danger" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Tratamiento / Indicaciones</label>
+                            <button type="button" class="btn btn-sm btn-link text-navy-centro fw-bold text-decoration-none" onclick="imprimirReceta()">
+                                <i class="fas fa-print me-1"></i>IMPRIMIR RECETA
+                            </button>
+                        </div>
+                        <textarea name="tratamiento" id="trata_input" class="form-control-centro w-100" rows="4" required></textarea>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn-centro-confirm shadow py-3 fs-5">
+                            <i class="fas fa-save me-2"></i>FINALIZAR ATENCIÓN
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalVisor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative">
+                <h5 class="fw-bold text-navy-centro m-0"><i class="fas fa-eye me-2"></i>Visor de Documentos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center visor-contenedor" id="visorContenedor"></div>
+        </div>
+    </div>
+</div>
+
+<div id="seccion-impresion-receta" class="d-none">
+    <div class="print-header">
+        <h2 class="print-title">CENTRO MÉDICO INTEGRAL</h2>
+        <p class="print-subtitle">Salud, Aprendizaje y Terapias</p>
+    </div>
+    <div class="print-info-box">
+        <p><strong>Fecha:</strong> {{ now.strftime('%d-%m-%Y') }}</p>
+        <p><strong>Paciente:</strong> {{ cita.nombre }} {{ cita.apellido }}</p>
+        <p><strong>RUT:</strong> {{ cita.rut | formatear_rut }}</p>
+        <p><strong>Diagnóstico:</strong> <span id="p_diag"></span></p>
+    </div>
+    <div class="print-body">
+        <h4 class="print-h4">Receta / Indicaciones</h4>
+        <div id="p_trata" class="print-content"></div>
+    </div>
+    <div class="print-footer">
+        <div class="print-signature-box">
+            <p class="print-signature-name">Dr/a. {{ cita.prof_nom }} {{ cita.prof_ape }}</p>
+            <p class="print-signature-role">Firma y Timbre</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarArchivos(input) {
+    const lista = document.getElementById('lista-archivos');
+    lista.innerHTML = '';
+    Array.from(input.files).forEach(f => {
+        lista.innerHTML += `<span class="badge bg-light text-dark border p-2"><i class="fas fa-file me-1"></i>${f.name}</span>`;
+    });
+}
+
+function verArchivo(url, tipo) {
+    const cont = document.getElementById('visorContenedor');
+    // JS inyecta clases limpias del CSS en lugar de estilos en línea
+    cont.innerHTML = tipo === 'pdf' 
+        ? `<iframe src="${url}" class="visor-iframe"></iframe>`
+        : `<img src="${url}" class="visor-img">`;
+    new bootstrap.Modal(document.getElementById('modalVisor')).show();
+}
+
+function imprimirReceta() {
+    const diag = document.getElementById('diag_input').value;
+    const trata = document.getElementById('trata_input').value;
+    if(!diag || !trata) return Swal.fire('Error', 'Complete diagnóstico y tratamiento', 'warning');
+    document.getElementById('p_diag').innerText = diag;
+    document.getElementById('p_trata').innerText = trata;
+    window.print();
+}
+</script>
+{% endblock %}

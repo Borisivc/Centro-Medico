@@ -245,7 +245,7 @@ def agendar_publico():
 # ==========================================
 @main_bp.route('/dashboard')
 def dashboard():
-    # CANDADO: Solo usuarios logueados pueden ver el Dashboard
+    # 🛡️ CANDADO: Solo usuarios logueados pueden ver el Dashboard
     if 'user_id' not in session: 
         flash('Acceso denegado: Por favor, inicie sesión para ver el panel.', 'danger')
         return redirect(url_for('main.index'))

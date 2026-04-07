@@ -8,111 +8,125 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ range(1, 99999) | random }}">
 </head>
-<body>
+<body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-custom navbar-dark mb-4">
+    {% if session.get('user_id') %}
+    <div class="d-flex" id="wrapper">
+        
+        <div class="bg-navy-centro text-white sidebar shadow-lg" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-uppercase border-bottom border-secondary border-opacity-25">
+                <i class="fas fa-heartbeat me-2 icon-brand fs-3"></i>Centro Médico
+            </div>
+            
+            <div class="list-group list-group-flush my-3">
+                <a href="{{ url_for('main.dashboard') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
+                    <i class="fas fa-tachometer-alt me-3 icon-dashboard"></i>Dashboard
+                </a>
+                
+                <a href="{{ url_for('agenda.index') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
+                    <i class="fas fa-calendar-alt me-3 icon-agenda"></i>Agenda
+                </a>
+                
+                <a href="{{ url_for('clinical.index') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
+                    <i class="fas fa-user-md me-3 icon-consulta"></i>Mi Consulta
+                </a>
+
+                <a href="{{ url_for('clinical.historial') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
+                    <i class="fas fa-folder-open me-3 icon-consulta"></i>Historial
+                </a>
+                
+                <div class="px-4 pt-4 pb-2 x-small fw-bold text-uppercase opacity-50 text-white sidebar-admin-title">
+                    Administración
+                </div>
+
+                <a href="{{ url_for('patients.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-users me-2 icon-pacientes"></i>Pacientes
+                </a>
+                <a href="{{ url_for('professionals.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-user-nurse me-2 icon-profesionales"></i>Profesionales
+                </a>
+                <a href="{{ url_for('availability.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-clock me-2 icon-availability"></i>Disponibilidad
+                </a>
+                <a href="{{ url_for('users.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-user-shield me-2 icon-users"></i>Usuarios
+                </a>
+                <a href="{{ url_for('specialties.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-stethoscope me-2 icon-specialties"></i>Especialidades
+                </a>
+                <a href="{{ url_for('roles.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-user-tag me-2 icon-roles"></i>Roles
+                </a>
+                <a href="{{ url_for('states.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
+                    <i class="fas fa-tasks me-2 icon-states"></i>Estados
+                </a>
+            </div>
+        </div>
+        
+        <div id="page-content-wrapper" class="w-100 bg-light">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4 py-3">
+                <div class="container-fluid p-0">
+                    <span class="fs-5 fw-bold text-navy-centro">Sistema de Gestión Integral</span>
+                    <div class="ms-auto d-flex align-items-center">
+                        <div class="me-4 text-end d-none d-md-block">
+                            <span class="fw-bold text-navy-centro d-block nav-user-name">{{ session.get('user_nombre', 'Usuario') }}</span>
+                            <span class="text-success x-small fw-bold text-uppercase">Conectado</span>
+                        </div>
+                        <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">
+                            <i class="fas fa-power-off me-2"></i>SALIR
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-navy-centro shadow-sm py-3">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
-                <i class="fas fa-hospital-alt me-2 icon-brand"></i>
-                CENTRO MÉDICO
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('main.index') }}">
+                <i class="fas fa-heartbeat me-2 icon-brand fs-3"></i>
+                <span class="brand-text-spacing">CENTRO MÉDICO</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center fw-bold small text-uppercase">
-                    {% if session.get('user_id') %}
-                        <li class="nav-item me-3">
-                            <a class="nav-link d-flex align-items-center text-white" href="{{ url_for('main.dashboard') }}">
-                                <i class="fas fa-chart-line me-2 icon-dashboard"></i> DASHBOARD
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item me-3">
-                            <a class="nav-link d-flex align-items-center text-white" href="{{ url_for('agenda.index') }}">
-                                <i class="far fa-calendar-alt me-2 icon-brand"></i> AGENDA
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item dropdown me-4">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cogs me-2 icon-admin"></i> ADMINISTRACIÓN
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="adminDropdown">
-                                <li><a class="dropdown-item py-2" href="{{ url_for('patients.index') }}"><i class="fas fa-user-injured me-2 icon-pacientes"></i>Pacientes</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('professionals.index') }}"><i class="fas fa-user-md me-2 icon-profesionales"></i>Profesionales</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('users.index') }}"><i class="fas fa-users-cog me-2 icon-users"></i>Usuarios</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('availability.index') }}"><i class="fas fa-clock me-2 icon-availability"></i>Disponibilidad</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('specialties.index') }}"><i class="fas fa-tags me-2 icon-specialties"></i>Especialidades</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('roles.index') }}"><i class="fas fa-user-tag me-2 icon-roles"></i>Roles</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ url_for('states.index') }}"><i class="fas fa-info-circle me-2 icon-states"></i>Estados</a></li>
-                            </ul>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a href="{{ url_for('main.logout') }}" class="btn btn-eliminar-centro shadow-sm">SALIR</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a href="#" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalLogin">INGRESAR</a>
-                        </li>
-                    {% endif %}
-                </ul>
+            
+            <div class="ms-auto">
+                <a href="#" class="btn btn-ingresar-out rounded-pill px-4 fw-bold text-uppercase" data-bs-toggle="modal" data-bs-target="#modalLogin">
+                    INGRESAR
+                </a>
             </div>
         </div>
     </nav>
+    
+    <div class="container-fluid p-0">
+        {% block content_public %}{% endblock %}
+    </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    {% for category, message in messages %}
-                        {% set icon = 'success' %}
-                        {% if category == 'danger' or category == 'error' %}{% set icon = 'error' %}{% endif %}
-                        {% if category == 'warning' %}{% set icon = 'warning' %}{% endif %}
-                        {% if category == 'info' %}{% set icon = 'info' %}{% endif %}
-                        
-                        Swal.fire({
-                            icon: '{{ icon }}',
-                            title: 'Mensaje del Sistema',
-                            text: '{{ message }}',
-                            confirmButtonColor: '#001f3f'
-                        });
-                    {% endfor %}
-                });
-            </script>
-        {% endif %}
-    {% endwith %}
-
-    <main>{% block content %}{% endblock %}</main>
-
-    <footer class="navbar-custom text-white text-center py-3 mt-5 shadow-lg">
-        <div class="container"><p class="mb-0 small fw-bold">&copy; 2026 Centro Médico.</p></div>
-    </footer>
-
-    {% if not session.get('user_id') %}
     <div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow-lg rounded-4 p-2">
-                <div class="modal-header border-0 pb-0 text-center position-relative">
-                    <div class="w-100"><h5 class="modal-title fw-bold text-navy-centro">Acceso Seguro</h5></div>
-                    <button type="button" class="btn-close position-absolute end-0 top-0 m-2" data-bs-dismiss="modal"></button>
+                <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
+                    <div class="w-100"><h5 class="modal-centro-title m-0 fw-bold text-navy-centro">Acceso al Sistema</h5></div>
+                    <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body px-4 pb-4 pt-3">
-                    <form action="{{ url_for('main.login') }}" method="POST" id="formLoginWeb">
+                <div class="modal-body p-4 pt-4">
+                    <form action="{{ url_for('main.login') }}" method="POST" id="formLogin">
                         <div class="mb-3">
-                            <label class="form-label x-small fw-bold text-muted ms-1">Email</label>
-                            <input type="email" name="email" id="login_email" class="form-control form-control-centro" autocomplete="email" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Email Corporativo</label>
+                            <input type="email" name="email" class="form-control-centro w-100" autocomplete="email" required>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label x-small fw-bold text-muted ms-1">Contraseña</label>
-                            <input type="password" name="password" id="login_password" class="form-control form-control-centro" autocomplete="current-password" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Contraseña</label>
+                            <input type="password" name="password" class="form-control-centro w-100" autocomplete="current-password" required>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-centro-confirm btn-sm shadow-sm">INGRESAR</button>
+                        <div class="d-grid mt-2">
+                            <button type="submit" class="btn-centro-confirm shadow-sm py-2">ENTRAR AL SISTEMA</button>
                         </div>
                     </form>
                 </div>
@@ -127,15 +141,39 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var modalLogin = document.getElementById('modalLogin');
-            if (modalLogin) {
-                modalLogin.addEventListener('show.bs.modal', function () {
-                    document.getElementById('login_email').value = '';
-                    document.getElementById('login_password').value = '';
+            const modalLoginElement = document.getElementById('modalLogin');
+            if (modalLoginElement) {
+                modalLoginElement.addEventListener('show.bs.modal', function () {
+                    const formLogin = document.getElementById('formLogin');
+                    if (formLogin) {
+                        formLogin.reset();
+                        const inputs = formLogin.querySelectorAll('input');
+                        inputs.forEach(input => input.value = '');
+                    }
+                });
+
+                modalLoginElement.addEventListener('hidden.bs.modal', function () {
+                    const formLogin = document.getElementById('formLogin');
+                    if (formLogin) {
+                        formLogin.reset();
+                    }
                 });
             }
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% set icon = 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' %}
+                        Swal.fire({
+                            icon: '{{ icon }}',
+                            title: 'Atención',
+                            text: '{{ message }}',
+                            confirmButtonColor: '#001f3f'
+                        });
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         });
     </script>
-
 </body>
 </html>

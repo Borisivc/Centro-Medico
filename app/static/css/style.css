@@ -24,6 +24,7 @@ body {
 }
 
 .text-navy-centro { color: var(--navy-centro) !important; }
+.bg-navy-centro { background-color: var(--navy-centro) !important; }
 .bg-light { background-color: #f8f9fa !important; }
 
 /* ==========================================================================
@@ -33,8 +34,6 @@ body {
     background-color: var(--navy-centro) !important;
     padding: 0.8rem 2rem;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 1050 !important;
 }
 
 .navbar-brand {
@@ -44,9 +43,16 @@ body {
     letter-spacing: 1px;
 }
 
-.dropdown-menu {
-    z-index: 1060 !important;
+.sidebar {
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 100vh;
+    transition: all 0.3s;
 }
+
+.sidebar-admin-title { letter-spacing: 1px; }
+.nav-user-name { font-size: 0.9rem; }
+.brand-text-spacing { letter-spacing: 1px; }
 
 /* ==========================================================================
    4. COMPONENTES DE INTERFAZ (CARDS Y TABLAS)
@@ -86,12 +92,6 @@ body {
     font-weight: 700 !important;
     text-transform: uppercase;
     font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-.btn-nuevo-centro:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
 }
 
 .btn-editar-centro {
@@ -110,6 +110,23 @@ body {
     border-radius: 50px !important;
     padding: 4px 15px !important;
     font-weight: 700;
+}
+
+.btn-ingresar-out {
+    background: transparent !important;
+    color: var(--white) !important;
+    border: 2px solid var(--white) !important;
+    border-radius: 50px !important;
+    padding: 6px 30px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.btn-ingresar-out:hover {
+    border-color: var(--cian-centro) !important;
+    color: var(--cian-centro) !important;
 }
 
 /* ==========================================================================
@@ -135,12 +152,12 @@ body {
 }
 
 /* ==========================================================================
-   7. FIXES Y Z-INDEX (ESPECÍFICOS)
+   7. FIXES Y Z-INDEX
    ========================================================================== */
 .table-responsive-scroll thead th {
     position: sticky;
     top: 0;
-    z-index: 1 !important; /* Mantiene la cabecera por debajo del menú */
+    z-index: 1 !important;
     background-color: #f8f9fa !important;
     box-shadow: inset 0 -2px 0 #dee2e6;
 }
@@ -169,81 +186,96 @@ body {
 }
 
 .btn-agendar-home:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 218, 235, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 218, 235, 0.4) !important;
 }
 
+/* Contenedor de Área de Atención base */
 .area-contenedor {
     border-radius: 20px;
     background: var(--white);
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     overflow: hidden;
-    /* Aplicamos una transición suave para el efecto */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-/* Efecto hover: eleva un poco la tarjeta y hace zoom */
+/* CORRECCIÓN: Efecto Hover recuperado */
 .area-contenedor:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
+    transform: translateY(-10px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
 }
 
 .area-img {
     width: 100%;
     height: 250px;
     object-fit: cover;
+    transition: transform 0.4s ease;
 }
 
-.container-dash-fecha {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--white);
-    border: 1px solid #dee2e6;
-    border-radius: 50px;
-    padding: 8px 18px;
-}
-
-.input-dash-fecha {
-    border: none !important;
-    font-weight: 700 !important;
-    color: var(--navy-centro) !important;
-    background: transparent !important;
-    outline: none !important;
+/* Zoom suave en la imagen al hacer hover en la tarjeta */
+.area-contenedor:hover .area-img {
+    transform: scale(1.05);
 }
 
 /* ==========================================================================
    9. COLORES DE ICONOS (CORPORATIVOS)
    ========================================================================== */
 .icon-brand { color: var(--cian-centro) !important; }
-.icon-dashboard { color: #6610f2 !important; }
-.icon-admin { color: #546e7a !important; }
+.icon-dashboard { color: var(--cian-centro) !important; } 
+.icon-agenda { color: var(--cian-centro) !important; } 
+.icon-consulta { color: var(--cian-centro) !important; } 
+
 .icon-pacientes { color: #0d6efd !important; }
 .icon-profesionales { color: var(--verde-centro) !important; }
-.icon-citas-totales { color: var(--cian-centro) !important; }
-.icon-users { color: #e83e8c !important; }
 .icon-availability { color: #f44336 !important; }
 .icon-specialties { color: #6f42c1 !important; }
 .icon-roles { color: #fd7e14 !important; }
 .icon-states { color: #20c997 !important; }
-/* ==========================================================================
-   10. UTILIDADES DE MANTENEDORES (ALTURAS Y SCROLLS)
-   ========================================================================== */
-.card-mantenedor {
-    min-height: 550px;
-}
+.icon-users { color: #e83e8c !important; }
 
+/* ==========================================================================
+   10. UTILIDADES MANTENEDORES
+   ========================================================================== */
+.card-mantenedor { min-height: 550px; }
 .scroll-checkboxes {
     max-height: 120px;
     overflow-y: auto;
     border: 1px solid #dee2e6;
-    background-color: var(--white);
 }
+
 /* ==========================================================================
-   11. COLUMNA DE ACCIONES (ESTÁNDAR)
+   11. COLUMNA ACCIONES
    ========================================================================== */
-.col-acciones {
-    width: 1%; /* Obliga a la columna a encogerse al tamaño de los botones */
-    white-space: nowrap; /* Evita que los botones se apilen */
-    text-align: center !important; /* Centra el título perfectamente sobre los botones */
+.col-acciones { width: 1%; white-space: nowrap; text-align: center !important; }
+
+/* ==========================================================================
+   12. MÓDULO CLÍNICO Y MOTOR IMPRESIÓN
+   ========================================================================== */
+.file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; }
+.file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+
+.historial-scroll { max-height: 75vh; overflow-y: auto; }
+.visor-contenedor { height: 70vh; }
+.visor-iframe { border: none; border-radius: 10px; width: 100%; height: 100%; }
+.visor-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
+
+.print-header { border-bottom: 3px solid var(--navy-centro); padding-bottom: 10px; margin-bottom: 20px; }
+.print-title { color: var(--navy-centro); font-weight: bold; margin: 0; }
+.print-subtitle { margin: 0; font-size: 12px; color: #666; }
+.print-info-box { margin-bottom: 30px; font-size: 14px; }
+.print-body { min-height: 400px; }
+.print-h4 { color: var(--navy-centro); border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+.print-content { font-size: 14px; white-space: pre-wrap; margin-top: 15px; }
+.print-footer { margin-top: 50px; text-align: right; }
+.print-signature-box { display: inline-block; text-align: center; border-top: 1px solid #000; padding-top: 10px; width: 250px; }
+.print-signature-name { margin: 0; font-weight: bold; }
+.print-signature-role { margin: 0; font-size: 12px; }
+
+@media print {
+    body * { visibility: hidden; }
+    #seccion-impresion-receta, #seccion-impresion-receta * { visibility: visible; }
+    #seccion-impresion-receta { position: absolute; left: 0; top: 0; width: 100%; padding: 40px; background-color: white !important; }
+    .navbar, .sidebar, #sidebar-wrapper, nav { display: none !important; }
+    body { background-color: white !important; }
 }

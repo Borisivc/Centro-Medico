@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block content %}
+
+{% block content_public %}
 <div class="hero-home py-5 mb-5 shadow-sm">
     <div class="container py-5 text-center">
-        <h1 class="display-4 fw-bold text-navy-centro mb-3">Centro Médico</h1>
-        <p class="lead text-dark mb-5 fw-bold">Comprometidos con tu salud y bienestar, a un clic de distancia.</p>
+        <h1 class="display-4 fw-bold text-navy-centro mb-3">Tu Salud es Nuestra Prioridad</h1>
+        <p class="lead text-dark mb-5 fw-bold">Especialistas en Salud Integral, Aprendizaje y Terapias.</p>
         <a href="#" class="btn-agendar-home shadow" data-bs-toggle="modal" data-bs-target="#modalReservaWeb">
-            <i class="fas fa-calendar-plus me-2"></i>RESERVA TU HORA AQUÍ
+            <i class="fas fa-calendar-check me-2"></i>RESERVA TU HORA AQUÍ
         </a>
     </div>
 </div>
@@ -14,19 +15,19 @@
     <div class="row g-4 text-center">
         <div class="col-md-4">
             <div class="area-contenedor pb-3">
-                <img src="{{ url_for('static', filename='img/area_salud_integral.png') }}" class="area-img">
+                <img src="{{ url_for('static', filename='img/area_salud_integral.png') }}" class="area-img" alt="Salud Integral">
                 <h5 class="text-navy-centro fw-bold mt-3">Salud Integral</h5>
             </div>
         </div>
         <div class="col-md-4">
             <div class="area-contenedor pb-3">
-                <img src="{{ url_for('static', filename='img/area_aprendizaje.png') }}" class="area-img">
+                <img src="{{ url_for('static', filename='img/area_aprendizaje.png') }}" class="area-img" alt="Aprendizaje">
                 <h5 class="text-navy-centro fw-bold mt-3">Aprendizaje</h5>
             </div>
         </div>
         <div class="col-md-4">
             <div class="area-contenedor pb-3">
-                <img src="{{ url_for('static', filename='img/area_terapias.png') }}" class="area-img">
+                <img src="{{ url_for('static', filename='img/area_terapias.png') }}" class="area-img" alt="Terapias">
                 <h5 class="text-navy-centro fw-bold mt-3">Terapias</h5>
             </div>
         </div>
@@ -37,55 +38,70 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4 p-2">
             <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative text-center">
-                <div class="w-100"><h4 class="modal-centro-title m-0 fw-bold fs-4 text-navy-centro">Reserva de Hora Médica</h4>
-                    <p class="text-muted small mb-0 mt-1">Si ya es paciente, sus datos se cargarán automáticamente.</p>
+                <div class="w-100">
+                    <h4 class="modal-centro-title m-0 fw-bold fs-4 text-navy-centro">Reserva de Hora Médica</h4>
+                    <p class="text-muted small mb-0 mt-1">Completa tus datos para agendar una cita.</p>
                 </div>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 pt-4">
                 <form action="{{ url_for('main.agendar_publico') }}" method="POST" id="formReservaWeb">
-                    <h6 class="text-navy-centro fw-bold border-bottom pb-2 mb-3"><i class="fas fa-user me-2"></i>1. Identificación del Paciente</h6>
+                    
+                    <h6 class="text-navy-centro fw-bold border-bottom pb-2 mb-3"><i class="fas fa-id-card me-2"></i>1. Identificación</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="label-centro fw-bold x-small text-muted ms-2">RUT</label>
                             <input type="text" name="rut" id="reserva_rut" class="form-control-centro w-100 fw-bold" placeholder="Ej: 12.345.678-9" required>
                         </div>
-                        <div class="col-md-4"><label class="label-centro fw-bold x-small text-muted ms-2">Nombres</label><input type="text" name="nombre" id="reserva_nom" class="form-control-centro w-100 text-uppercase" required></div>
-                        <div class="col-md-4"><label class="label-centro fw-bold x-small text-muted ms-2">Apellidos</label><input type="text" name="apellido" id="reserva_ape" class="form-control-centro w-100 text-uppercase" required></div>
+                        <div class="col-md-4">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Nombres</label>
+                            <input type="text" name="nombre" id="reserva_nom" class="form-control-centro w-100 text-uppercase" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Apellidos</label>
+                            <input type="text" name="apellido" id="reserva_ape" class="form-control-centro w-100 text-uppercase" required>
+                        </div>
                     </div>
 
-                    <h6 class="text-navy-centro fw-bold border-bottom pb-2 mb-3"><i class="fas fa-stethoscope me-2"></i>2. Detalle de la Atención</h6>
+                    <h6 class="text-navy-centro fw-bold border-bottom pb-2 mb-3"><i class="fas fa-clock me-2"></i>2. Horario y Especialidad</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="label-centro fw-bold x-small text-muted ms-2">Especialidad</label>
                             <select id="reserva_esp" class="form-select form-control-centro w-100" required>
                                 <option value="">Seleccione Especialidad...</option>
                                 {% for e in especialidades %}
-                                <option value="{{ e.get('id', e[0]) }}">{{ e.get('nombre', e[1]) }}</option>
+                                <option value="{{ e.id if e is mapping else e[0] }}">{{ e.nombre if e is mapping else e[1] }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Profesional Médico</label>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Profesional</label>
                             <select name="profesional_id" id="reserva_prof" class="form-select form-control-centro w-100" required>
                                 <option value="">Seleccione Profesional...</option>
                                 {% for p in profesionales %}
-                                    <option value="{{ p.get('id', p[0]) }}" data-esp="{{ p.get('especialidad_id', p[3]) }}">Dr/a. {{ p.get('nombre', p[1]) }} {{ p.get('apellido', p[2]) }}</option>
+                                <option value="{{ p.id if p is mapping else p[0] }}" data-esp="{{ p.especialidad_id if p is mapping else p[3] }}">
+                                    Dr/a. {{ p.nombre if p is mapping else p[1] }} {{ p.apellido if p is mapping else p[2] }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha Solicitada</label>
-                            <input type="date" name="fecha" id="reserva_fecha" class="form-control-centro w-100" min="{{ now }}" required>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Fecha</label>
+                            <input type="date" name="fecha" id="reserva_fecha" class="form-control-centro w-100" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora Disponible</label>
+                            <label class="label-centro fw-bold x-small text-muted ms-2">Hora</label>
                             <select name="hora" id="reserva_hora" class="form-select form-control-centro w-100" required disabled>
-                                <option value="">Seleccione Profesional y Fecha...</option>
+                                <option value="">Seleccione Fecha y Profesional...</option>
                             </select>
                         </div>
                     </div>
-                    <div class="d-grid mt-4"><button type="submit" id="btnSubmitReserva" class="btn-centro-confirm shadow-sm fs-5 py-3">CONFIRMAR AGENDAMIENTO</button></div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" id="btnSubmitReserva" class="btn-centro-confirm shadow-sm py-3 fs-5">
+                            CONFIRMAR MI RESERVA
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -97,58 +113,53 @@ document.addEventListener('DOMContentLoaded', function() {
     const rutInput = document.getElementById('reserva_rut');
     const nomInput = document.getElementById('reserva_nom');
     const apeInput = document.getElementById('reserva_ape');
-    const formReserva = document.getElementById('formReservaWeb');
+    const espSelect = document.getElementById('reserva_esp');
     const profSelect = document.getElementById('reserva_prof');
     const fechaInput = document.getElementById('reserva_fecha');
     const horaSelect = document.getElementById('reserva_hora');
 
+    // Validación y Autocarga de RUT
     rutInput.addEventListener('input', function(e) {
-        try {
-            let v = e.target.value.replace(/[^0-9kK]/g, '').toUpperCase();
+        let v = e.target.value.replace(/[^0-9kK]/g, '').toUpperCase();
+        if (typeof formatoRutVisual === 'function') {
             e.target.value = formatoRutVisual(v);
-            rutInput.classList.remove('is-invalid', 'is-valid');
-        } catch(err) {}
+        } else {
+            e.target.value = v;
+        }
     });
 
     rutInput.addEventListener('blur', function() {
-        try {
-            let r = rutInput.value.replace(/[\.\-]/g, '').toUpperCase();
-            if (r.length < 2) return;
+        let r = rutInput.value.replace(/[\.\-]/g, '').toUpperCase();
+        if (r.length < 8) return;
 
-            if (!validarRutMatematico(r)) {
-                rutInput.classList.add('is-invalid');
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'RUT Inválido',
-                        text: 'El RUT ingresado no es válido.',
-                        confirmButtonColor: '#001f3f'
-                    }).then(() => { rutInput.value = ''; rutInput.focus(); });
+        fetch(`/api/validar_rut/${r}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.existe) {
+                    nomInput.value = data.nombre;
+                    apeInput.value = data.apellido;
+                    nomInput.readOnly = true;
+                    apeInput.readOnly = true;
+                    nomInput.classList.add('bg-light');
+                    apeInput.classList.add('bg-light');
+                } else {
+                    nomInput.readOnly = false;
+                    apeInput.readOnly = false;
+                    nomInput.classList.remove('bg-light');
+                    apeInput.classList.remove('bg-light');
                 }
-            } else {
-                rutInput.classList.add('is-valid');
-                fetch(`/api/validar_rut/${r}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.existe) {
-                            nomInput.value = data.nombre; apeInput.value = data.apellido;
-                            nomInput.readOnly = true; apeInput.readOnly = true;
-                            nomInput.classList.add('bg-light'); apeInput.classList.add('bg-light');
-                        }
-                    });
-            }
-        } catch(err) {}
+            });
     });
 
-    const espSelect = document.getElementById('reserva_esp');
-    const profOptions = Array.from(profSelect.options);
-
+    // Filtro Dinámico Especialidad -> Profesional
+    const originalProfOptions = Array.from(profSelect.options);
     espSelect.addEventListener('change', function() {
         const valEsp = this.value;
         profSelect.innerHTML = "";
-        profSelect.appendChild(profOptions[0]);
-        profOptions.forEach((opt, i) => {
-            if (i === 0) return;
+        profSelect.appendChild(originalProfOptions[0]); // Mantener el "Seleccione..."
+
+        originalProfOptions.forEach((opt, idx) => {
+            if (idx === 0) return;
             if (!valEsp || opt.getAttribute('data-esp') === valEsp) {
                 profSelect.appendChild(opt);
             }
@@ -156,69 +167,43 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarHoras();
     });
 
+    // Carga de Horarios (Bloques de 60 min para vista pública)
     function actualizarHoras() {
         const profId = profSelect.value;
         const fecha = fechaInput.value;
 
-        horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-        horaSelect.disabled = true;
-
         if (!profId || !fecha) {
-            horaSelect.innerHTML = '<option value="">Seleccione Profesional y Fecha...</option>';
+            horaSelect.innerHTML = '<option value="">Seleccione Fecha y Profesional...</option>';
+            horaSelect.disabled = true;
             return;
         }
 
+        horaSelect.innerHTML = '<option value="">Buscando disponibilidad...</option>';
+        horaSelect.disabled = true;
+
         fetch(`/api/horarios_disponibles?profesional_id=${profId}&fecha=${fecha}&publico=true`)
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 horaSelect.innerHTML = '<option value="">Seleccione una hora...</option>';
                 if (data.length === 0) {
-                    horaSelect.innerHTML = '<option value="">No hay horas disponibles este día</option>';
+                    horaSelect.innerHTML = '<option value="">Sin cupos disponibles para esta fecha</option>';
                 } else {
-                    data.forEach(hora => {
+                    data.forEach(h => {
                         let opt = document.createElement('option');
-                        opt.value = hora; opt.textContent = hora;
+                        opt.value = h;
+                        opt.textContent = h + ' hrs.';
                         horaSelect.appendChild(opt);
                     });
                     horaSelect.disabled = false;
                 }
             })
-            .catch(error => {
-                horaSelect.innerHTML = '<option value="">Error al cargar horas</option>';
+            .catch(() => {
+                horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
             });
     }
 
     profSelect.addEventListener('change', actualizarHoras);
     fechaInput.addEventListener('change', actualizarHoras);
-
-    formReserva.addEventListener('submit', function(e) {
-        // CANDADO FRONTEND: Evita que se envíe el formulario si la hora está vacía
-        if (!horaSelect.value) {
-            e.preventDefault();
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'warning', title: 'Falta Horario',
-                    text: 'Por favor, seleccione una hora disponible antes de agendar.',
-                    confirmButtonColor: '#001f3f'
-                });
-            }
-            return;
-        }
-
-        try {
-            let r = rutInput.value.replace(/[\.\-]/g, '').toUpperCase();
-            if (!validarRutMatematico(r) || rutInput.classList.contains('is-invalid')) {
-                e.preventDefault();
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error', title: 'Acción Bloqueada',
-                        text: 'El RUT ingresado no es válido. Corríjalo antes de enviar.',
-                        confirmButtonColor: '#001f3f'
-                    });
-                }
-            }
-        } catch (err) {}
-    });
 });
 </script>
 {% endblock %}

@@ -3,7 +3,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 # Definición del Blueprint
 patients_bp = Blueprint('patients', __name__)
 
-# FIREWALL DE SEGURIDAD GLOBAL
+# ==============================================================================
+# 🛡️ FIREWALL DE SEGURIDAD GLOBAL PARA PACIENTES
+# ==============================================================================
 @patients_bp.before_request
 def check_auth():
     if 'user_id' not in session:

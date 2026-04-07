@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="text-navy-centro fw-bold m-0">
+                <i class="fas fa-folder-open me-2 icon-consulta"></i>Buscador de Historial
+            </h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Búsqueda maestra de pacientes</p>
+        </div>
+        <div class="col-md-6">
+            <form action="{{ url_for('clinical.historial') }}" method="GET" class="d-flex shadow-sm rounded-pill overflow-hidden">
+                <input type="text" name="q" class="form-control border-0 bg-white px-4 py-3" placeholder="Buscar por RUT o Apellidos..." value="{{ request.args.get('q', '') }}" required>
+                <button type="submit" class="btn btn-centro-confirm rounded-0 px-4" style="width: auto;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if paciente %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-navy-centro text-white">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3 class="fw-bold m-0 text-uppercase">
+                    <i class="fas fa-user me-2 icon-brand"></i>{{ paciente.nombre }} {{ paciente.apellido }}
+                </h3>
+                <div class="mt-2 opacity-75 small">
+                    <span class="me-3"><i class="fas fa-id-card me-1"></i> RUT: {{ paciente.rut | formatear_rut }}</span>
+                    <span class="me-3"><i class="fas fa-calendar me-1"></i> Nacimiento: {{ paciente.fecha_nacimiento.strftime('%d-%m-%Y') if paciente.fecha_nacimiento else 'N/A' }}</span>
+                    <span><i class="fas fa-envelope me-1"></i> {{ paciente.email }}</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-light text-navy-centro fs-6 rounded-pill px-3 py-2 shadow-sm">
+                    Total Atenciones: {{ historial|length }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h5 class="fw-bold text-navy-centro border-bottom pb-3 mb-4">
+            <i class="fas fa-notes-medical me-2"></i>Registro Clínico Histórico
+        </h5>
+        
+        <div class="accordion" id="accordionHistorialMaestro">
+            {% for h in historial %}
+            <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-3 bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseH{{ loop.index }}">
+                        <div class="w-100 d-flex justify-content-between align-items-center pe-3">
+                            <div>
+                                <div class="fw-bold text-navy-centro fs-6">
+                                    <i class="fas fa-calendar-check me-2 icon-agenda"></i>{{ h.fecha_hora.strftime('%d-%m-%Y %H:%M') }}
+                                </div>
+                                <div class="small text-muted mt-1">Dr/a. {{ h.prof_nom }} {{ h.prof_ape }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-danger rounded-pill px-3 text-uppercase shadow-sm">{{ h.diagnostico }}</span>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapseH{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#accordionHistorialMaestro">
+                    <div class="accordion-body p-4 bg-white">
+                        <div class="row g-4">
+                            <div class="col-md-6 border-end">
+                                <h6 class="fw-bold text-muted x-small text-uppercase mb-2">Motivo de Consulta</h6>
+                                <p class="small mb-4">{{ h.motivo_consulta }}</p>
+                                
+                                <h6 class="fw-bold text-muted x-small text-uppercase mb-2">Examen Físico</h6>
+                                <p class="small mb-0">{{ h.examen_fisico or 'No registrado' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-muted x-small text-uppercase mb-2">Tratamiento / Indicaciones</h6>
+                                <p class="small mb-4">{{ h.tratamiento }}</p>
+                                
+                                {% if adjuntos.get(h.ficha_id) %}
+                                <div class="pt-3 border-top">
+                                    <h6 class="fw-bold text-muted x-small text-uppercase mb-2">Documentos Adjuntos</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for adj in adjuntos[h.ficha_id] %}
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill x-small shadow-sm fw-bold" 
+                                                    onclick="verArchivo('{{ url_for('static', filename=adj.ruta_archivo) }}', '{{ adj.tipo }}')">
+                                                <i class="fas {{ 'fa-file-pdf text-danger' if adj.tipo == 'pdf' else 'fa-image text-primary' }} me-1"></i> 
+                                                {{ adj.nombre_original }}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-minus fa-3x text-muted opacity-25 mb-3 d-block"></i>
+                <h6 class="text-muted fw-bold">El paciente no tiene atenciones registradas.</h6>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% elif request.args.get('q') %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center mt-4">
+        <i class="fas fa-search fa-3x text-muted opacity-25 mb-3 d-block"></i>
+        <h5 class="text-navy-centro fw-bold">No se encontraron resultados</h5>
+        <p class="text-muted small">No existe ningún paciente que coincida con "{{ request.args.get('q') }}".</p>
+        <a href="{{ url_for('clinical.historial') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-4 mt-2">Limpiar Búsqueda</a>
+    </div>
+    
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center mt-4 bg-white">
+        <i class="fas fa-hospital-user fa-4x text-muted opacity-25 mb-3 d-block"></i>
+        <h5 class="text-navy-centro fw-bold">Buscador de Historial Clínico</h5>
+        <p class="text-muted small">Ingrese el RUT o los apellidos del paciente en la barra superior para acceder a su expediente médico completo.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="modalVisor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 position-relative">
+                <h5 class="fw-bold text-navy-centro m-0"><i class="fas fa-eye me-2"></i>Visor de Documentos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center visor-contenedor" id="visorContenedor"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function verArchivo(url, tipo) {
+    const cont = document.getElementById('visorContenedor');
+    cont.innerHTML = tipo === 'pdf' 
+        ? `<iframe src="${url}" class="visor-iframe"></iframe>`
+        : `<img src="${url}" class="visor-img">`;
+    new bootstrap.Modal(document.getElementById('modalVisor')).show();
+}
+</script>
+{% endblock %}

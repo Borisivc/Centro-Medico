@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8 text-start">
+            <h2 class="text-navy-centro fw-bold m-0">Mi Consulta Médica</h2>
+            <p class="text-muted small mb-0 fw-bold text-uppercase">Pacientes en espera para hoy</p>
+        </div>
+    </div>
+
+    <div class="card p-0 border-0 shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="py-3 px-4 text-navy-centro">Hora</th>
+                    <th class="py-3 text-navy-centro">Paciente</th>
+                    <th class="py-3 text-navy-centro">Profesional Asignado</th>
+                    <th class="py-3 text-end px-4">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in citas_hoy %}
+                <tr class="border-bottom">
+                    <td class="px-4 py-3 fw-bold">{{ c.get('hora', c[1]) }}</td>
+                    <td class="py-3">
+                        <div class="text-uppercase fw-bold text-navy-centro">{{ c.get('nombre', c[4]) }} {{ c.get('apellido', c[5]) }}</div>
+                        <div class="x-small text-muted formato-rut-cl">{{ c.get('rut', c[3]) }}</div>
+                    </td>
+                    <td class="py-3 small text-uppercase">Dr/a. {{ c.get('prof_nom', c[7]) }} {{ c.get('prof_ape', c[8]) }}</td>
+                    <td class="text-end px-4 py-3">
+                        <a href="{{ url_for('clinical.workspace', agenda_id=c.get('agenda_id', c[0])) }}" class="btn-centro-confirm btn-sm px-4 shadow-sm rounded-pill" style="font-size: 0.8rem;">
+                            <i class="fas fa-stethoscope me-2"></i>ATENDER
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <i class="fas fa-mug-hot fa-3x text-muted opacity-25 mb-3 d-block"></i>
+                        <h6 class="text-muted fw-bold">No hay pacientes en espera</h6>
+                        <p class="small text-muted mb-0">Todos los pacientes agendados para hoy ya han sido atendidos.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

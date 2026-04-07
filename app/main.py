@@ -31,7 +31,7 @@ def index():
     return render_template('index.html', especialidades=especialidades, profesionales=profesionales)
 
 # ==========================================
-# 2. AUTENTICACIÓN (LOGIN / LOGOUT)
+# 2. AUTENTICACIÓN (LOGIN / LOGOUT CON ROLES)
 # ==========================================
 @main_bp.route('/login', methods=['POST'])
 def login():
@@ -39,17 +39,28 @@ def login():
     password = request.form.get('password')
     cur = g.db.cursor()
     try:
-        cur.execute("SELECT id, nombre, password_hash FROM usuarios WHERE email = %s AND activo = 1", (email,))
+        # Hacemos JOIN para traer el nombre del rol
+        query = """
+            SELECT u.id, u.nombre, u.password_hash, r.nombre as rol_nombre
+            FROM usuarios u
+            LEFT JOIN usuarios_roles ur ON u.id = ur.usuario_id
+            LEFT JOIN roles r ON ur.rol_id = r.id
+            WHERE u.email = %s AND u.activo = 1
+        """
+        cur.execute(query, (email,))
         user = cur.fetchone()
         
         u_id = user.get('id') if isinstance(user, dict) else user[0] if user else None
         u_nom = user.get('nombre') if isinstance(user, dict) else user[1] if user else None
         u_hash = user.get('password_hash') if isinstance(user, dict) else user[2] if user else None
+        u_rol = user.get('rol_nombre') if isinstance(user, dict) else user[3] if user and len(user)>3 else None
 
         if user and check_password_hash(u_hash, password):
             session.clear()
             session['user_id'] = u_id
             session['user_nombre'] = u_nom
+            # Guardamos el ROL en mayúsculas para evitar problemas de tipeo
+            session['user_rol'] = str(u_rol).upper() if u_rol else 'SIN_ROL'
             return redirect(url_for('main.dashboard'))
     except Exception as e:
         print(f"Error Login: {e}")
@@ -245,7 +256,7 @@ def agendar_publico():
 # ==========================================
 @main_bp.route('/dashboard')
 def dashboard():
-    # 🛡️ CANDADO: Solo usuarios logueados pueden ver el Dashboard
+    # CANDADO: Solo usuarios logueados pueden ver el Dashboard
     if 'user_id' not in session: 
         flash('Acceso denegado: Por favor, inicie sesión para ver el panel.', 'danger')
         return redirect(url_for('main.index'))

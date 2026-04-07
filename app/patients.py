@@ -4,13 +4,18 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 patients_bp = Blueprint('patients', __name__)
 
 # ==============================================================================
-# 🛡️ FIREWALL DE SEGURIDAD GLOBAL PARA PACIENTES
+# 🛡️ FIREWALL DE SEGURIDAD GLOBAL (RBAC) PARA PACIENTES
 # ==============================================================================
 @patients_bp.before_request
 def check_auth():
     if 'user_id' not in session:
         flash('Acceso denegado: Por favor, inicie sesión.', 'danger')
         return redirect(url_for('main.index'))
+    
+    # Validamos por NOMBRE de rol, como solicitaste.
+    if session.get('user_rol') not in ['ADMIN', 'RECEPCION']:
+        flash('No tiene los permisos necesarios (Admin/Recepción) para acceder a Gestión de Pacientes.', 'danger')
+        return redirect(url_for('main.dashboard'))
 
 @patients_bp.route('/')
 def index():

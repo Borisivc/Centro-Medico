@@ -14,6 +14,8 @@
 <body class="bg-light">
 
     {% if session.get('user_id') %}
+    {% set rol = session.get('user_rol', '') %}
+    
     <div class="d-flex" id="wrapper">
         
         <div class="bg-navy-centro text-white sidebar shadow-lg" id="sidebar-wrapper">
@@ -30,21 +32,28 @@
                     <i class="fas fa-calendar-alt me-3 icon-agenda"></i>Agenda
                 </a>
                 
+                {% if rol in ['ADMIN', 'PROFESIONAL'] %}
                 <a href="{{ url_for('clinical.index') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
                     <i class="fas fa-user-md me-3 icon-consulta"></i>Mi Consulta
                 </a>
-
                 <a href="{{ url_for('clinical.historial') }}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold px-4 py-3 border-0">
                     <i class="fas fa-folder-open me-3 icon-consulta"></i>Historial
                 </a>
+                {% endif %}
                 
+                {% if rol in ['ADMIN', 'RECEPCION'] %}
                 <div class="px-4 pt-4 pb-2 x-small fw-bold text-uppercase opacity-50 text-white sidebar-admin-title">
-                    Administración
+                    Recepción
                 </div>
-
                 <a href="{{ url_for('patients.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
                     <i class="fas fa-users me-2 icon-pacientes"></i>Pacientes
                 </a>
+                {% endif %}
+
+                {% if rol == 'ADMIN' %}
+                <div class="px-4 pt-4 pb-2 x-small fw-bold text-uppercase opacity-50 text-white sidebar-admin-title">
+                    Administración
+                </div>
                 <a href="{{ url_for('professionals.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
                     <i class="fas fa-user-nurse me-2 icon-profesionales"></i>Profesionales
                 </a>
@@ -63,6 +72,7 @@
                 <a href="{{ url_for('states.index') }}" class="list-group-item list-group-item-action bg-transparent text-white small border-0 ps-5 py-2">
                     <i class="fas fa-tasks me-2 icon-states"></i>Estados
                 </a>
+                {% endif %}
             </div>
         </div>
         
@@ -73,7 +83,7 @@
                     <div class="ms-auto d-flex align-items-center">
                         <div class="me-4 text-end d-none d-md-block">
                             <span class="fw-bold text-navy-centro d-block nav-user-name">{{ session.get('user_nombre', 'Usuario') }}</span>
-                            <span class="text-success x-small fw-bold text-uppercase">Conectado</span>
+                            <span class="text-success x-small fw-bold text-uppercase">{{ rol if rol != 'SIN_ROL' else 'CONECTADO' }}</span>
                         </div>
                         <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">
                             <i class="fas fa-power-off me-2"></i>SALIR
